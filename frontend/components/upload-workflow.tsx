@@ -40,15 +40,26 @@ type BackendHealth = {
   error?: string | null;
 };
 
+type NormalizedParsedResponse = {
+  summary: string;
+  strengths: string[];
+  issues: string[];
+  next_steps: string[];
+  notes: string[];
+};
+
 type AnalysisRecord = {
   id: number;
   video_id: number;
   prompt_template_id: number;
   status: string;
   raw_response: string | null;
-  parsed_response: Record<string, unknown> | null;
+  parsed_response: NormalizedParsedResponse | null;
   model_name: string | null;
   confidence: number | null;
+  parser_strategy: string | null;
+  json_parse_succeeded: boolean | null;
+  template_key_snapshot: string | null;
   created_at: string;
   updated_at: string;
   video: VideoRecord;
@@ -76,6 +87,38 @@ function formatFileSize(sizeBytes: number): string {
   }
 
   return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => String(item).trim())
+    .filter((item) => item.length > 0);
+}
+
+function normalizeParsedResponse(
+  parsedResponse: NormalizedParsedResponse | null | undefined,
+): NormalizedParsedResponse {
+  if (!parsedResponse) {
+    return {
+      summary: "",
+      strengths: [],
+      issues: [],
+      next_steps: [],
+      notes: [],
+    };
+  }
+
+  return {
+    summary: String(parsedResponse.summary ?? "").trim(),
+    strengths: normalizeStringArray(parsedResponse.strengths),
+    issues: normalizeStringArray(parsedResponse.issues),
+    next_steps: normalizeStringArray(parsedResponse.next_steps),
+    notes: normalizeStringArray(parsedResponse.notes),
+  };
 }
 
 async function parseError(response: Response): Promise<string> {
@@ -153,6 +196,10 @@ export function UploadWorkflow() {
         (template) => String(template.id) === selectedPromptTemplateId,
       ) ?? null,
     [promptTemplates, selectedPromptTemplateId],
+  );
+  const normalizedAnalysisResponse = useMemo(
+    () => normalizeParsedResponse(analysis?.parsed_response),
+    [analysis?.parsed_response],
   );
 
   async function syncTemplates() {
@@ -440,6 +487,12 @@ export function UploadWorkflow() {
                 <dt>Description</dt>
                 <dd>{selectedPromptTemplate.description ?? "No description"}</dd>
               </div>
+              {selectedPromptTemplate.key === "boxing_structured" ? (
+                <div>
+                  <dt>Recommended use</dt>
+                  <dd>Best current template for stable structured boxing feedback.</dd>
+                </div>
+              ) : null}
             </dl>
           </div>
         ) : null}
@@ -505,6 +558,20 @@ export function UploadWorkflow() {
                 <dd>{analysis.model_name ?? "null"}</dd>
               </div>
               <div>
+                <dt>Parser strategy</dt>
+                <dd>{analysis.parser_strategy ?? "n/a"}</dd>
+              </div>
+              <div>
+                <dt>JSON parse</dt>
+                <dd>
+                  {analysis.json_parse_succeeded === null
+                    ? "n/a"
+                    : analysis.json_parse_succeeded
+                      ? "succeeded"
+                      : "not used / failed"}
+                </dd>
+              </div>
+              <div>
                 <dt>Updated at</dt>
                 <dd>{analysis.updated_at}</dd>
               </div>
@@ -513,6 +580,10 @@ export function UploadWorkflow() {
                 <dd>
                   {analysis.prompt_template.title} ({analysis.prompt_template.key})
                 </dd>
+              </div>
+              <div>
+                <dt>Template key at execution</dt>
+                <dd>{analysis.template_key_snapshot ?? "n/a"}</dd>
               </div>
               <div>
                 <dt>Video</dt>
@@ -531,10 +602,63 @@ export function UploadWorkflow() {
             </dl>
 
             <div className="result-block">
-              <h3>Parsed response</h3>
-              <pre className="code-block">
-                {JSON.stringify(analysis.parsed_response, null, 2)}
-              </pre>
+              <h3>Normalized parsed response</h3>
+              <div className="normalized-grid">
+                <section className="normalized-card normalized-card-wide">
+                  <h4>Summary</h4>
+                  <p>
+                    {normalizedAnalysisResponse.summary || "No summary was parsed."}
+                  </p>
+                </section>
+                <section className="normalized-card">
+                  <h4>Strengths</h4>
+                  <ul className="normalized-list">
+                    {normalizedAnalysisResponse.strengths.length > 0 ? (
+                      normalizedAnalysisResponse.strengths.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))
+                    ) : (
+                      <li>No strengths parsed.</li>
+                    )}
+                  </ul>
+                </section>
+                <section className="normalized-card">
+                  <h4>Issues</h4>
+                  <ul className="normalized-list">
+                    {normalizedAnalysisResponse.issues.length > 0 ? (
+                      normalizedAnalysisResponse.issues.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))
+                    ) : (
+                      <li>No issues parsed.</li>
+                    )}
+                  </ul>
+                </section>
+                <section className="normalized-card">
+                  <h4>Next steps</h4>
+                  <ul className="normalized-list">
+                    {normalizedAnalysisResponse.next_steps.length > 0 ? (
+                      normalizedAnalysisResponse.next_steps.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))
+                    ) : (
+                      <li>No next steps parsed.</li>
+                    )}
+                  </ul>
+                </section>
+                <section className="normalized-card">
+                  <h4>Notes</h4>
+                  <ul className="normalized-list">
+                    {normalizedAnalysisResponse.notes.length > 0 ? (
+                      normalizedAnalysisResponse.notes.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))
+                    ) : (
+                      <li>No notes parsed.</li>
+                    )}
+                  </ul>
+                </section>
+              </div>
             </div>
 
             <div className="result-block">

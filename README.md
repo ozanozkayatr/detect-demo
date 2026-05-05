@@ -126,6 +126,12 @@ Starter prompt templates are stored as local JSON files:
 - `boxing_structured`
 - `coach_summary`
 
+Current intent for each template:
+
+- `observable_only`: strict visible-only notes with minimal interpretation
+- `boxing_structured`: best current option for stable structured boxing feedback and parsing
+- `coach_summary`: concise coaching-style narrative with clearly separated sections
+
 To sync them into PostgreSQL:
 
 ```bash
@@ -174,6 +180,7 @@ The response includes:
 - uploaded video metadata
 - selected prompt template summary
 - analysis status
+- parser metadata
 - `raw_response`
 - best-effort `parsed_response`
 
@@ -209,11 +216,14 @@ alembic upgrade head
 ## Current Limitations
 
 - Analysis execution is synchronous inside the request. There are no queues, retries, polling endpoints, or background jobs.
-- The parsed-response layer is intentionally lightweight. It works best when Gemini returns either JSON or clearly labeled sections.
+- `boxing_structured` is the most reliable template for consistent normalized output because it prefers JSON-shaped Gemini output.
+- `observable_only` and `coach_summary` still rely more heavily on labeled-section parsing and heuristics.
+- `parsed_response` is derived with a lightweight strategy in this order: JSON parse, labeled-section parse, then text heuristics.
+- The parsing layer remains intentionally best-effort. It improves consistency, but it is not a guaranteed structured-output system.
 - `confidence` remains `null` for now because this first integration does not derive a reliable confidence score from Gemini responses.
 - The backend deletes the temporary Gemini file after the request when possible, but it does not yet persist Gemini-side file metadata.
 - No pose estimation, tracking, or multi-step video pipeline exists yet.
 
 ## What Comes Later
 
-The next implementation step should improve result quality and robustness: better output shaping, better parsing for structured boxing feedback, and optionally a separate execution path for longer-running analyses without changing the local-first development model.
+The next implementation step should improve analysis quality rather than architecture: tune prompt wording against real example clips, refine the normalized parser from observed Gemini outputs, and optionally add lightweight comparison/history views for repeated runs.

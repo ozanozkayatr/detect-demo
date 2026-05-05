@@ -375,6 +375,43 @@ select {
   line-height: 1.5;
 }
 
+.normalized-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.normalized-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.normalized-card-wide {
+  grid-column: 1 / -1;
+}
+
+.normalized-card h4 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+
+.normalized-card p {
+  margin: 0;
+}
+
+.normalized-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.normalized-list li + li {
+  margin-top: 6px;
+}
+
 @media (max-width: 720px) {
   .shell {
     width: min(100% - 20px, 1100px);

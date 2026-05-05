@@ -16,6 +16,7 @@ from app.services.gemini_service import (
     GeminiExecutionError,
     run_gemini_video_analysis,
 )
+from app.services.analysis_parser import note_only_response
 
 router = APIRouter()
 
@@ -63,6 +64,9 @@ def create_analysis(
         parsed_response=None,
         model_name=settings.gemini_model if settings.gemini_configured else None,
         confidence=None,
+        parser_strategy=None,
+        json_parse_succeeded=None,
+        template_key_snapshot=prompt_template.key,
     )
     db.add(analysis)
     db.commit()
@@ -78,17 +82,16 @@ def create_analysis(
         analysis.parsed_response = result.parsed_response
         analysis.model_name = result.model_name
         analysis.confidence = result.confidence
+        analysis.parser_strategy = result.parser_strategy
+        analysis.json_parse_succeeded = result.json_parse_succeeded
+        analysis.template_key_snapshot = result.template_key_snapshot
         db.commit()
     except GeminiConfigurationError as exc:
         analysis.status = "failed"
         analysis.raw_response = None
-        analysis.parsed_response = {
-            "summary": "",
-            "strengths": [],
-            "issues": [],
-            "next_steps": [],
-            "notes": [str(exc)],
-        }
+        analysis.parsed_response = note_only_response(str(exc))
+        analysis.parser_strategy = "not_run"
+        analysis.json_parse_succeeded = False
         db.commit()
         raise api_error(
             status_code=503,
@@ -99,13 +102,9 @@ def create_analysis(
     except GeminiExecutionError as exc:
         analysis.status = "failed"
         analysis.raw_response = None
-        analysis.parsed_response = {
-            "summary": "",
-            "strengths": [],
-            "issues": [],
-            "next_steps": [],
-            "notes": [str(exc)],
-        }
+        analysis.parsed_response = note_only_response(str(exc))
+        analysis.parser_strategy = "execution_error"
+        analysis.json_parse_succeeded = False
         db.commit()
         raise api_error(
             status_code=502,

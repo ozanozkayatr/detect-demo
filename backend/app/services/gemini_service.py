@@ -11,7 +11,7 @@ from google import genai
 from app.core.config import settings
 from app.models.prompt_template import PromptTemplate
 from app.models.video import Video
-from app.services.analysis_parser import parse_analysis_response
+from app.services.analysis_parser import ParseOutcome, parse_analysis_response
 
 VIDEO_POLL_INTERVAL_SECONDS = 5
 VIDEO_PROCESSING_TIMEOUT_SECONDS = 180
@@ -31,22 +31,99 @@ class GeminiAnalysisResult:
     parsed_response: dict[str, object]
     model_name: str
     confidence: float | None
+    parser_strategy: str
+    json_parse_succeeded: bool
+    template_key_snapshot: str
+
+
+@dataclass(slots=True)
+class TemplateExecutionPolicy:
+    prefer_json_output: bool
+    response_mime_type: str | None
+    response_json_schema: dict[str, object] | None
+    system_instruction: str
+    temperature: float
+
+
+NORMALIZED_ANALYSIS_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "summary": {"type": "string"},
+        "strengths": {"type": "array", "items": {"type": "string"}},
+        "issues": {"type": "array", "items": {"type": "string"}},
+        "next_steps": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["summary", "strengths", "issues", "next_steps", "notes"],
+}
+
+
+def build_template_policy(prompt_template: PromptTemplate) -> TemplateExecutionPolicy:
+    template_key = prompt_template.key.strip().lower()
+    system_instruction = "\n".join(
+        [
+            "You are a careful boxing video analyst for a local demo app.",
+            "Only describe actions, movement, posture, timing, balance, distance, and defense that are clearly visible.",
+            "Do not guess hidden intent, scorecards, impact, emotions, off-camera actions, or unseen causes.",
+            "Keep the result concise, beginner-friendly, and useful for review.",
+        ]
+    )
+
+    if template_key == "boxing_structured":
+        return TemplateExecutionPolicy(
+            prefer_json_output=True,
+            response_mime_type="application/json",
+            response_json_schema=NORMALIZED_ANALYSIS_JSON_SCHEMA,
+            system_instruction=system_instruction,
+            temperature=0.2,
+        )
+
+    return TemplateExecutionPolicy(
+        prefer_json_output=False,
+        response_mime_type=None,
+        response_json_schema=None,
+        system_instruction=system_instruction,
+        temperature=0.4,
+    )
+
+
+def build_generate_content_config(
+    template_policy: TemplateExecutionPolicy,
+) -> dict[str, object]:
+    config: dict[str, object] = {
+        "system_instruction": template_policy.system_instruction,
+        "temperature": template_policy.temperature,
+    }
+
+    if template_policy.response_mime_type is not None:
+        config["response_mime_type"] = template_policy.response_mime_type
+
+    if template_policy.response_json_schema is not None:
+        config["response_json_schema"] = template_policy.response_json_schema
+
+    return config
 
 
 def build_analysis_instruction(prompt_template: PromptTemplate) -> str:
+    template_key = prompt_template.key.strip().lower()
     base_instruction = prompt_template.prompt_body.strip()
 
-    if prompt_template.output_type.lower() == "json":
+    if template_key == "boxing_structured":
         format_instruction = (
-            "Return a JSON object with these keys: "
+            "Return a concise JSON object with exactly these keys: "
             "summary, strengths, issues, next_steps, notes. "
-            "Use arrays for strengths, issues, next_steps, and notes."
+            "Use short strings and short arrays. Return empty arrays instead of guessing."
+        )
+    elif template_key == "coach_summary":
+        format_instruction = (
+            "Return five labeled sections exactly named Summary, Strengths, Issues, "
+            "Next Steps, and Notes. Keep the summary short and make the coaching advice practical."
         )
     else:
         format_instruction = (
             "Return the result in five labeled sections exactly named: "
             "Summary, Strengths, Issues, Next Steps, and Notes. "
-            "Use bullets where useful."
+            "Use bullets where useful, and leave uncertain observations in Notes."
         )
 
     return "\n\n".join(
@@ -137,6 +214,7 @@ def run_gemini_video_analysis(
 
     client = genai.Client(api_key=settings.gemini_api_key)
     uploaded_file: Any | None = None
+    template_policy = build_template_policy(prompt_template)
 
     try:
         upload_config = build_upload_config(video)
@@ -154,15 +232,22 @@ def run_gemini_video_analysis(
         response = client.models.generate_content(
             model=settings.gemini_model,
             contents=[uploaded_file, build_analysis_instruction(prompt_template)],
+            config=build_generate_content_config(template_policy),
         )
         raw_response = extract_response_text(response)
-        parsed_response = parse_analysis_response(raw_response)
+        parse_outcome: ParseOutcome = parse_analysis_response(
+            raw_response,
+            prefer_json=template_policy.prefer_json_output,
+        )
 
         return GeminiAnalysisResult(
             raw_response=raw_response,
-            parsed_response=parsed_response,
+            parsed_response=parse_outcome.parsed_response,
             model_name=settings.gemini_model,
             confidence=None,
+            parser_strategy=parse_outcome.parser_strategy,
+            json_parse_succeeded=parse_outcome.json_parse_succeeded,
+            template_key_snapshot=prompt_template.key,
         )
     except GeminiConfigurationError:
         raise

@@ -11,7 +11,7 @@
 1. `POST /api/v1/videos/upload` stores the uploaded file under `backend/data/uploads/`.
 2. The backend saves video metadata into PostgreSQL.
 3. `POST /api/v1/prompt-templates/sync` upserts prompt template seed files from `prompts/templates/`.
-4. `POST /api/v1/analyses` creates an analysis row, uploads the local video file to Gemini, runs the selected prompt template, and stores the result.
+4. `POST /api/v1/analyses` creates an analysis row, uploads the local video file to Gemini, runs the selected prompt template, normalizes the response, and stores both raw plus parsed output.
 
 ## Why This Is Kept Minimal
 

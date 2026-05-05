@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -14,6 +13,14 @@ class AnalysisCreate(BaseModel):
     prompt_template_id: int
 
 
+class ParsedAnalysisResponse(BaseModel):
+    summary: str = ""
+    strengths: list[str] = []
+    issues: list[str] = []
+    next_steps: list[str] = []
+    notes: list[str] = []
+
+
 class AnalysisRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -22,9 +29,12 @@ class AnalysisRead(BaseModel):
     prompt_template_id: int
     status: str
     raw_response: str | None
-    parsed_response: dict[str, Any] | None
+    parsed_response: ParsedAnalysisResponse | None
     model_name: str | None
     confidence: float | None
+    parser_strategy: str | None
+    json_parse_succeeded: bool | None
+    template_key_snapshot: str | None
     created_at: datetime
     updated_at: datetime
     video: VideoRead
