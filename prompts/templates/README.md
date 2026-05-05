@@ -1,12 +1,11 @@
 # Prompt Templates
 
-Add local prompt files here later.
+Local prompt template seed files live here.
 
-Suggested examples for future work:
+Current starter templates:
 
-- `jab-timing.md`
-- `guard-detection.md`
-- `footwork-summary.md`
+- `observable_only.json`
+- `boxing_structured.json`
+- `coach_summary.json`
 
-No runtime prompt files are required yet.
-
+Each JSON file is synced into the `prompt_templates` table by `key`.

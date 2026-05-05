@@ -204,6 +204,11 @@ select {
   margin-bottom: 24px;
 }
 
+.flow-stack {
+  display: grid;
+  gap: 20px;
+}
+
 .status-list,
 .upload-notes {
   margin: 16px 0 0;
@@ -228,6 +233,140 @@ select {
   color: var(--muted);
 }
 
+.form-stack,
+.result-block {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.input-control {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+}
+
+.input-control:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.button-primary,
+.button-secondary {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: #fff7f0;
+}
+
+.button-secondary {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.button-primary:hover,
+.button-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.button-primary:disabled,
+.button-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.feedback-success,
+.feedback-error {
+  margin: 12px 0 0;
+  font-weight: 600;
+}
+
+.feedback-success {
+  color: var(--success);
+}
+
+.feedback-error {
+  color: var(--error);
+}
+
+.result-card {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.data-list {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.data-list div {
+  display: grid;
+  gap: 4px;
+}
+
+.data-list dt {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.data-list dd {
+  margin: 0;
+  color: var(--text);
+}
+
+.break-text {
+  word-break: break-word;
+}
+
+.code-block {
+  margin: 0;
+  padding: 16px;
+  border-radius: 18px;
+  background: #1d1a17;
+  color: #f8efe3;
+  overflow-x: auto;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 720px) {
   .shell {
     width: min(100% - 20px, 1100px);
@@ -246,4 +385,3 @@ select {
     padding: 22px;
   }
 }
-

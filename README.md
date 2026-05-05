@@ -62,8 +62,10 @@ Backend endpoints:
 
 - `GET http://127.0.0.1:8000/api/v1/health`
 - `POST http://127.0.0.1:8000/api/v1/videos/upload`
+- `POST http://127.0.0.1:8000/api/v1/prompt-templates/sync`
 - `GET http://127.0.0.1:8000/api/v1/analyses`
 - `GET http://127.0.0.1:8000/api/v1/prompt-templates`
+- `POST http://127.0.0.1:8000/api/v1/analyses`
 
 ### 4. Install and run the frontend
 
@@ -101,9 +103,61 @@ Defined in [`frontend/.env.example`](./frontend/.env.example):
 ## Development Notes
 
 - Uploads are stored locally under `backend/data/uploads/`.
-- Prompt files are expected under `prompts/templates/`.
-- The upload flow currently saves video files and metadata only. No model analysis runs yet.
-- Analysis records can be created as placeholders through the API, but Gemini integration is intentionally deferred.
+- Prompt template seed files live under `prompts/templates/`.
+- The upload page syncs local prompt-template files before listing them.
+- The current analysis flow creates a placeholder database record only. No model analysis runs yet.
+- Gemini integration is intentionally deferred.
+
+## Prompt Template Sync
+
+Starter prompt templates are stored as local JSON files:
+
+- `observable_only`
+- `boxing_structured`
+- `coach_summary`
+
+To sync them into PostgreSQL:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/prompt-templates/sync
+```
+
+This operation is repeatable and upserts templates by `key`.
+
+## Local Demo Flow
+
+### Browser flow
+
+1. Open `http://127.0.0.1:3001/upload`
+2. Choose a local video file
+3. Upload it to the backend
+4. Confirm prompt templates are available
+5. Select a prompt template
+6. Create the placeholder analysis and inspect the returned stub payload
+
+### API flow
+
+Upload a video:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/videos/upload \
+  -F "file=@/absolute/path/to/local-video.mp4"
+```
+
+Create a placeholder analysis:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/analyses \
+  -H "Content-Type: application/json" \
+  -d '{"video_id": 1, "prompt_template_id": 1}'
+```
+
+The response includes:
+
+- uploaded video metadata
+- selected prompt template summary
+- placeholder analysis status
+- stubbed `parsed_response`
 
 ## Migrations
 
@@ -124,4 +178,4 @@ alembic upgrade head
 
 ## What Comes Later
 
-The next implementation step should attach a real upload UI to the backend upload endpoint and then trigger prompt-driven video analysis from saved uploads. Gemini integration should happen only after that local flow is stable.
+The next implementation step should replace the stubbed analysis creation with a real prompt execution step against uploaded videos. Gemini integration should happen only after this local flow is stable.

@@ -1,0 +1,8 @@
+{
+  "key": "observable_only",
+  "title": "Observable Only",
+  "description": "Describe only clearly visible actions in the boxing clip without adding inference.",
+  "prompt_body": "You are reviewing a boxing video. Only report directly observable actions, positions, and timing cues. Do not speculate about intent, emotion, or unseen events.",
+  "output_type": "text",
+  "is_active": true
+}

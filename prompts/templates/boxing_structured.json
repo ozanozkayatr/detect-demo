@@ -1,0 +1,8 @@
+{
+  "key": "boxing_structured",
+  "title": "Boxing Structured",
+  "description": "Return a simple structured breakdown of visible boxing activity.",
+  "prompt_body": "Review the boxing clip and produce a structured summary with visible stance, punches thrown, defensive actions, movement notes, and notable exchanges. Use placeholder structure for now.",
+  "output_type": "json",
+  "is_active": true
+}

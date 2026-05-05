@@ -35,4 +35,3 @@ async def upload_video(
     db.commit()
     db.refresh(video)
     return video
-

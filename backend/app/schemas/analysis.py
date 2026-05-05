@@ -5,12 +5,13 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.prompt_template import PromptTemplateSummary
+from app.schemas.video import VideoRead
+
 
 class AnalysisCreate(BaseModel):
     video_id: int
     prompt_template_id: int
-    status: str = "pending"
-    model_name: str | None = None
 
 
 class AnalysisRead(BaseModel):
@@ -25,4 +26,5 @@ class AnalysisRead(BaseModel):
     model_name: str | None
     confidence: float | None
     created_at: datetime
-
+    video: VideoRead
+    prompt_template: PromptTemplateSummary

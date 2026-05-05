@@ -10,15 +10,20 @@ from app.schemas.prompt_template import (
     PromptFileRead,
     PromptTemplateCreate,
     PromptTemplateRead,
+    PromptTemplateSyncRead,
 )
-from app.services.prompt_loader import list_prompt_files
+from app.services.prompt_loader import list_prompt_files, sync_prompt_templates
 
 router = APIRouter()
 
 
 @router.get("", response_model=list[PromptTemplateRead])
 def list_prompt_templates(db: Session = Depends(get_db)) -> list[PromptTemplate]:
-    statement = select(PromptTemplate).order_by(PromptTemplate.created_at.desc())
+    statement = (
+        select(PromptTemplate)
+        .where(PromptTemplate.is_active.is_(True))
+        .order_by(PromptTemplate.key.asc())
+    )
     return list(db.scalars(statement))
 
 
@@ -38,3 +43,17 @@ def create_prompt_template(
     db.refresh(prompt_template)
     return prompt_template
 
+
+@router.post("/sync", response_model=PromptTemplateSyncRead)
+def sync_prompt_template_records(
+    db: Session = Depends(get_db),
+) -> PromptTemplateSyncRead:
+    created_count, updated_count, templates = sync_prompt_templates(db)
+    return PromptTemplateSyncRead(
+        created_count=created_count,
+        updated_count=updated_count,
+        synced_count=len(templates),
+        templates=[
+            PromptTemplateRead.model_validate(template) for template in templates
+        ],
+    )

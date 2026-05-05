@@ -1,0 +1,8 @@
+{
+  "key": "coach_summary",
+  "title": "Coach Summary",
+  "description": "Generate a short coaching-style summary grounded only in the uploaded clip.",
+  "prompt_body": "Write a concise coach-style summary of the clip focused on obvious strengths, visible issues, and one next correction. Keep the tone practical and grounded in what is visible.",
+  "output_type": "text",
+  "is_active": true
+}
