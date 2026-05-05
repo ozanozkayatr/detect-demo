@@ -60,14 +60,41 @@ NORMALIZED_ANALYSIS_JSON_SCHEMA = {
 
 def build_template_policy(prompt_template: PromptTemplate) -> TemplateExecutionPolicy:
     template_key = prompt_template.key.strip().lower()
-    system_instruction = "\n".join(
-        [
-            "You are a careful boxing video analyst for a local demo app.",
-            "Only describe actions, movement, posture, timing, balance, distance, and defense that are clearly visible.",
-            "Do not guess hidden intent, scorecards, impact, emotions, off-camera actions, or unseen causes.",
-            "Keep the result concise, beginner-friendly, and useful for review.",
-        ]
-    )
+    system_instruction_lines = [
+        "You are a careful boxing video analyst for a local demo app.",
+        "Analyze only what is clearly visible in the uploaded video.",
+        "Prefer uncertainty over overclaiming.",
+        "Do not guess hidden details, off-camera actions, intent, score, impact, or unseen causes.",
+        "Do not assume there is a partner, target, or exchange unless it is clearly visible.",
+        "Do not name an exact punch type unless the visual evidence is clear enough to support it.",
+        "If angle, framing, motion blur, speed, or occlusion limit confidence, say that explicitly.",
+        "Keep the result concise, beginner-friendly, and useful for review.",
+    ]
+
+    if template_key == "boxing_structured":
+        system_instruction_lines.extend(
+            [
+                "This template is the default structured boxing review.",
+                "Return stable, compact, evidence-first output that is easy to parse.",
+                "If a conclusion is uncertain, put that uncertainty in notes instead of guessing.",
+            ]
+        )
+    elif template_key == "observable_only":
+        system_instruction_lines.extend(
+            [
+                "This template is intentionally conservative.",
+                "Prefer direct observation over interpretation, and call out visibility limitations early.",
+            ]
+        )
+    elif template_key == "coach_summary":
+        system_instruction_lines.extend(
+            [
+                "This template should sound supportive and practical, but still remain evidence-based.",
+                "Do not become overly technical if simpler language is sufficient.",
+            ]
+        )
+
+    system_instruction = "\n".join(system_instruction_lines)
 
     if template_key == "boxing_structured":
         return TemplateExecutionPolicy(
@@ -75,7 +102,25 @@ def build_template_policy(prompt_template: PromptTemplate) -> TemplateExecutionP
             response_mime_type="application/json",
             response_json_schema=NORMALIZED_ANALYSIS_JSON_SCHEMA,
             system_instruction=system_instruction,
+            temperature=0.1,
+        )
+
+    if template_key == "observable_only":
+        return TemplateExecutionPolicy(
+            prefer_json_output=False,
+            response_mime_type=None,
+            response_json_schema=None,
+            system_instruction=system_instruction,
             temperature=0.2,
+        )
+
+    if template_key == "coach_summary":
+        return TemplateExecutionPolicy(
+            prefer_json_output=False,
+            response_mime_type=None,
+            response_json_schema=None,
+            system_instruction=system_instruction,
+            temperature=0.3,
         )
 
     return TemplateExecutionPolicy(
@@ -83,7 +128,7 @@ def build_template_policy(prompt_template: PromptTemplate) -> TemplateExecutionP
         response_mime_type=None,
         response_json_schema=None,
         system_instruction=system_instruction,
-        temperature=0.4,
+        temperature=0.3,
     )
 
 
@@ -112,18 +157,20 @@ def build_analysis_instruction(prompt_template: PromptTemplate) -> str:
         format_instruction = (
             "Return a concise JSON object with exactly these keys: "
             "summary, strengths, issues, next_steps, notes. "
-            "Use short strings and short arrays. Return empty arrays instead of guessing."
+            "Use short strings and short arrays. Return empty arrays instead of guessing. "
+            "Only include specific punch names when they are visually clear. "
+            "Use notes for visibility caveats and uncertainty."
         )
     elif template_key == "coach_summary":
         format_instruction = (
             "Return five labeled sections exactly named Summary, Strengths, Issues, "
-            "Next Steps, and Notes. Keep the summary short and make the coaching advice practical."
+            "Next Steps, and Notes. Keep the summary short, practical, supportive, and grounded in visible evidence."
         )
     else:
         format_instruction = (
             "Return the result in five labeled sections exactly named: "
             "Summary, Strengths, Issues, Next Steps, and Notes. "
-            "Use bullets where useful, and leave uncertain observations in Notes."
+            "Use bullets where useful, and place uncertainty or visibility limits in Notes."
         )
 
     return "\n\n".join(

@@ -68,6 +68,10 @@ def normalize_items(value: object) -> list[str]:
     normalized: list[str] = []
     for item in items:
         cleaned = re.sub(r"^[-*0-9.)\s]+", "", str(item).strip())
+        cleaned = re.sub(r"^\*{1,2}\s*", "", cleaned)
+        cleaned = re.sub(r"\s*\*{1,2}$", "", cleaned)
+        cleaned = re.sub(r"\*\*(.*?)\*\*", r"\1", cleaned)
+        cleaned = re.sub(r"\*(.*?)\*", r"\1", cleaned)
         if cleaned:
             normalized.append(cleaned)
     return normalized
@@ -152,6 +156,31 @@ def try_parse_json(raw_response: str) -> ParseOutcome | None:
     )
 
 
+def match_section_heading(line: str) -> tuple[str, str] | None:
+    normalized_line = re.sub(r"^[#>\s]+", "", line.strip())
+
+    inline_match = re.match(
+        r"^\*{0,2}\s*(summary|strength|strengths|issue|issues|next step|next steps|next_steps|next-steps|note|notes)\s*\*{0,2}\s*:\s*(.*)$",
+        normalized_line,
+        re.IGNORECASE,
+    )
+    if inline_match:
+        return (
+            SECTION_ALIASES[inline_match.group(1).lower()],
+            inline_match.group(2).strip(),
+        )
+
+    heading_only_match = re.match(
+        r"^\*{0,2}\s*(summary|strength|strengths|issue|issues|next step|next steps|next_steps|next-steps|note|notes)\s*\*{0,2}\s*$",
+        normalized_line,
+        re.IGNORECASE,
+    )
+    if heading_only_match:
+        return (SECTION_ALIASES[heading_only_match.group(1).lower()], "")
+
+    return None
+
+
 def parse_labeled_sections(raw_response: str) -> ParseOutcome | None:
     parsed = default_parsed_response()
     sections: dict[str, list[str]] = {key: [] for key in parsed}
@@ -162,14 +191,9 @@ def parse_labeled_sections(raw_response: str) -> ParseOutcome | None:
         if not line:
             continue
 
-        match = re.match(
-            r"^(summary|strength|strengths|issue|issues|next step|next steps|next_steps|next-steps|note|notes)\s*:\s*(.*)$",
-            line,
-            re.IGNORECASE,
-        )
-        if match:
-            current_section = SECTION_ALIASES[match.group(1).lower()]
-            trailing_text = match.group(2).strip()
+        section_heading = match_section_heading(line)
+        if section_heading:
+            current_section, trailing_text = section_heading
             if trailing_text:
                 sections[current_section].append(trailing_text)
             continue

@@ -128,9 +128,9 @@ Starter prompt templates are stored as local JSON files:
 
 Current intent for each template:
 
-- `observable_only`: strict visible-only notes with minimal interpretation
-- `boxing_structured`: best current option for stable structured boxing feedback and parsing
-- `coach_summary`: concise coaching-style narrative with clearly separated sections
+- `observable_only`: the most conservative template for strict visible-only notes with minimal interpretation
+- `boxing_structured`: the default test template and best current option for stable structured boxing feedback and parsing
+- `coach_summary`: concise coaching-style narrative with simpler, supportive user-facing wording
 
 To sync them into PostgreSQL:
 
@@ -217,6 +217,7 @@ alembic upgrade head
 
 - Analysis execution is synchronous inside the request. There are no queues, retries, polling endpoints, or background jobs.
 - `boxing_structured` is the most reliable template for consistent normalized output because it prefers JSON-shaped Gemini output.
+- All templates are now explicitly instructed to avoid overclaiming, avoid hidden-detail guesses, avoid exact punch labels unless visually clear, and call out visibility limits directly.
 - `observable_only` and `coach_summary` still rely more heavily on labeled-section parsing and heuristics.
 - `parsed_response` is derived with a lightweight strategy in this order: JSON parse, labeled-section parse, then text heuristics.
 - The parsing layer remains intentionally best-effort. It improves consistency, but it is not a guaranteed structured-output system.

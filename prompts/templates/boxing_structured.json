@@ -1,8 +1,8 @@
 {
   "key": "boxing_structured",
   "title": "Boxing Structured",
-  "description": "Best current option for stable structured boxing feedback and parsing.",
-  "prompt_body": "Analyze the boxing video for a beginner-friendly technical review. Use only clearly visible evidence from the clip. Do not guess hidden details, unseen punches, exact impact, score, intent, or off-camera actions. Focus on visible stance, guard position, balance, movement, punch selection, defense, distance, rhythm, and obvious openings. Return concise findings with a short summary, then clear strengths, clear issues, practical next steps, and uncertainty notes. If evidence is weak or ambiguous, place that in notes instead of guessing.",
+  "description": "Default template for reliable structured beginner boxing feedback and the best current parsing target.",
+  "prompt_body": "Analyze the boxing video for a beginner-friendly technical review using only clearly visible evidence. Prioritize observable stance, guard, balance, movement, distance, rhythm, punch selection, and defense. Do not guess hidden details, unseen punches, exact impact, scoring, intent, or off-camera actions. Only classify a punch type when it is visually clear; otherwise describe it more generally as a punch, hand action, or strike attempt. Only mention a partner, target, or exchange if it is clearly visible. Do not make technique judgments from obscured, incomplete, or ambiguous views. If the camera angle, framing, speed, blur, or visibility makes a conclusion uncertain, say that explicitly instead of guessing. Return concise structured feedback for a beginner product with summary, strengths, issues, next_steps, and notes.",
   "output_type": "json",
   "is_active": true
 }

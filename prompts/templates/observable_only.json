@@ -1,8 +1,8 @@
 {
   "key": "observable_only",
   "title": "Observable Only",
-  "description": "Best for strict visible-only notes with minimal interpretation.",
-  "prompt_body": "Review the boxing video and describe only what is clearly visible. Focus on stance, guard, movement, punches, defensive reactions, balance, and spacing only when those details can be seen directly. Do not guess intent, scoring, impact, fatigue, emotion, or off-camera events. Keep the output concise and separate clear strengths, clear issues, suggested next steps, and uncertainty notes.",
+  "description": "Most conservative template. Use when you want strict visible-only notes with minimal interpretation.",
+  "prompt_body": "Review the boxing video and report only what is clearly visible. Focus on directly observable stance, guard, footwork, punches, defensive reactions, balance, spacing, and camera limitations. Do not guess hidden details, exact punch types, partner presence, impact, scoring, fatigue, intent, or off-camera actions unless they are visually clear. If the angle, framing, speed, blur, or occlusion makes something uncertain, say that explicitly in notes instead of guessing. Keep the response concise, evidence-first, and minimally interpretive. Separate the result into summary, strengths, issues, next_steps, and notes.",
   "output_type": "text",
   "is_active": true
 }

@@ -1,8 +1,8 @@
 {
   "key": "coach_summary",
   "title": "Coach Summary",
-  "description": "Best for concise narrative coaching feedback grounded in visible actions.",
-  "prompt_body": "Write a short coach-style review of the boxing clip using only visible evidence. Keep the tone practical and beginner-friendly. Highlight the clearest strengths, the most obvious issues, and the next corrections that would help most. Do not guess hidden details or overstate uncertain observations. Separate the response into summary, strengths, issues, next steps, and notes.",
+  "description": "Supportive short coaching feedback grounded in visible evidence, without getting overly technical.",
+  "prompt_body": "Write a short, supportive coach-style review of the boxing clip using only what is clearly visible. Keep the tone practical, calm, and beginner-friendly. Highlight the clearest strengths, the most obvious issues, and the simplest next corrections that would help most. Do not guess hidden details, exact punch types, or unseen exchanges unless they are visually clear. If visibility is limited, say so directly instead of overstating the conclusion. Separate the response into summary, strengths, issues, next_steps, and notes.",
   "output_type": "text",
   "is_active": true
 }
