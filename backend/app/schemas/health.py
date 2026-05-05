@@ -9,5 +9,6 @@ class HealthResponse(BaseModel):
     database: str
     prompts_dir: str
     upload_dir: str
+    gemini_configured: bool
+    gemini_model: str
     error: str | None = None
-

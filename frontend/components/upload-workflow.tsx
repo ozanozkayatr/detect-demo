@@ -29,6 +29,17 @@ type PromptTemplateSyncResult = {
   templates: PromptTemplate[];
 };
 
+type BackendHealth = {
+  status: string;
+  service: string;
+  database: string;
+  prompts_dir: string;
+  upload_dir: string;
+  gemini_configured: boolean;
+  gemini_model: string;
+  error?: string | null;
+};
+
 type AnalysisRecord = {
   id: number;
   video_id: number;
@@ -39,6 +50,7 @@ type AnalysisRecord = {
   model_name: string | null;
   confidence: number | null;
   created_at: string;
+  updated_at: string;
   video: VideoRecord;
   prompt_template: {
     id: number;
@@ -69,11 +81,25 @@ function formatFileSize(sizeBytes: number): string {
 async function parseError(response: Response): Promise<string> {
   try {
     const payload = (await response.json()) as
-      | { detail?: string | { msg?: string }[] }
+      | {
+          detail?:
+            | string
+            | { msg?: string }[]
+            | { code?: string; message?: string; analysis_id?: number | null };
+        }
       | undefined;
 
     if (typeof payload?.detail === "string") {
       return payload.detail;
+    }
+
+    if (
+      payload?.detail &&
+      typeof payload.detail === "object" &&
+      !Array.isArray(payload.detail) &&
+      payload.detail.message
+    ) {
+      return payload.detail.message;
     }
 
     if (Array.isArray(payload?.detail)) {
@@ -108,6 +134,7 @@ export function UploadWorkflow() {
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplate[]>([]);
   const [selectedPromptTemplateId, setSelectedPromptTemplateId] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
+  const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null);
 
   const [isSyncingTemplates, setIsSyncingTemplates] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -118,6 +145,7 @@ export function UploadWorkflow() {
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [healthError, setHealthError] = useState<string | null>(null);
 
   const selectedPromptTemplate = useMemo(
     () =>
@@ -166,8 +194,25 @@ export function UploadWorkflow() {
     }
   }
 
+  async function loadBackendHealth() {
+    setHealthError(null);
+
+    try {
+      const result = await apiRequest<BackendHealth>("/health");
+      setBackendHealth(result);
+    } catch (error) {
+      setBackendHealth(null);
+      setHealthError(
+        error instanceof Error
+          ? error.message
+          : "Backend health could not be loaded.",
+      );
+    }
+  }
+
   useEffect(() => {
     void syncTemplates();
+    void loadBackendHealth();
   }, []);
 
   async function handleUploadSubmit(event: FormEvent<HTMLFormElement>) {
@@ -218,6 +263,7 @@ export function UploadWorkflow() {
 
     setIsCreatingAnalysis(true);
     setAnalysisError(null);
+    setAnalysis(null);
 
     try {
       const createdAnalysis = await apiRequest<AnalysisRecord>("/analyses", {
@@ -232,14 +278,16 @@ export function UploadWorkflow() {
       });
 
       setAnalysis(createdAnalysis);
+      setUploadMessage(null);
     } catch (error) {
       setAnalysisError(
         error instanceof Error
           ? error.message
-          : "Placeholder analysis could not be created.",
+          : "Gemini analysis could not be created.",
       );
     } finally {
       setIsCreatingAnalysis(false);
+      void loadBackendHealth();
     }
   }
 
@@ -399,11 +447,27 @@ export function UploadWorkflow() {
 
       <section className="panel">
         <p className="kicker">Step 3</p>
-        <h2>Create a placeholder analysis</h2>
+        <h2>Run Gemini analysis</h2>
         <p>
-          This creates a stub analysis record for the uploaded video and
-          selected template. No Gemini call happens in this step.
+          This runs a single Gemini analysis against the uploaded video using
+          the selected prompt template from the database.
         </p>
+
+        {backendHealth && !backendHealth.gemini_configured ? (
+          <div className="warning-card">
+            <p className="kicker">Gemini configuration</p>
+            <p>
+              Gemini is not configured in the backend yet. Set
+              <code> DETECT_DEMO_GEMINI_API_KEY</code> in
+              <code> backend/.env</code>, then restart the backend.
+            </p>
+            <p className="muted-label">
+              Configured model: <code>{backendHealth.gemini_model}</code>
+            </p>
+          </div>
+        ) : null}
+
+        {healthError ? <p className="feedback-error">{healthError}</p> : null}
 
         <div className="button-row">
           <button
@@ -418,7 +482,7 @@ export function UploadWorkflow() {
               isCreatingAnalysis
             }
           >
-            {isCreatingAnalysis ? "Creating..." : "Create placeholder analysis"}
+            {isCreatingAnalysis ? "Running Gemini..." : "Run Gemini analysis"}
           </button>
         </div>
 
@@ -426,7 +490,7 @@ export function UploadWorkflow() {
 
         {analysis ? (
           <div className="result-card">
-            <p className="kicker">Created analysis</p>
+            <p className="kicker">Analysis result</p>
             <dl className="data-list">
               <div>
                 <dt>Analysis ID</dt>
@@ -439,6 +503,10 @@ export function UploadWorkflow() {
               <div>
                 <dt>Model name</dt>
                 <dd>{analysis.model_name ?? "null"}</dd>
+              </div>
+              <div>
+                <dt>Updated at</dt>
+                <dd>{analysis.updated_at}</dd>
               </div>
               <div>
                 <dt>Prompt template</dt>
@@ -468,10 +536,17 @@ export function UploadWorkflow() {
                 {JSON.stringify(analysis.parsed_response, null, 2)}
               </pre>
             </div>
+
+            <div className="result-block">
+              <h3>Raw response</h3>
+              <pre className="code-block">
+                {analysis.raw_response ?? "No raw text response was stored."}
+              </pre>
+            </div>
           </div>
         ) : (
           <p className="muted-label">
-            No analysis has been created yet for the current upload.
+            No Gemini analysis has been created yet for the current upload.
           </p>
         )}
       </section>

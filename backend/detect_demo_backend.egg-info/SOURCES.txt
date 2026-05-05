@@ -2,6 +2,7 @@ pyproject.toml
 app/__init__.py
 app/main.py
 app/api/__init__.py
+app/api/errors.py
 app/api/router.py
 app/api/routes/__init__.py
 app/api/routes/analyses.py
@@ -19,10 +20,13 @@ app/models/prompt_template.py
 app/models/video.py
 app/schemas/__init__.py
 app/schemas/analysis.py
+app/schemas/api_error.py
 app/schemas/health.py
 app/schemas/prompt_template.py
 app/schemas/video.py
 app/services/__init__.py
+app/services/analysis_parser.py
+app/services/gemini_service.py
 app/services/prompt_loader.py
 app/services/upload_service.py
 detect_demo_backend.egg-info/PKG-INFO

@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     ]
     upload_dir: Path = BACKEND_DIR / "data" / "uploads"
     prompts_dir: Path = REPO_ROOT / "prompts"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",
@@ -49,6 +51,10 @@ class Settings(BaseSettings):
     def ensure_local_directories(self) -> None:
         self.upload_dir.mkdir(parents=True, exist_ok=True)
         self.prompts_dir.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def gemini_configured(self) -> bool:
+        return bool(self.gemini_api_key and self.gemini_model)
 
 
 @lru_cache

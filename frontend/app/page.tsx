@@ -43,7 +43,7 @@ export default function HomePage() {
             storage. The UI stays intentionally lightweight until the workflow is
             finalized.
           </p>
-          <Link href="/upload">Open upload placeholder</Link>
+          <Link href="/upload">Open upload workflow</Link>
         </article>
 
         <article className="grid-card">
@@ -59,4 +59,3 @@ export default function HomePage() {
     </main>
   );
 }
-

@@ -1,14 +1,21 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.api.errors import api_error
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.analysis import Analysis
 from app.models.prompt_template import PromptTemplate
 from app.models.video import Video
 from app.schemas.analysis import AnalysisCreate, AnalysisRead
+from app.services.gemini_service import (
+    GeminiConfigurationError,
+    GeminiExecutionError,
+    run_gemini_video_analysis,
+)
 
 router = APIRouter()
 
@@ -35,37 +42,77 @@ def create_analysis(
     prompt_template = db.get(PromptTemplate, payload.prompt_template_id)
 
     if video is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video not found.",
+        raise api_error(
+            status_code=404,
+            code="video_not_found",
+            message="Video not found.",
         )
 
     if prompt_template is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Prompt template not found.",
+        raise api_error(
+            status_code=404,
+            code="prompt_template_not_found",
+            message="Prompt template not found.",
         )
-
-    parsed_response = {
-        "mode": "stubbed",
-        "message": "Gemini integration is not enabled yet.",
-        "video_id": video.id,
-        "prompt_template_key": prompt_template.key,
-        "prompt_template_title": prompt_template.title,
-        "next_step": "Replace this placeholder with a real model call.",
-    }
 
     analysis = Analysis(
         video_id=payload.video_id,
         prompt_template_id=payload.prompt_template_id,
-        status="stubbed",
+        status="running",
         raw_response=None,
-        parsed_response=parsed_response,
-        model_name="not_run",
+        parsed_response=None,
+        model_name=settings.gemini_model if settings.gemini_configured else None,
         confidence=None,
     )
     db.add(analysis)
     db.commit()
+    db.refresh(analysis)
+
+    try:
+        result = run_gemini_video_analysis(
+            video=video,
+            prompt_template=prompt_template,
+        )
+        analysis.status = "completed"
+        analysis.raw_response = result.raw_response
+        analysis.parsed_response = result.parsed_response
+        analysis.model_name = result.model_name
+        analysis.confidence = result.confidence
+        db.commit()
+    except GeminiConfigurationError as exc:
+        analysis.status = "failed"
+        analysis.raw_response = None
+        analysis.parsed_response = {
+            "summary": "",
+            "strengths": [],
+            "issues": [],
+            "next_steps": [],
+            "notes": [str(exc)],
+        }
+        db.commit()
+        raise api_error(
+            status_code=503,
+            code="gemini_not_configured",
+            message=str(exc),
+            analysis_id=analysis.id,
+        )
+    except GeminiExecutionError as exc:
+        analysis.status = "failed"
+        analysis.raw_response = None
+        analysis.parsed_response = {
+            "summary": "",
+            "strengths": [],
+            "issues": [],
+            "next_steps": [],
+            "notes": [str(exc)],
+        }
+        db.commit()
+        raise api_error(
+            status_code=502,
+            code="gemini_request_failed",
+            message=str(exc),
+            analysis_id=analysis.id,
+        )
 
     statement = analysis_query().where(Analysis.id == analysis.id)
     return db.scalars(statement).one()

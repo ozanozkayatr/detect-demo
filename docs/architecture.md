@@ -10,8 +10,8 @@
 
 1. `POST /api/v1/videos/upload` stores the uploaded file under `backend/data/uploads/`.
 2. The backend saves video metadata into PostgreSQL.
-3. Prompt template files can later be loaded from `prompts/templates/`.
-4. Analysis creation is currently a local placeholder that records intent and status in the database.
+3. `POST /api/v1/prompt-templates/sync` upserts prompt template seed files from `prompts/templates/`.
+4. `POST /api/v1/analyses` creates an analysis row, uploads the local video file to Gemini, runs the selected prompt template, and stores the result.
 
 ## Why This Is Kept Minimal
 
@@ -19,7 +19,6 @@
 - No auth
 - No background workers
 - No cloud storage
-- No Gemini integration yet
+- No orchestration layer beyond a single synchronous Gemini call
 
 The goal is a stable local foundation that is easy to extend in small steps.
-

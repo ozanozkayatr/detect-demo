@@ -26,5 +26,6 @@ class AnalysisRead(BaseModel):
     model_name: str | None
     confidence: float | None
     created_at: datetime
+    updated_at: datetime
     video: VideoRead
     prompt_template: PromptTemplateSummary

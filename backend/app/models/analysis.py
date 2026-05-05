@@ -29,7 +29,11 @@ class Analysis(Base):
         default=utcnow,
         index=True,
     )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utcnow,
+        onupdate=utcnow,
+    )
 
     video = relationship("Video", back_populates="analyses")
     prompt_template = relationship("PromptTemplate", back_populates="analyses")
-

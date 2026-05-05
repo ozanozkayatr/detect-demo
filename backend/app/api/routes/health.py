@@ -28,6 +28,7 @@ def healthcheck() -> HealthResponse:
         database=database_status,
         prompts_dir=str(settings.prompts_dir),
         upload_dir=str(settings.upload_dir),
+        gemini_configured=settings.gemini_configured,
+        gemini_model=settings.gemini_model,
         error=error,
     )
-

@@ -8,6 +8,8 @@ type HealthPayload = {
   database: string;
   prompts_dir: string;
   upload_dir: string;
+  gemini_configured: boolean;
+  gemini_model: string;
   error?: string | null;
 };
 
@@ -100,9 +102,17 @@ export function BackendStatusCard() {
           <li>
             Prompts dir: <code>{data?.prompts_dir ?? "n/a"}</code>
           </li>
+          <li>
+            Gemini:{" "}
+            <strong>
+              {data?.gemini_configured ? "configured" : "not configured"}
+            </strong>
+          </li>
+          <li>
+            Gemini model: <code>{data?.gemini_model ?? "n/a"}</code>
+          </li>
         </ul>
       )}
     </section>
   );
 }
-

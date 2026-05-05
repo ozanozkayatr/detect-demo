@@ -328,6 +328,14 @@ select {
   background: rgba(255, 255, 255, 0.58);
 }
 
+.warning-card {
+  margin: 16px 0 0;
+  padding: 18px;
+  border: 1px solid rgba(141, 95, 23, 0.24);
+  border-radius: 20px;
+  background: rgba(252, 244, 222, 0.85);
+}
+
 .data-list {
   margin: 0;
   display: grid;
