@@ -1,0 +1,7 @@
+alembic<2.0.0,>=1.13.2
+fastapi<1.0.0,>=0.115.0
+psycopg[binary]<4.0.0,>=3.2.1
+pydantic-settings<3.0.0,>=2.4.0
+python-multipart<1.0.0,>=0.0.9
+sqlalchemy<3.0.0,>=2.0.34
+uvicorn[standard]<1.0.0,>=0.30.6
