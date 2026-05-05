@@ -9,6 +9,7 @@ type VideoRecord = {
   mime_type: string;
   size_bytes: number;
   created_at: string;
+  file_url: string;
 };
 
 type PromptTemplate = {
@@ -87,6 +88,19 @@ function formatFileSize(sizeBytes: number): string {
   }
 
   return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDateTime(value: string): string {
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return value;
+  }
+
+  return parsedDate.toLocaleString();
+}
+
+function buildApiAssetUrl(path: string): string {
+  return new URL(path, `${apiBaseUrl}/`).toString();
 }
 
 function normalizeStringArray(value: unknown): string[] {
@@ -200,6 +214,15 @@ export function UploadWorkflow() {
   const normalizedAnalysisResponse = useMemo(
     () => normalizeParsedResponse(analysis?.parsed_response),
     [analysis?.parsed_response],
+  );
+  const reviewVideo = analysis?.video ?? uploadedVideo;
+  const uploadedVideoUrl = useMemo(
+    () => (uploadedVideo ? buildApiAssetUrl(uploadedVideo.file_url) : null),
+    [uploadedVideo],
+  );
+  const reviewVideoUrl = useMemo(
+    () => (reviewVideo ? buildApiAssetUrl(reviewVideo.file_url) : null),
+    [reviewVideo],
   );
 
   async function syncTemplates() {
@@ -421,7 +444,24 @@ export function UploadWorkflow() {
                 <dt>Stored path</dt>
                 <dd className="break-text">{uploadedVideo.stored_path}</dd>
               </div>
+              <div>
+                <dt>Playback URL</dt>
+                <dd className="break-text">{uploadedVideo.file_url}</dd>
+              </div>
             </dl>
+            {!analysis && uploadedVideoUrl ? (
+              <div className="result-block">
+                <h3>Uploaded video preview</h3>
+                <video
+                  className="video-player"
+                  controls
+                  preload="metadata"
+                  src={uploadedVideoUrl}
+                >
+                  Your browser could not play this uploaded video.
+                </video>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </section>
@@ -600,6 +640,44 @@ export function UploadWorkflow() {
                 <dd>{formatFileSize(analysis.video.size_bytes)}</dd>
               </div>
             </dl>
+
+            {reviewVideo && reviewVideoUrl ? (
+              <div className="result-block">
+                <h3>Uploaded video</h3>
+                <div className="video-review-card">
+                  <video
+                    className="video-player"
+                    controls
+                    preload="metadata"
+                    src={reviewVideoUrl}
+                  >
+                    Your browser could not play this uploaded video.
+                  </video>
+                  <dl className="data-list video-meta-list">
+                    <div>
+                      <dt>Filename</dt>
+                      <dd>{reviewVideo.original_filename}</dd>
+                    </div>
+                    <div>
+                      <dt>MIME type</dt>
+                      <dd>{reviewVideo.mime_type}</dd>
+                    </div>
+                    <div>
+                      <dt>Size</dt>
+                      <dd>{formatFileSize(reviewVideo.size_bytes)}</dd>
+                    </div>
+                    <div>
+                      <dt>Created at</dt>
+                      <dd>{formatDateTime(reviewVideo.created_at)}</dd>
+                    </div>
+                    <div>
+                      <dt>Playback URL</dt>
+                      <dd className="break-text">{reviewVideo.file_url}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            ) : null}
 
             <div className="result-block">
               <h3>Normalized parsed response</h3>
