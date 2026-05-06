@@ -224,6 +224,9 @@ export function UploadWorkflow() {
     () => (reviewVideo ? buildApiAssetUrl(reviewVideo.file_url) : null),
     [reviewVideo],
   );
+  const isAnalysisReady =
+    Boolean(uploadedVideo) && Boolean(selectedPromptTemplateId);
+  const hasAnalysisResult = Boolean(analysis);
 
   async function syncTemplates() {
     setIsSyncingTemplates(true);
@@ -363,196 +366,383 @@ export function UploadWorkflow() {
 
   return (
     <div className="flow-stack">
-      <section className="panel">
-        <p className="kicker">Step 1</p>
-        <h2>Upload a local video</h2>
-        <p>
-          Choose a single local video file and send it to the backend. The file
-          is stored under <code>backend/data/uploads/</code> and a video record
-          is written to PostgreSQL.
-        </p>
-
-        <form className="form-stack" onSubmit={handleUploadSubmit}>
-          <label className="field">
-            <span>Video file</span>
-            <input
-              className="input-control"
-              type="file"
-              accept="video/*"
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null;
-                setSelectedFile(file);
-                setUploadedVideo(null);
-                setAnalysis(null);
-                setAnalysisError(null);
-                setUploadError(null);
-                setUploadMessage(null);
-              }}
-            />
-          </label>
-
-          {selectedFile ? (
-            <dl className="data-list">
-              <div>
-                <dt>Filename</dt>
-                <dd>{selectedFile.name}</dd>
-              </div>
-              <div>
-                <dt>Type</dt>
-                <dd>{selectedFile.type || "unknown"}</dd>
-              </div>
-              <div>
-                <dt>Size</dt>
-                <dd>{formatFileSize(selectedFile.size)}</dd>
-              </div>
-            </dl>
-          ) : (
-            <p className="muted-label">No file selected yet.</p>
-          )}
-
-          <div className="button-row">
-            <button className="button-primary" type="submit" disabled={isUploading}>
-              {isUploading ? "Uploading..." : "Upload video"}
-            </button>
+      <div className="workflow-overview">
+        <article
+          className={`overview-card ${uploadedVideo ? "overview-card-complete" : ""}`}
+        >
+          <span className="overview-index">1</span>
+          <div>
+            <h3>Upload</h3>
+            <p>
+              {uploadedVideo
+                ? `Video #${uploadedVideo.id} is ready`
+                : selectedFile
+                  ? "File selected and ready to upload"
+                  : "Choose a local clip to begin"}
+            </p>
           </div>
-        </form>
-
-        {uploadMessage ? <p className="feedback-success">{uploadMessage}</p> : null}
-        {uploadError ? <p className="feedback-error">{uploadError}</p> : null}
-
-        {uploadedVideo ? (
-          <div className="result-card">
-            <p className="kicker">Uploaded video</p>
-            <dl className="data-list">
-              <div>
-                <dt>Video ID</dt>
-                <dd>{uploadedVideo.id}</dd>
-              </div>
-              <div>
-                <dt>Stored filename</dt>
-                <dd>{uploadedVideo.original_filename}</dd>
-              </div>
-              <div>
-                <dt>MIME type</dt>
-                <dd>{uploadedVideo.mime_type}</dd>
-              </div>
-              <div>
-                <dt>Size</dt>
-                <dd>{formatFileSize(uploadedVideo.size_bytes)}</dd>
-              </div>
-              <div>
-                <dt>Stored path</dt>
-                <dd className="break-text">{uploadedVideo.stored_path}</dd>
-              </div>
-              <div>
-                <dt>Playback URL</dt>
-                <dd className="break-text">{uploadedVideo.file_url}</dd>
-              </div>
-            </dl>
-            {!analysis && uploadedVideoUrl ? (
-              <div className="result-block">
-                <h3>Uploaded video preview</h3>
-                <video
-                  className="video-player"
-                  controls
-                  preload="metadata"
-                  src={uploadedVideoUrl}
-                >
-                  Your browser could not play this uploaded video.
-                </video>
-              </div>
-            ) : null}
+        </article>
+        <article
+          className={`overview-card ${selectedPromptTemplate ? "overview-card-complete" : ""}`}
+        >
+          <span className="overview-index">2</span>
+          <div>
+            <h3>Template</h3>
+            <p>
+              {selectedPromptTemplate
+                ? `${selectedPromptTemplate.title} selected`
+                : isSyncingTemplates
+                  ? "Syncing local templates"
+                  : "Pick the analysis prompt"}
+            </p>
           </div>
-        ) : null}
-      </section>
+        </article>
+        <article
+          className={`overview-card ${hasAnalysisResult ? "overview-card-complete" : ""}`}
+        >
+          <span className="overview-index">3</span>
+          <div>
+            <h3>Review</h3>
+            <p>
+              {analysis
+                ? `Analysis #${analysis.id} is ready to inspect`
+                : isAnalysisReady
+                  ? "Run Gemini and review the output"
+                  : "Complete the first two steps"}
+            </p>
+          </div>
+        </article>
+      </div>
 
-      <section className="panel">
-        <p className="kicker">Step 2</p>
-        <h2>Select a prompt template</h2>
-        <p>
-          Prompt templates are synced from local files in
-          <code> prompts/templates/</code>. You can resync them at any time.
-        </p>
-
-        <div className="button-row">
-          <button
-            className="button-secondary"
-            type="button"
-            onClick={() => {
-              void syncTemplates();
-            }}
-            disabled={isSyncingTemplates}
-          >
-            {isSyncingTemplates ? "Syncing..." : "Sync local templates"}
-          </button>
+      <section className="panel workflow-panel">
+        <div className="step-header">
+          <div className="step-badge">1</div>
+          <div className="step-copy">
+            <p className="kicker">Step 1</p>
+            <h2>Upload a local video</h2>
+            <p className="section-lead">
+              Choose a clip, upload it once, and keep the stored local file
+              available for preview and analysis.
+            </p>
+          </div>
         </div>
 
-        {templateMessage ? <p className="feedback-success">{templateMessage}</p> : null}
-        {templateError ? <p className="feedback-error">{templateError}</p> : null}
+        <div className="step-grid step-grid-wide">
+          <div className="surface-card">
+            <form className="form-stack" onSubmit={handleUploadSubmit}>
+              <label className="field">
+                <span>Video file</span>
+                <input
+                  className="input-control"
+                  type="file"
+                  accept="video/*"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setSelectedFile(file);
+                    setUploadedVideo(null);
+                    setAnalysis(null);
+                    setAnalysisError(null);
+                    setUploadError(null);
+                    setUploadMessage(null);
+                  }}
+                />
+              </label>
 
-        <label className="field">
-          <span>Prompt template</span>
-          <select
-            className="input-control"
-            value={selectedPromptTemplateId}
-            onChange={(event) => setSelectedPromptTemplateId(event.target.value)}
-            disabled={promptTemplates.length === 0 || isSyncingTemplates}
-          >
-            <option value="">Select a prompt template</option>
-            {promptTemplates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.title} ({template.key})
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {selectedPromptTemplate ? (
-          <div className="result-card">
-            <p className="kicker">Selected template</p>
-            <dl className="data-list">
-              <div>
-                <dt>Key</dt>
-                <dd>{selectedPromptTemplate.key}</dd>
-              </div>
-              <div>
-                <dt>Title</dt>
-                <dd>{selectedPromptTemplate.title}</dd>
-              </div>
-              <div>
-                <dt>Output type</dt>
-                <dd>{selectedPromptTemplate.output_type}</dd>
-              </div>
-              <div>
-                <dt>Description</dt>
-                <dd>{selectedPromptTemplate.description ?? "No description"}</dd>
-              </div>
-              {selectedPromptTemplate.key === "boxing_structured" ? (
-                <div>
-                  <dt>Recommended use</dt>
-                  <dd>Best current template for stable structured boxing feedback.</dd>
+              {selectedFile ? (
+                <dl className="data-list data-list-grid compact-data-list">
+                  <div>
+                    <dt>Filename</dt>
+                    <dd>{selectedFile.name}</dd>
+                  </div>
+                  <div>
+                    <dt>Type</dt>
+                    <dd>{selectedFile.type || "unknown"}</dd>
+                  </div>
+                  <div>
+                    <dt>Size</dt>
+                    <dd>{formatFileSize(selectedFile.size)}</dd>
+                  </div>
+                </dl>
+              ) : (
+                <div className="empty-state-card">
+                  <p className="mini-label">No file selected</p>
+                  <p className="muted-label">
+                    Pick one local video to unlock upload, preview, and
+                    analysis.
+                  </p>
                 </div>
-              ) : null}
-            </dl>
+              )}
+
+              <div className="action-strip">
+                <div className="action-copy">
+                  <p className="mini-label">Storage target</p>
+                  <p>
+                    Uploaded files are stored in <code>backend/data/uploads/</code>.
+                  </p>
+                </div>
+                <div className="button-row">
+                  <button
+                    className="button-primary"
+                    type="submit"
+                    disabled={isUploading}
+                  >
+                    {isUploading ? "Uploading..." : "Upload video"}
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {uploadMessage ? (
+              <p className="feedback-success">{uploadMessage}</p>
+            ) : null}
+            {uploadError ? <p className="feedback-error">{uploadError}</p> : null}
           </div>
-        ) : null}
+
+          <div className="surface-card surface-card-subtle">
+            <div className="subsection-header">
+              <div>
+                <p className="mini-label">Stored preview</p>
+                <h3>{uploadedVideo ? "Uploaded video ready" : "Waiting for upload"}</h3>
+              </div>
+              {uploadedVideo ? (
+                <span className="meta-pill meta-pill-success">
+                  Video #{uploadedVideo.id}
+                </span>
+              ) : null}
+            </div>
+
+            {uploadedVideo ? (
+              <>
+                <dl className="data-list data-list-grid compact-data-list">
+                  <div>
+                    <dt>Filename</dt>
+                    <dd>{uploadedVideo.original_filename}</dd>
+                  </div>
+                  <div>
+                    <dt>MIME type</dt>
+                    <dd>{uploadedVideo.mime_type}</dd>
+                  </div>
+                  <div>
+                    <dt>Size</dt>
+                    <dd>{formatFileSize(uploadedVideo.size_bytes)}</dd>
+                  </div>
+                  <div>
+                    <dt>Created at</dt>
+                    <dd>{formatDateTime(uploadedVideo.created_at)}</dd>
+                  </div>
+                </dl>
+
+                {!analysis && uploadedVideoUrl ? (
+                  <div className="result-block">
+                    <h3>Uploaded video preview</h3>
+                    <video
+                      className="video-player"
+                      controls
+                      preload="metadata"
+                      src={uploadedVideoUrl}
+                    >
+                      Your browser could not play this uploaded video.
+                    </video>
+                  </div>
+                ) : null}
+
+                <dl className="data-list compact-link-list">
+                  <div>
+                    <dt>Stored path</dt>
+                    <dd className="break-text">{uploadedVideo.stored_path}</dd>
+                  </div>
+                  <div>
+                    <dt>Playback URL</dt>
+                    <dd className="break-text">{uploadedVideo.file_url}</dd>
+                  </div>
+                </dl>
+              </>
+            ) : (
+              <div className="empty-state-card">
+                <p className="mini-label">Preview area</p>
+                <p className="muted-label">
+                  The stored video record, local preview, and playback path
+                  appear here after upload.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
-      <section className="panel">
-        <p className="kicker">Step 3</p>
-        <h2>Run Gemini analysis</h2>
-        <p>
-          This runs a single Gemini analysis against the uploaded video using
-          the selected prompt template from the database.
-        </p>
+      <section className="panel workflow-panel">
+        <div className="step-header">
+          <div className="step-badge">2</div>
+          <div className="step-copy">
+            <p className="kicker">Step 2</p>
+            <h2>Select a prompt template</h2>
+            <p className="section-lead">
+              Sync local prompt files, pick the right template, and keep the
+              template details compact and easy to compare.
+            </p>
+          </div>
+        </div>
+
+        <div className="step-grid">
+          <div className="surface-card">
+            <div className="subsection-header">
+              <div>
+                <p className="mini-label">Prompt source</p>
+                <h3>Local template sync</h3>
+              </div>
+              <span className="meta-pill">
+                {promptTemplates.length} template
+                {promptTemplates.length === 1 ? "" : "s"}
+              </span>
+            </div>
+
+            <p className="muted-label panel-note">
+              Templates are loaded from <code>prompts/templates/</code> and can
+              be resynced at any time.
+            </p>
+
+            <div className="action-strip">
+              <label className="field">
+                <span>Prompt template</span>
+                <select
+                  className="input-control"
+                  value={selectedPromptTemplateId}
+                  onChange={(event) => setSelectedPromptTemplateId(event.target.value)}
+                  disabled={promptTemplates.length === 0 || isSyncingTemplates}
+                >
+                  <option value="">Select a prompt template</option>
+                  {promptTemplates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.title} ({template.key})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="button-row">
+                <button
+                  className="button-secondary"
+                  type="button"
+                  onClick={() => {
+                    void syncTemplates();
+                  }}
+                  disabled={isSyncingTemplates}
+                >
+                  {isSyncingTemplates ? "Syncing..." : "Sync local templates"}
+                </button>
+              </div>
+            </div>
+
+            {templateMessage ? (
+              <p className="feedback-success">{templateMessage}</p>
+            ) : null}
+            {templateError ? (
+              <p className="feedback-error">{templateError}</p>
+            ) : null}
+          </div>
+
+          <div className="surface-card surface-card-subtle">
+            {selectedPromptTemplate ? (
+              <div className="template-summary-card">
+                <div className="template-summary-head">
+                  <div>
+                    <p className="mini-label">Selected template</p>
+                    <h3>{selectedPromptTemplate.title}</h3>
+                  </div>
+                  <span className="template-key-pill">
+                    {selectedPromptTemplate.key}
+                  </span>
+                </div>
+
+                <p className="template-description">
+                  {selectedPromptTemplate.description ?? "No description"}
+                </p>
+
+                <div className="meta-pill-row">
+                  <span className="meta-pill">
+                    {selectedPromptTemplate.output_type} output
+                  </span>
+                  <span className="meta-pill">
+                    {selectedPromptTemplate.is_active ? "active" : "inactive"}
+                  </span>
+                  {selectedPromptTemplate.key === "boxing_structured" ? (
+                    <span className="meta-pill meta-pill-accent">
+                      Default structured test template
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <div className="empty-state-card">
+                <p className="mini-label">No template selected</p>
+                <p className="muted-label">
+                  Choose one template to define how Gemini should review the
+                  uploaded video.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="panel workflow-panel">
+        <div className="step-header">
+          <div className="step-badge">3</div>
+          <div className="step-copy">
+            <p className="kicker">Step 3</p>
+            <h2>Run Gemini analysis</h2>
+            <p className="section-lead">
+              Execute the selected template on the uploaded video, then review
+              the normalized and raw output in one place.
+            </p>
+          </div>
+        </div>
+
+        <div className="surface-card action-surface">
+          <div className="action-surface-copy">
+            <p className="mini-label">Execution readiness</p>
+            <h3>Run the current local demo flow</h3>
+            <div className="meta-pill-row">
+              <span
+                className={`meta-pill ${uploadedVideo ? "meta-pill-success" : ""}`}
+              >
+                {uploadedVideo ? "Video ready" : "Upload required"}
+              </span>
+              <span
+                className={`meta-pill ${selectedPromptTemplate ? "meta-pill-success" : ""}`}
+              >
+                {selectedPromptTemplate ? "Template selected" : "Template required"}
+              </span>
+              <span
+                className={`meta-pill ${backendHealth?.gemini_configured ? "meta-pill-success" : ""}`}
+              >
+                {backendHealth?.gemini_configured
+                  ? "Gemini configured"
+                  : "Gemini not configured"}
+              </span>
+            </div>
+          </div>
+          <div className="button-row">
+            <button
+              className="button-primary"
+              type="button"
+              onClick={() => {
+                void handleCreateAnalysis();
+              }}
+              disabled={!isAnalysisReady || isCreatingAnalysis}
+            >
+              {isCreatingAnalysis ? "Running Gemini..." : "Run Gemini analysis"}
+            </button>
+          </div>
+        </div>
 
         {backendHealth && !backendHealth.gemini_configured ? (
           <div className="warning-card">
             <p className="kicker">Gemini configuration</p>
             <p>
               Gemini is not configured in the backend yet. Set
-              <code> DETECT_DEMO_GEMINI_API_KEY</code> in
-              <code> backend/.env</code>, then restart the backend.
+              <code> DETECT_DEMO_GEMINI_API_KEY</code> in <code>backend/.env</code>,
+              then restart the backend.
             </p>
             <p className="muted-label">
               Configured model: <code>{backendHealth.gemini_model}</code>
@@ -561,37 +751,27 @@ export function UploadWorkflow() {
         ) : null}
 
         {healthError ? <p className="feedback-error">{healthError}</p> : null}
-
-        <div className="button-row">
-          <button
-            className="button-primary"
-            type="button"
-            onClick={() => {
-              void handleCreateAnalysis();
-            }}
-            disabled={
-              !uploadedVideo ||
-              !selectedPromptTemplateId ||
-              isCreatingAnalysis
-            }
-          >
-            {isCreatingAnalysis ? "Running Gemini..." : "Run Gemini analysis"}
-          </button>
-        </div>
-
         {analysisError ? <p className="feedback-error">{analysisError}</p> : null}
 
         {analysis ? (
-          <div className="result-card">
-            <p className="kicker">Analysis result</p>
-            <dl className="data-list">
+          <div className="result-card result-card-strong">
+            <div className="result-card-head">
+              <div>
+                <p className="mini-label">Analysis result</p>
+                <h3>Stored Gemini review</h3>
+              </div>
+              <div className="meta-pill-row">
+                <span className="meta-pill meta-pill-accent">
+                  {analysis.status}
+                </span>
+                <span className="meta-pill">{analysis.prompt_template.key}</span>
+              </div>
+            </div>
+
+            <dl className="data-list data-list-grid compact-data-list">
               <div>
                 <dt>Analysis ID</dt>
                 <dd>{analysis.id}</dd>
-              </div>
-              <div>
-                <dt>Status</dt>
-                <dd>{analysis.status}</dd>
               </div>
               <div>
                 <dt>Model name</dt>
@@ -613,7 +793,7 @@ export function UploadWorkflow() {
               </div>
               <div>
                 <dt>Updated at</dt>
-                <dd>{analysis.updated_at}</dd>
+                <dd>{formatDateTime(analysis.updated_at)}</dd>
               </div>
               <div>
                 <dt>Prompt template</dt>
@@ -643,7 +823,12 @@ export function UploadWorkflow() {
 
             {reviewVideo && reviewVideoUrl ? (
               <div className="result-block">
-                <h3>Uploaded video</h3>
+                <div className="subsection-header">
+                  <div>
+                    <p className="mini-label">Recorded input</p>
+                    <h3>Uploaded video</h3>
+                  </div>
+                </div>
                 <div className="video-review-card">
                   <video
                     className="video-player"
@@ -653,7 +838,7 @@ export function UploadWorkflow() {
                   >
                     Your browser could not play this uploaded video.
                   </video>
-                  <dl className="data-list video-meta-list">
+                  <dl className="data-list video-meta-list data-list-grid compact-data-list">
                     <div>
                       <dt>Filename</dt>
                       <dd>{reviewVideo.original_filename}</dd>
@@ -680,7 +865,12 @@ export function UploadWorkflow() {
             ) : null}
 
             <div className="result-block">
-              <h3>Normalized parsed response</h3>
+              <div className="subsection-header">
+                <div>
+                  <p className="mini-label">Normalized review</p>
+                  <h3>Parsed response</h3>
+                </div>
+              </div>
               <div className="normalized-grid">
                 <section className="normalized-card normalized-card-wide">
                   <h4>Summary</h4>
@@ -740,16 +930,25 @@ export function UploadWorkflow() {
             </div>
 
             <div className="result-block">
-              <h3>Raw response</h3>
+              <div className="subsection-header">
+                <div>
+                  <p className="mini-label">Model output</p>
+                  <h3>Raw response</h3>
+                </div>
+              </div>
               <pre className="code-block">
                 {analysis.raw_response ?? "No raw text response was stored."}
               </pre>
             </div>
           </div>
         ) : (
-          <p className="muted-label">
-            No Gemini analysis has been created yet for the current upload.
-          </p>
+          <div className="empty-state-card">
+            <p className="mini-label">No analysis yet</p>
+            <p className="muted-label">
+              Upload a video and select a prompt template to generate the first
+              Gemini result for this page.
+            </p>
+          </div>
         )}
       </section>
     </div>
