@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type VideoRecord = {
   id: number;
@@ -88,15 +88,6 @@ function formatFileSize(sizeBytes: number): string {
   }
 
   return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDateTime(value: string): string {
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
-  return parsedDate.toLocaleString();
 }
 
 function buildApiAssetUrl(path: string): string {
@@ -193,43 +184,26 @@ export function UploadWorkflow() {
   const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
   const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null);
 
-  const [isSyncingTemplates, setIsSyncingTemplates] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isCreatingAnalysis, setIsCreatingAnalysis] = useState(false);
 
-  const [templateMessage, setTemplateMessage] = useState<string | null>(null);
   const [templateError, setTemplateError] = useState<string | null>(null);
-  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [healthError, setHealthError] = useState<string | null>(null);
 
-  const selectedPromptTemplate = useMemo(
-    () =>
-      promptTemplates.find(
-        (template) => String(template.id) === selectedPromptTemplateId,
-      ) ?? null,
-    [promptTemplates, selectedPromptTemplateId],
-  );
   const normalizedAnalysisResponse = useMemo(
     () => normalizeParsedResponse(analysis?.parsed_response),
     [analysis?.parsed_response],
   );
   const reviewVideo = analysis?.video ?? uploadedVideo;
-  const uploadedVideoUrl = useMemo(
-    () => (uploadedVideo ? buildApiAssetUrl(uploadedVideo.file_url) : null),
-    [uploadedVideo],
-  );
   const reviewVideoUrl = useMemo(
     () => (reviewVideo ? buildApiAssetUrl(reviewVideo.file_url) : null),
     [reviewVideo],
   );
   const isAnalysisReady =
     Boolean(uploadedVideo) && Boolean(selectedPromptTemplateId);
-  const hasAnalysisResult = Boolean(analysis);
 
   async function syncTemplates() {
-    setIsSyncingTemplates(true);
     setTemplateError(null);
 
     try {
@@ -253,33 +227,21 @@ export function UploadWorkflow() {
 
         return result.templates[0] ? String(result.templates[0].id) : "";
       });
-      setTemplateMessage(
-        `Synced ${result.synced_count} prompt template${result.synced_count === 1 ? "" : "s"} from local files.`,
-      );
     } catch (error) {
       setTemplateError(
         error instanceof Error
           ? error.message
           : "Prompt templates could not be synced.",
       );
-    } finally {
-      setIsSyncingTemplates(false);
     }
   }
 
   async function loadBackendHealth() {
-    setHealthError(null);
-
     try {
       const result = await apiRequest<BackendHealth>("/health");
       setBackendHealth(result);
     } catch (error) {
       setBackendHealth(null);
-      setHealthError(
-        error instanceof Error
-          ? error.message
-          : "Backend health could not be loaded.",
-      );
     }
   }
 
@@ -288,23 +250,16 @@ export function UploadWorkflow() {
     void loadBackendHealth();
   }, []);
 
-  async function handleUploadSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!selectedFile) {
-      setUploadError("Choose a video file before uploading.");
-      return;
-    }
-
+  async function uploadSelectedFile(file: File) {
     setIsUploading(true);
     setUploadError(null);
-    setUploadMessage(null);
+    setUploadedVideo(null);
     setAnalysis(null);
     setAnalysisError(null);
 
     try {
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      formData.append("file", file);
 
       const video = await apiRequest<VideoRecord>("/videos/upload", {
         method: "POST",
@@ -312,7 +267,6 @@ export function UploadWorkflow() {
       });
 
       setUploadedVideo(video);
-      setUploadMessage(`Uploaded video #${video.id} successfully.`);
     } catch (error) {
       setUploadedVideo(null);
       setUploadError(
@@ -351,7 +305,6 @@ export function UploadWorkflow() {
       });
 
       setAnalysis(createdAnalysis);
-      setUploadMessage(null);
     } catch (error) {
       setAnalysisError(
         error instanceof Error
@@ -365,366 +318,149 @@ export function UploadWorkflow() {
   }
 
   return (
-    <div className="flow-stack">
-      <div className="workflow-overview">
-        <article
-          className={`overview-card ${uploadedVideo ? "overview-card-complete" : ""}`}
-        >
-          <span className="overview-index">1</span>
-          <div>
-            <h3>Upload</h3>
-            <p>
-              {uploadedVideo
-                ? `Video #${uploadedVideo.id} is ready`
-                : selectedFile
-                  ? "File selected and ready to upload"
-                  : "Choose a local clip to begin"}
-            </p>
-          </div>
-        </article>
-        <article
-          className={`overview-card ${selectedPromptTemplate ? "overview-card-complete" : ""}`}
-        >
-          <span className="overview-index">2</span>
-          <div>
-            <h3>Template</h3>
-            <p>
-              {selectedPromptTemplate
-                ? `${selectedPromptTemplate.title} selected`
-                : isSyncingTemplates
-                  ? "Syncing local templates"
-                  : "Pick the analysis prompt"}
-            </p>
-          </div>
-        </article>
-        <article
-          className={`overview-card ${hasAnalysisResult ? "overview-card-complete" : ""}`}
-        >
-          <span className="overview-index">3</span>
-          <div>
-            <h3>Review</h3>
-            <p>
-              {analysis
-                ? `Analysis #${analysis.id} is ready to inspect`
-                : isAnalysisReady
-                  ? "Run Gemini and review the output"
-                  : "Complete the first two steps"}
-            </p>
-          </div>
-        </article>
-      </div>
-
-      <section className="panel workflow-panel">
-        <div className="step-header">
-          <div className="step-badge">1</div>
-          <div className="step-copy">
-            <p className="kicker">Step 1</p>
-            <h2>Upload a local video</h2>
-            <p className="section-lead">
-              Choose a clip, upload it once, and keep the stored local file
-              available for preview and analysis.
-            </p>
+    <div className="showcase-stack">
+      <section className="demo-hero">
+        <div className="demo-hero-copy">
+          <span className="eyebrow">Local Gemini demo</span>
+          <h1>Upload a clip. Run boxing analysis. Review the result.</h1>
+          <div className="hero-flow">
+            <div className="hero-flow-step">
+              <span>01</span>
+              <strong>Select clip</strong>
+            </div>
+            <div className="hero-flow-step">
+              <span>02</span>
+              <strong>Select prompt</strong>
+            </div>
+            <div className="hero-flow-step">
+              <span>03</span>
+              <strong>Inspect output</strong>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div className="step-grid step-grid-wide">
-          <div className="surface-card">
-            <form className="form-stack" onSubmit={handleUploadSubmit}>
-              <label className="field">
-                <span>Video file</span>
-                <input
-                  className="input-control"
-                  type="file"
-                  accept="video/*"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null;
-                    setSelectedFile(file);
-                    setUploadedVideo(null);
-                    setAnalysis(null);
-                    setAnalysisError(null);
-                    setUploadError(null);
-                    setUploadMessage(null);
-                  }}
-                />
-              </label>
+      <section className="workspace-stage">
+        <div className="workspace-grid">
+          <section className="workspace-card workspace-card-primary">
+            <div className="workspace-card-head">
+              <div>
+                <p className="mini-label">Step 1</p>
+                <h2>Choose a clip</h2>
+              </div>
+            </div>
 
-              {selectedFile ? (
-                <dl className="data-list data-list-grid compact-data-list">
-                  <div>
-                    <dt>Filename</dt>
-                    <dd>{selectedFile.name}</dd>
-                  </div>
-                  <div>
-                    <dt>Type</dt>
-                    <dd>{selectedFile.type || "unknown"}</dd>
-                  </div>
-                  <div>
-                    <dt>Size</dt>
-                    <dd>{formatFileSize(selectedFile.size)}</dd>
-                  </div>
-                </dl>
+            <div className="workspace-card-body">
+              <div className="form-stack">
+                <label
+                  className={`upload-dropzone upload-dropzone-showcase ${selectedFile ? "upload-dropzone-active" : ""}`}
+                >
+                  <input
+                    className="upload-file-input"
+                    type="file"
+                    accept="video/*"
+                    disabled={isUploading}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null;
+                      event.currentTarget.value = "";
+
+                      if (!file) {
+                        return;
+                      }
+
+                      setSelectedFile(file);
+                      void uploadSelectedFile(file);
+                    }}
+                  />
+                  <span className="upload-dropzone-button">
+                    {isUploading
+                      ? "Uploading..."
+                      : selectedFile
+                        ? "Choose another clip"
+                        : "Upload"}
+                  </span>
+                </label>
+
+                {selectedFile ? (
+                  <dl className="data-list data-list-grid compact-data-list">
+                    <div>
+                      <dt>Filename</dt>
+                      <dd className="break-text" title={selectedFile.name}>
+                        {selectedFile.name}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Size</dt>
+                      <dd>{formatFileSize(selectedFile.size)}</dd>
+                    </div>
+                  </dl>
+                ) : null}
+              </div>
+
+              {uploadError ? <p className="feedback-error">{uploadError}</p> : null}
+            </div>
+          </section>
+
+          <section className="workspace-card">
+            <div className="workspace-card-head">
+              <div>
+                <p className="mini-label">Step 2</p>
+                <h2>Select a prompt</h2>
+              </div>
+            </div>
+            <div className="workspace-card-body">
+              {templateError ? <p className="feedback-error">{templateError}</p> : null}
+
+              {promptTemplates.length > 0 ? (
+                <div className="template-grid">
+                  {promptTemplates.map((template) => {
+                    const isSelected = String(template.id) === selectedPromptTemplateId;
+
+                    return (
+                      <button
+                        key={template.id}
+                        type="button"
+                        className={`template-option ${isSelected ? "template-option-selected" : ""}`}
+                        onClick={() => setSelectedPromptTemplateId(String(template.id))}
+                      >
+                        <div className="template-option-head">
+                          <div>
+                            <p className="mini-label">{template.key}</p>
+                            <h3 className="break-text" title={template.title}>
+                              {template.title}
+                            </h3>
+                          </div>
+                          {isSelected ? (
+                            <span className="template-option-state">Selected</span>
+                          ) : null}
+                        </div>
+                        <p className="break-text" title={template.description ?? "No description"}>
+                          {template.description ?? "No description"}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="empty-state-card">
-                  <p className="mini-label">No file selected</p>
-                  <p className="muted-label">
-                    Pick one local video to unlock upload, preview, and
-                    analysis.
-                  </p>
+                  <p className="mini-label">No templates loaded</p>
+                  <p className="muted-label">Sync local prompt files.</p>
                 </div>
               )}
-
-              <div className="action-strip">
-                <div className="action-copy">
-                  <p className="mini-label">Storage target</p>
-                  <p>
-                    Uploaded files are stored in <code>backend/data/uploads/</code>.
-                  </p>
-                </div>
-                <div className="button-row">
-                  <button
-                    className="button-primary"
-                    type="submit"
-                    disabled={isUploading}
-                  >
-                    {isUploading ? "Uploading..." : "Upload video"}
-                  </button>
-                </div>
-              </div>
-            </form>
-
-            {uploadMessage ? (
-              <p className="feedback-success">{uploadMessage}</p>
-            ) : null}
-            {uploadError ? <p className="feedback-error">{uploadError}</p> : null}
-          </div>
-
-          <div className="surface-card surface-card-subtle">
-            <div className="subsection-header">
-              <div>
-                <p className="mini-label">Stored preview</p>
-                <h3>{uploadedVideo ? "Uploaded video ready" : "Waiting for upload"}</h3>
-              </div>
-              {uploadedVideo ? (
-                <span className="meta-pill meta-pill-success">
-                  Video #{uploadedVideo.id}
-                </span>
-              ) : null}
             </div>
-
-            {uploadedVideo ? (
-              <>
-                <dl className="data-list data-list-grid compact-data-list">
-                  <div>
-                    <dt>Filename</dt>
-                    <dd>{uploadedVideo.original_filename}</dd>
-                  </div>
-                  <div>
-                    <dt>MIME type</dt>
-                    <dd>{uploadedVideo.mime_type}</dd>
-                  </div>
-                  <div>
-                    <dt>Size</dt>
-                    <dd>{formatFileSize(uploadedVideo.size_bytes)}</dd>
-                  </div>
-                  <div>
-                    <dt>Created at</dt>
-                    <dd>{formatDateTime(uploadedVideo.created_at)}</dd>
-                  </div>
-                </dl>
-
-                {!analysis && uploadedVideoUrl ? (
-                  <div className="result-block">
-                    <h3>Uploaded video preview</h3>
-                    <video
-                      className="video-player"
-                      controls
-                      preload="metadata"
-                      src={uploadedVideoUrl}
-                    >
-                      Your browser could not play this uploaded video.
-                    </video>
-                  </div>
-                ) : null}
-
-                <dl className="data-list compact-link-list">
-                  <div>
-                    <dt>Stored path</dt>
-                    <dd className="break-text">{uploadedVideo.stored_path}</dd>
-                  </div>
-                  <div>
-                    <dt>Playback URL</dt>
-                    <dd className="break-text">{uploadedVideo.file_url}</dd>
-                  </div>
-                </dl>
-              </>
-            ) : (
-              <div className="empty-state-card">
-                <p className="mini-label">Preview area</p>
-                <p className="muted-label">
-                  The stored video record, local preview, and playback path
-                  appear here after upload.
-                </p>
-              </div>
-            )}
-          </div>
+          </section>
         </div>
       </section>
 
-      <section className="panel workflow-panel">
-        <div className="step-header">
-          <div className="step-badge">2</div>
-          <div className="step-copy">
-            <p className="kicker">Step 2</p>
-            <h2>Select a prompt template</h2>
-            <p className="section-lead">
-              Sync local prompt files, pick the right template, and keep the
-              template details compact and easy to compare.
-            </p>
-          </div>
-        </div>
-
-        <div className="step-grid">
-          <div className="surface-card">
-            <div className="subsection-header">
-              <div>
-                <p className="mini-label">Prompt source</p>
-                <h3>Local template sync</h3>
-              </div>
-              <span className="meta-pill">
-                {promptTemplates.length} template
-                {promptTemplates.length === 1 ? "" : "s"}
-              </span>
-            </div>
-
-            <p className="muted-label panel-note">
-              Templates are loaded from <code>prompts/templates/</code> and can
-              be resynced at any time.
-            </p>
-
-            <div className="action-strip">
-              <label className="field">
-                <span>Prompt template</span>
-                <select
-                  className="input-control"
-                  value={selectedPromptTemplateId}
-                  onChange={(event) => setSelectedPromptTemplateId(event.target.value)}
-                  disabled={promptTemplates.length === 0 || isSyncingTemplates}
-                >
-                  <option value="">Select a prompt template</option>
-                  {promptTemplates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.title} ({template.key})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="button-row">
-                <button
-                  className="button-secondary"
-                  type="button"
-                  onClick={() => {
-                    void syncTemplates();
-                  }}
-                  disabled={isSyncingTemplates}
-                >
-                  {isSyncingTemplates ? "Syncing..." : "Sync local templates"}
-                </button>
-              </div>
-            </div>
-
-            {templateMessage ? (
-              <p className="feedback-success">{templateMessage}</p>
-            ) : null}
-            {templateError ? (
-              <p className="feedback-error">{templateError}</p>
-            ) : null}
-          </div>
-
-          <div className="surface-card surface-card-subtle">
-            {selectedPromptTemplate ? (
-              <div className="template-summary-card">
-                <div className="template-summary-head">
-                  <div>
-                    <p className="mini-label">Selected template</p>
-                    <h3>{selectedPromptTemplate.title}</h3>
-                  </div>
-                  <span className="template-key-pill">
-                    {selectedPromptTemplate.key}
-                  </span>
-                </div>
-
-                <p className="template-description">
-                  {selectedPromptTemplate.description ?? "No description"}
-                </p>
-
-                <div className="meta-pill-row">
-                  <span className="meta-pill">
-                    {selectedPromptTemplate.output_type} output
-                  </span>
-                  <span className="meta-pill">
-                    {selectedPromptTemplate.is_active ? "active" : "inactive"}
-                  </span>
-                  {selectedPromptTemplate.key === "boxing_structured" ? (
-                    <span className="meta-pill meta-pill-accent">
-                      Default structured test template
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            ) : (
-              <div className="empty-state-card">
-                <p className="mini-label">No template selected</p>
-                <p className="muted-label">
-                  Choose one template to define how Gemini should review the
-                  uploaded video.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="panel workflow-panel">
-        <div className="step-header">
-          <div className="step-badge">3</div>
-          <div className="step-copy">
+      <section className="review-stage">
+        <div className="review-stage-head">
+          <div>
             <p className="kicker">Step 3</p>
-            <h2>Run Gemini analysis</h2>
-            <p className="section-lead">
-              Execute the selected template on the uploaded video, then review
-              the normalized and raw output in one place.
-            </p>
+            <h2>Run Gemini and review the result</h2>
           </div>
-        </div>
-
-        <div className="surface-card action-surface">
-          <div className="action-surface-copy">
-            <p className="mini-label">Execution readiness</p>
-            <h3>Run the current local demo flow</h3>
-            <div className="meta-pill-row">
-              <span
-                className={`meta-pill ${uploadedVideo ? "meta-pill-success" : ""}`}
-              >
-                {uploadedVideo ? "Video ready" : "Upload required"}
-              </span>
-              <span
-                className={`meta-pill ${selectedPromptTemplate ? "meta-pill-success" : ""}`}
-              >
-                {selectedPromptTemplate ? "Template selected" : "Template required"}
-              </span>
-              <span
-                className={`meta-pill ${backendHealth?.gemini_configured ? "meta-pill-success" : ""}`}
-              >
-                {backendHealth?.gemini_configured
-                  ? "Gemini configured"
-                  : "Gemini not configured"}
-              </span>
-            </div>
-          </div>
-          <div className="button-row">
+          <div className="review-stage-actions">
             <button
-              className="button-primary"
+              className="button-primary button-primary-large"
               type="button"
               onClick={() => {
                 void handleCreateAnalysis();
@@ -740,9 +476,8 @@ export function UploadWorkflow() {
           <div className="warning-card">
             <p className="kicker">Gemini configuration</p>
             <p>
-              Gemini is not configured in the backend yet. Set
-              <code> DETECT_DEMO_GEMINI_API_KEY</code> in <code>backend/.env</code>,
-              then restart the backend.
+              Set <code>DETECT_DEMO_GEMINI_API_KEY</code> in <code>backend/.env</code>
+              and restart the backend.
             </p>
             <p className="muted-label">
               Configured model: <code>{backendHealth.gemini_model}</code>
@@ -750,134 +485,76 @@ export function UploadWorkflow() {
           </div>
         ) : null}
 
-        {healthError ? <p className="feedback-error">{healthError}</p> : null}
         {analysisError ? <p className="feedback-error">{analysisError}</p> : null}
 
         {analysis ? (
-          <div className="result-card result-card-strong">
-            <div className="result-card-head">
-              <div>
-                <p className="mini-label">Analysis result</p>
-                <h3>Stored Gemini review</h3>
-              </div>
-              <div className="meta-pill-row">
-                <span className="meta-pill meta-pill-accent">
-                  {analysis.status}
-                </span>
-                <span className="meta-pill">{analysis.prompt_template.key}</span>
+          <div className="review-result-shell">
+            <div className="review-media-column">
+              <div className="review-hero-card">
+                <div className="result-card-head">
+                  <div>
+                    <p className="mini-label">Video</p>
+                    <h3>Uploaded clip</h3>
+                  </div>
+                </div>
+
+                {reviewVideo && reviewVideoUrl ? (
+                  <div className="video-review-card">
+                    <video
+                      className="video-player video-player-featured"
+                      controls
+                      preload="metadata"
+                      src={reviewVideoUrl}
+                    >
+                      Your browser could not play this uploaded video.
+                    </video>
+                    <dl className="data-list video-meta-list data-list-grid compact-data-list">
+                      <div>
+                        <dt>Filename</dt>
+                        <dd className="break-text" title={reviewVideo.original_filename}>
+                          {reviewVideo.original_filename}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Size</dt>
+                        <dd>{formatFileSize(reviewVideo.size_bytes)}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                ) : null}
               </div>
             </div>
 
-            <dl className="data-list data-list-grid compact-data-list">
-              <div>
-                <dt>Analysis ID</dt>
-                <dd>{analysis.id}</dd>
-              </div>
-              <div>
-                <dt>Model name</dt>
-                <dd>{analysis.model_name ?? "null"}</dd>
-              </div>
-              <div>
-                <dt>Parser strategy</dt>
-                <dd>{analysis.parser_strategy ?? "n/a"}</dd>
-              </div>
-              <div>
-                <dt>JSON parse</dt>
-                <dd>
-                  {analysis.json_parse_succeeded === null
-                    ? "n/a"
-                    : analysis.json_parse_succeeded
-                      ? "succeeded"
-                      : "not used / failed"}
-                </dd>
-              </div>
-              <div>
-                <dt>Updated at</dt>
-                <dd>{formatDateTime(analysis.updated_at)}</dd>
-              </div>
-              <div>
-                <dt>Prompt template</dt>
-                <dd>
-                  {analysis.prompt_template.title} ({analysis.prompt_template.key})
-                </dd>
-              </div>
-              <div>
-                <dt>Template key at execution</dt>
-                <dd>{analysis.template_key_snapshot ?? "n/a"}</dd>
-              </div>
-              <div>
-                <dt>Video</dt>
-                <dd>
-                  #{analysis.video.id} {analysis.video.original_filename}
-                </dd>
-              </div>
-              <div>
-                <dt>Video type</dt>
-                <dd>{analysis.video.mime_type}</dd>
-              </div>
-              <div>
-                <dt>Video size</dt>
-                <dd>{formatFileSize(analysis.video.size_bytes)}</dd>
-              </div>
-            </dl>
+            <div className="review-insight-column">
+              <div className="review-summary-card">
+                <p className="mini-label">Product result</p>
+                <h3>Normalized boxing review</h3>
+                <p className="review-summary-text break-text">
+                  {normalizedAnalysisResponse.summary || "No summary was parsed."}
+                </p>
 
-            {reviewVideo && reviewVideoUrl ? (
-              <div className="result-block">
-                <div className="subsection-header">
+                <dl className="data-list data-list-grid compact-data-list">
                   <div>
-                    <p className="mini-label">Recorded input</p>
-                    <h3>Uploaded video</h3>
+                    <dt>Status</dt>
+                    <dd>{analysis.status}</dd>
                   </div>
-                </div>
-                <div className="video-review-card">
-                  <video
-                    className="video-player"
-                    controls
-                    preload="metadata"
-                    src={reviewVideoUrl}
-                  >
-                    Your browser could not play this uploaded video.
-                  </video>
-                  <dl className="data-list video-meta-list data-list-grid compact-data-list">
-                    <div>
-                      <dt>Filename</dt>
-                      <dd>{reviewVideo.original_filename}</dd>
-                    </div>
-                    <div>
-                      <dt>MIME type</dt>
-                      <dd>{reviewVideo.mime_type}</dd>
-                    </div>
-                    <div>
-                      <dt>Size</dt>
-                      <dd>{formatFileSize(reviewVideo.size_bytes)}</dd>
-                    </div>
-                    <div>
-                      <dt>Created at</dt>
-                      <dd>{formatDateTime(reviewVideo.created_at)}</dd>
-                    </div>
-                    <div>
-                      <dt>Playback URL</dt>
-                      <dd className="break-text">{reviewVideo.file_url}</dd>
-                    </div>
-                  </dl>
-                </div>
+                  <div>
+                    <dt>Template</dt>
+                    <dd
+                      className="break-text"
+                      title={analysis.prompt_template.title}
+                    >
+                      {analysis.prompt_template.title}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Parser</dt>
+                    <dd>{analysis.parser_strategy ?? "n/a"}</dd>
+                  </div>
+                </dl>
               </div>
-            ) : null}
 
-            <div className="result-block">
-              <div className="subsection-header">
-                <div>
-                  <p className="mini-label">Normalized review</p>
-                  <h3>Parsed response</h3>
-                </div>
-              </div>
-              <div className="normalized-grid">
-                <section className="normalized-card normalized-card-wide">
-                  <h4>Summary</h4>
-                  <p>
-                    {normalizedAnalysisResponse.summary || "No summary was parsed."}
-                  </p>
-                </section>
+              <div className="normalized-grid normalized-grid-showcase">
                 <section className="normalized-card">
                   <h4>Strengths</h4>
                   <ul className="normalized-list">
@@ -927,27 +604,45 @@ export function UploadWorkflow() {
                   </ul>
                 </section>
               </div>
-            </div>
 
-            <div className="result-block">
-              <div className="subsection-header">
-                <div>
-                  <p className="mini-label">Model output</p>
-                  <h3>Raw response</h3>
-                </div>
-              </div>
-              <pre className="code-block">
-                {analysis.raw_response ?? "No raw text response was stored."}
-              </pre>
+              <details className="raw-response-panel">
+                <summary>Raw model output</summary>
+                <pre className="code-block">
+                  {analysis.raw_response ?? "No raw text response was stored."}
+                </pre>
+              </details>
             </div>
           </div>
         ) : (
-          <div className="empty-state-card">
-            <p className="mini-label">No analysis yet</p>
-            <p className="muted-label">
-              Upload a video and select a prompt template to generate the first
-              Gemini result for this page.
-            </p>
+          <div className="review-placeholder">
+            {reviewVideo && reviewVideoUrl ? (
+              <div className="review-hero-card">
+                <div className="result-card-head">
+                  <div>
+                    <p className="mini-label">Video</p>
+                    <h3>Clip ready for review</h3>
+                  </div>
+                </div>
+                <div className="video-review-card">
+                  <video
+                    className="video-player video-player-featured"
+                    controls
+                    preload="metadata"
+                    src={reviewVideoUrl}
+                  >
+                    Your browser could not play this uploaded video.
+                  </video>
+                  <p className="muted-label">
+                    Select a prompt, then run Gemini.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="empty-state-card empty-state-card-large">
+                <p className="mini-label">Awaiting analysis</p>
+                <h3>Add a clip to start the review stage.</h3>
+              </div>
+            )}
           </div>
         )}
       </section>

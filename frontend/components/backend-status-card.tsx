@@ -72,46 +72,58 @@ export function BackendStatusCard() {
       ? "status-badge status-error"
       : "status-badge status-ok";
 
+  const badgeLabel = loading
+    ? "Checking backend"
+    : error
+      ? "Backend unavailable"
+      : `${data?.service ?? "api"} is reachable`;
+
   return (
-    <section className="panel">
-      <p className="kicker">Backend status</p>
-      <h2>Local API readiness</h2>
-      <div className={badgeClassName}>
-        <span className="status-dot" aria-hidden="true" />
-        <span>
-          {loading
-            ? "Checking backend"
-            : error
-              ? "Backend unavailable"
-              : `${data?.service ?? "api"} is reachable`}
-        </span>
+    <section className="workspace-stage">
+      <div className="status-stage-head">
+        <p className="mini-label">Backend status</p>
+        <h2>Local API readiness</h2>
+        <div className={badgeClassName}>
+          <span className="status-dot" aria-hidden="true" />
+          <span>{badgeLabel}</span>
+        </div>
       </div>
+
       {error ? (
-        <p>{error}</p>
+        <p className="feedback-error">{error}</p>
       ) : (
-        <ul className="status-list">
-          <li>
-            API status: <strong>{data?.status ?? "unknown"}</strong>
-          </li>
-          <li>
-            Database: <strong>{data?.database ?? "unknown"}</strong>
-          </li>
-          <li>
-            Upload dir: <code>{data?.upload_dir ?? "n/a"}</code>
-          </li>
-          <li>
-            Prompts dir: <code>{data?.prompts_dir ?? "n/a"}</code>
-          </li>
-          <li>
-            Gemini:{" "}
-            <strong>
+        <dl className="data-list data-list-grid compact-data-list status-data-list">
+          <div>
+            <dt>API status</dt>
+            <dd>{data?.status ?? "unknown"}</dd>
+          </div>
+          <div>
+            <dt>Database</dt>
+            <dd>{data?.database ?? "unknown"}</dd>
+          </div>
+          <div>
+            <dt>Gemini</dt>
+            <dd>
               {data?.gemini_configured ? "configured" : "not configured"}
-            </strong>
-          </li>
-          <li>
-            Gemini model: <code>{data?.gemini_model ?? "n/a"}</code>
-          </li>
-        </ul>
+            </dd>
+          </div>
+          <div>
+            <dt>Gemini model</dt>
+            <dd className="break-text">{data?.gemini_model ?? "n/a"}</dd>
+          </div>
+          <div>
+            <dt>Upload dir</dt>
+            <dd className="break-text">
+              <code>{data?.upload_dir ?? "n/a"}</code>
+            </dd>
+          </div>
+          <div>
+            <dt>Prompts dir</dt>
+            <dd className="break-text">
+              <code>{data?.prompts_dir ?? "n/a"}</code>
+            </dd>
+          </div>
+        </dl>
       )}
     </section>
   );
