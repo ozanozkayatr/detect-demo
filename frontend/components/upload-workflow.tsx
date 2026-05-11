@@ -41,6 +41,19 @@ type BackendHealth = {
   error?: string | null;
 };
 
+type GeminiModelOption = {
+  value: string;
+  display_name: string;
+  description: string | null;
+  input_token_limit: number | null;
+  output_token_limit: number | null;
+};
+
+type GeminiModelListResponse = {
+  configured_model: string;
+  models: GeminiModelOption[];
+};
+
 type NormalizedParsedResponse = {
   summary: string;
   strengths: string[];
@@ -181,13 +194,17 @@ export function UploadWorkflow() {
   const [uploadedVideo, setUploadedVideo] = useState<VideoRecord | null>(null);
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplate[]>([]);
   const [selectedPromptTemplateId, setSelectedPromptTemplateId] = useState("");
+  const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
+  const [selectedModelName, setSelectedModelName] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
   const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null);
 
   const [isUploading, setIsUploading] = useState(false);
   const [isCreatingAnalysis, setIsCreatingAnalysis] = useState(false);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
 
   const [templateError, setTemplateError] = useState<string | null>(null);
+  const [modelError, setModelError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
@@ -240,14 +257,62 @@ export function UploadWorkflow() {
     try {
       const result = await apiRequest<BackendHealth>("/health");
       setBackendHealth(result);
+      return result;
     } catch (error) {
       setBackendHealth(null);
+      return null;
+    }
+  }
+
+  async function loadGeminiModels(configuredModelName: string) {
+    setIsLoadingModels(true);
+    setModelError(null);
+
+    try {
+      const result = await apiRequest<GeminiModelListResponse>("/gemini/models");
+      setAvailableModels(result.models);
+      setSelectedModelName((currentValue) => {
+        if (
+          currentValue &&
+          result.models.some((model) => model.value === currentValue)
+        ) {
+          return currentValue;
+        }
+
+        if (
+          configuredModelName &&
+          result.models.some((model) => model.value === configuredModelName)
+        ) {
+          return configuredModelName;
+        }
+
+        return result.models[0]?.value ?? configuredModelName;
+      });
+    } catch (error) {
+      setAvailableModels([]);
+      setSelectedModelName(configuredModelName);
+      setModelError(
+        error instanceof Error ? error.message : "Gemini models could not be loaded.",
+      );
+    } finally {
+      setIsLoadingModels(false);
     }
   }
 
   useEffect(() => {
     void syncTemplates();
-    void loadBackendHealth();
+
+    void (async () => {
+      const health = await loadBackendHealth();
+
+      if (health?.gemini_configured) {
+        await loadGeminiModels(health.gemini_model);
+      } else {
+        setAvailableModels([]);
+        setSelectedModelName(health?.gemini_model ?? "");
+        setModelError(null);
+      }
+    })();
   }, []);
 
   async function uploadSelectedFile(file: File) {
@@ -301,6 +366,7 @@ export function UploadWorkflow() {
         body: JSON.stringify({
           video_id: uploadedVideo.id,
           prompt_template_id: Number(selectedPromptTemplateId),
+          model_name: selectedModelName || undefined,
         }),
       });
 
@@ -410,6 +476,31 @@ export function UploadWorkflow() {
             </div>
             <div className="workspace-card-body">
               {templateError ? <p className="feedback-error">{templateError}</p> : null}
+              {modelError ? <p className="feedback-error">{modelError}</p> : null}
+
+              {backendHealth?.gemini_configured ? (
+                <label className="field field-centered field-model">
+                  <span>Model</span>
+                  <select
+                    className="input-control"
+                    value={selectedModelName}
+                    onChange={(event) => setSelectedModelName(event.target.value)}
+                    disabled={isLoadingModels || availableModels.length === 0}
+                  >
+                    {availableModels.length > 0 ? (
+                      availableModels.map((model) => (
+                        <option key={model.value} value={model.value}>
+                          {model.display_name}
+                        </option>
+                      ))
+                    ) : (
+                      <option value={selectedModelName}>
+                        {isLoadingModels ? "Loading models..." : backendHealth.gemini_model}
+                      </option>
+                    )}
+                  </select>
+                </label>
+              ) : null}
 
               {promptTemplates.length > 0 ? (
                 <div className="template-grid">
@@ -550,6 +641,12 @@ export function UploadWorkflow() {
                   <div>
                     <dt>Parser</dt>
                     <dd>{analysis.parser_strategy ?? "n/a"}</dd>
+                  </div>
+                  <div>
+                    <dt>Model</dt>
+                    <dd className="break-text" title={analysis.model_name ?? "n/a"}>
+                      {analysis.model_name ?? "n/a"}
+                    </dd>
                   </div>
                 </dl>
               </div>

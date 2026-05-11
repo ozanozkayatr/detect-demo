@@ -56,13 +56,15 @@ def create_analysis(
             message="Prompt template not found.",
         )
 
+    selected_model_name = (payload.model_name or settings.gemini_model).strip()
+
     analysis = Analysis(
         video_id=payload.video_id,
         prompt_template_id=payload.prompt_template_id,
         status="running",
         raw_response=None,
         parsed_response=None,
-        model_name=settings.gemini_model if settings.gemini_configured else None,
+        model_name=selected_model_name if settings.gemini_configured else None,
         confidence=None,
         parser_strategy=None,
         json_parse_succeeded=None,
@@ -76,6 +78,7 @@ def create_analysis(
         result = run_gemini_video_analysis(
             video=video,
             prompt_template=prompt_template,
+            model_name=selected_model_name,
         )
         analysis.status = "completed"
         analysis.raw_response = result.raw_response

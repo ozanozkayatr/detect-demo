@@ -11,6 +11,7 @@ from app.schemas.video import VideoRead
 class AnalysisCreate(BaseModel):
     video_id: int
     prompt_template_id: int
+    model_name: str | None = None
 
 
 class ParsedAnalysisResponse(BaseModel):

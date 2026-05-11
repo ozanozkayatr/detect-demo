@@ -575,6 +575,16 @@ select {
   gap: 8px;
 }
 
+.field-centered {
+  width: min(100%, 420px);
+  justify-items: center;
+  text-align: center;
+}
+
+.field-centered .input-control {
+  text-align: center;
+}
+
 .field span {
   font-size: 0.92rem;
   font-weight: 700;

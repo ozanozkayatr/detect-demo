@@ -37,6 +37,15 @@ class GeminiAnalysisResult:
 
 
 @dataclass(slots=True)
+class GeminiModelChoice:
+    value: str
+    display_name: str
+    description: str | None
+    input_token_limit: int | None
+    output_token_limit: int | None
+
+
+@dataclass(slots=True)
 class TemplateExecutionPolicy:
     prefer_json_output: bool
     response_mime_type: str | None
@@ -243,15 +252,88 @@ def build_upload_config(video: Video) -> dict[str, str] | None:
     return {"mime_type": mime_type}
 
 
+def normalize_model_name(raw_name: str) -> str:
+    normalized = raw_name.strip()
+    publisher_prefix = "publishers/google/models/"
+    if normalized.startswith(publisher_prefix):
+        return normalized.removeprefix(publisher_prefix)
+    return normalized
+
+
+def list_accessible_gemini_models() -> list[GeminiModelChoice]:
+    if not settings.gemini_api_key:
+        raise GeminiConfigurationError(
+            "Gemini is not configured. Set DETECT_DEMO_GEMINI_API_KEY in backend/.env."
+        )
+
+    client = genai.Client(api_key=settings.gemini_api_key)
+
+    try:
+        seen_values: set[str] = set()
+        models: list[GeminiModelChoice] = []
+
+        for model in client.models.list(config={"query_base": True, "page_size": 100}):
+            raw_name = str(getattr(model, "name", "") or "").strip()
+            if not raw_name:
+                continue
+
+            model_value = normalize_model_name(raw_name)
+            if "gemini" not in model_value.lower():
+                continue
+
+            supported_actions = {
+                str(action).strip()
+                for action in (getattr(model, "supported_actions", None) or [])
+                if str(action).strip()
+            }
+            if "generateContent" not in supported_actions:
+                continue
+
+            if model_value in seen_values:
+                continue
+
+            seen_values.add(model_value)
+            models.append(
+                GeminiModelChoice(
+                    value=model_value,
+                    display_name=str(
+                        getattr(model, "display_name", None) or model_value
+                    ).strip(),
+                    description=(
+                        str(description).strip()
+                        if (description := getattr(model, "description", None))
+                        else None
+                    ),
+                    input_token_limit=getattr(model, "input_token_limit", None),
+                    output_token_limit=getattr(model, "output_token_limit", None),
+                )
+            )
+
+        models.sort(
+            key=lambda item: (
+                0 if item.value == settings.gemini_model else 1,
+                item.display_name.lower(),
+            )
+        )
+        return models
+    except GeminiConfigurationError:
+        raise
+    except Exception as exc:  # pragma: no cover - network/service dependency
+        raise GeminiExecutionError(f"Gemini model listing failed: {exc}") from exc
+
+
 def run_gemini_video_analysis(
     *,
     video: Video,
     prompt_template: PromptTemplate,
+    model_name: str | None = None,
 ) -> GeminiAnalysisResult:
     if not settings.gemini_configured:
         raise GeminiConfigurationError(
             "Gemini is not configured. Set DETECT_DEMO_GEMINI_API_KEY in backend/.env."
         )
+
+    selected_model_name = (model_name or settings.gemini_model).strip()
 
     video_path = Path(video.stored_path)
     if not video_path.exists():
@@ -277,7 +359,7 @@ def run_gemini_video_analysis(
             uploaded_file = wait_for_video_processing(client, uploaded_file)
 
         response = client.models.generate_content(
-            model=settings.gemini_model,
+            model=selected_model_name,
             contents=[uploaded_file, build_analysis_instruction(prompt_template)],
             config=build_generate_content_config(template_policy),
         )
@@ -290,7 +372,7 @@ def run_gemini_video_analysis(
         return GeminiAnalysisResult(
             raw_response=raw_response,
             parsed_response=parse_outcome.parsed_response,
-            model_name=settings.gemini_model,
+            model_name=selected_model_name,
             confidence=None,
             parser_strategy=parse_outcome.parser_strategy,
             json_parse_succeeded=parse_outcome.json_parse_succeeded,
