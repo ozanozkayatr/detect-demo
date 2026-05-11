@@ -779,6 +779,10 @@ select {
   width: 100%;
 }
 
+.persona-grid {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
 .template-option {
   display: grid;
   gap: 10px;
@@ -843,6 +847,10 @@ select {
   overflow: hidden;
   font-size: 0.96rem;
   line-height: 1.5;
+}
+
+.persona-option p {
+  -webkit-line-clamp: unset;
 }
 
 .template-key-pill,

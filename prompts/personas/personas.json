@@ -1,0 +1,18 @@
+[
+  {
+    "key": "experienced_boxer_coach",
+    "title": "Experienced Boxer-Coach",
+    "height_cm": 183,
+    "weight_kg": 81,
+    "sports_routine": "Boxes 5-6 days per week with roadwork, pad work, sparring, and strength sessions.",
+    "boxing_background": "Has 15 years of amateur and professional boxing experience and now also works as a coach."
+  },
+  {
+    "key": "beginner_amateur",
+    "title": "Beginner Amateur",
+    "height_cm": 168,
+    "weight_kg": 62,
+    "sports_routine": "Trains 2-3 times per week with basic bag work, light conditioning, and beginner drills.",
+    "boxing_background": "New to boxing with less than one year of experience, no fight history, and still building fundamentals."
+  }
+]

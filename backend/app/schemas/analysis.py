@@ -11,6 +11,7 @@ from app.schemas.video import VideoRead
 class AnalysisCreate(BaseModel):
     video_id: int
     prompt_template_id: int
+    persona_key: str
     model_name: str | None = None
 
 
@@ -36,6 +37,7 @@ class AnalysisRead(BaseModel):
     parser_strategy: str | None
     json_parse_succeeded: bool | None
     template_key_snapshot: str | None
+    persona_key_snapshot: str | None
     created_at: datetime
     updated_at: datetime
     video: VideoRead

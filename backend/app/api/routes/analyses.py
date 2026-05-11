@@ -17,6 +17,10 @@ from app.services.gemini_service import (
     run_gemini_video_analysis,
 )
 from app.services.analysis_parser import note_only_response
+from app.services.persona_loader import (
+    PersonaConfigurationError,
+    get_persona_by_key,
+)
 
 router = APIRouter()
 
@@ -41,6 +45,14 @@ def create_analysis(
 ) -> Analysis:
     video = db.get(Video, payload.video_id)
     prompt_template = db.get(PromptTemplate, payload.prompt_template_id)
+    try:
+        persona = get_persona_by_key(payload.persona_key)
+    except PersonaConfigurationError as exc:
+        raise api_error(
+            status_code=500,
+            code="persona_configuration_error",
+            message=str(exc),
+        )
 
     if video is None:
         raise api_error(
@@ -56,6 +68,13 @@ def create_analysis(
             message="Prompt template not found.",
         )
 
+    if persona is None:
+        raise api_error(
+            status_code=404,
+            code="persona_not_found",
+            message="Persona not found.",
+        )
+
     selected_model_name = (payload.model_name or settings.gemini_model).strip()
 
     analysis = Analysis(
@@ -69,6 +88,7 @@ def create_analysis(
         parser_strategy=None,
         json_parse_succeeded=None,
         template_key_snapshot=prompt_template.key,
+        persona_key_snapshot=persona.key,
     )
     db.add(analysis)
     db.commit()
@@ -78,6 +98,7 @@ def create_analysis(
         result = run_gemini_video_analysis(
             video=video,
             prompt_template=prompt_template,
+            persona=persona,
             model_name=selected_model_name,
         )
         analysis.status = "completed"
@@ -88,6 +109,7 @@ def create_analysis(
         analysis.parser_strategy = result.parser_strategy
         analysis.json_parse_succeeded = result.json_parse_succeeded
         analysis.template_key_snapshot = result.template_key_snapshot
+        analysis.persona_key_snapshot = persona.key
         db.commit()
     except GeminiConfigurationError as exc:
         analysis.status = "failed"

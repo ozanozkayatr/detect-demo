@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.models.prompt_template import PromptTemplate
 from app.models.video import Video
 from app.services.analysis_parser import ParseOutcome, parse_analysis_response
+from app.services.persona_loader import PersonaProfile
 
 VIDEO_POLL_INTERVAL_SECONDS = 5
 VIDEO_PROCESSING_TIMEOUT_SECONDS = 180
@@ -157,10 +158,24 @@ def build_generate_content_config(
 
     return config
 
-
-def build_analysis_instruction(prompt_template: PromptTemplate) -> str:
+def build_analysis_instruction(
+    prompt_template: PromptTemplate,
+    persona: PersonaProfile,
+) -> str:
     template_key = prompt_template.key.strip().lower()
     base_instruction = prompt_template.prompt_body.strip()
+    persona_instruction = "\n".join(
+        [
+            "Athlete persona context:",
+            f"- Persona: {persona.title}",
+            f"- Height: {persona.height_cm} cm",
+            f"- Weight: {persona.weight_kg} kg",
+            f"- Sports routine: {persona.sports_routine}",
+            f"- Boxing background: {persona.boxing_background}",
+            "Use this persona only as context for expectations and feedback level.",
+            "Do not let persona context override what is clearly visible in the video.",
+        ]
+    )
 
     if template_key == "boxing_structured":
         format_instruction = (
@@ -185,6 +200,7 @@ def build_analysis_instruction(prompt_template: PromptTemplate) -> str:
     return "\n\n".join(
         [
             "You are analyzing an uploaded boxing video.",
+            persona_instruction,
             "Use the following prompt template as the main instruction:",
             base_instruction,
             format_instruction,
@@ -326,6 +342,7 @@ def run_gemini_video_analysis(
     *,
     video: Video,
     prompt_template: PromptTemplate,
+    persona: PersonaProfile,
     model_name: str | None = None,
 ) -> GeminiAnalysisResult:
     if not settings.gemini_configured:
@@ -360,7 +377,7 @@ def run_gemini_video_analysis(
 
         response = client.models.generate_content(
             model=selected_model_name,
-            contents=[uploaded_file, build_analysis_instruction(prompt_template)],
+            contents=[uploaded_file, build_analysis_instruction(prompt_template, persona)],
             config=build_generate_content_config(template_policy),
         )
         raw_response = extract_response_text(response)

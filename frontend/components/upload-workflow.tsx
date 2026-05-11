@@ -54,6 +54,15 @@ type GeminiModelListResponse = {
   models: GeminiModelOption[];
 };
 
+type Persona = {
+  key: string;
+  title: string;
+  height_cm: number;
+  weight_kg: number;
+  sports_routine: string;
+  boxing_background: string;
+};
+
 type NormalizedParsedResponse = {
   summary: string;
   strengths: string[];
@@ -74,6 +83,7 @@ type AnalysisRecord = {
   parser_strategy: string | null;
   json_parse_succeeded: boolean | null;
   template_key_snapshot: string | null;
+  persona_key_snapshot: string | null;
   created_at: string;
   updated_at: string;
   video: VideoRecord;
@@ -192,7 +202,9 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
 export function UploadWorkflow() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadedVideo, setUploadedVideo] = useState<VideoRecord | null>(null);
+  const [personas, setPersonas] = useState<Persona[]>([]);
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplate[]>([]);
+  const [selectedPersonaKey, setSelectedPersonaKey] = useState("");
   const [selectedPromptTemplateId, setSelectedPromptTemplateId] = useState("");
   const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
   const [selectedModelName, setSelectedModelName] = useState("");
@@ -204,6 +216,7 @@ export function UploadWorkflow() {
   const [isLoadingModels, setIsLoadingModels] = useState(false);
 
   const [templateError, setTemplateError] = useState<string | null>(null);
+  const [personaError, setPersonaError] = useState<string | null>(null);
   const [modelError, setModelError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -217,8 +230,21 @@ export function UploadWorkflow() {
     () => (reviewVideo ? buildApiAssetUrl(reviewVideo.file_url) : null),
     [reviewVideo],
   );
+  const selectedPersona = useMemo(
+    () => personas.find((persona) => persona.key === selectedPersonaKey) ?? null,
+    [personas, selectedPersonaKey],
+  );
+  const analysisPersona = useMemo(
+    () =>
+      analysis?.persona_key_snapshot
+        ? personas.find((persona) => persona.key === analysis.persona_key_snapshot) ?? null
+        : null,
+    [analysis?.persona_key_snapshot, personas],
+  );
   const isAnalysisReady =
-    Boolean(uploadedVideo) && Boolean(selectedPromptTemplateId);
+    Boolean(uploadedVideo) &&
+    Boolean(selectedPersonaKey) &&
+    Boolean(selectedPromptTemplateId);
 
   async function syncTemplates() {
     setTemplateError(null);
@@ -299,8 +325,30 @@ export function UploadWorkflow() {
     }
   }
 
+  async function loadPersonas() {
+    setPersonaError(null);
+
+    try {
+      const result = await apiRequest<Persona[]>("/personas");
+      setPersonas(result);
+      setSelectedPersonaKey((currentValue) => {
+        if (currentValue && result.some((persona) => persona.key === currentValue)) {
+          return currentValue;
+        }
+
+        return result[0]?.key ?? "";
+      });
+    } catch (error) {
+      setPersonas([]);
+      setPersonaError(
+        error instanceof Error ? error.message : "Personas could not be loaded.",
+      );
+    }
+  }
+
   useEffect(() => {
     void syncTemplates();
+    void loadPersonas();
 
     void (async () => {
       const health = await loadBackendHealth();
@@ -353,6 +401,11 @@ export function UploadWorkflow() {
       return;
     }
 
+    if (!selectedPersonaKey) {
+      setAnalysisError("Select a persona first.");
+      return;
+    }
+
     setIsCreatingAnalysis(true);
     setAnalysisError(null);
     setAnalysis(null);
@@ -365,6 +418,7 @@ export function UploadWorkflow() {
         },
         body: JSON.stringify({
           video_id: uploadedVideo.id,
+          persona_key: selectedPersonaKey,
           prompt_template_id: Number(selectedPromptTemplateId),
           model_name: selectedModelName || undefined,
         }),
@@ -396,10 +450,14 @@ export function UploadWorkflow() {
             </div>
             <div className="hero-flow-step">
               <span>02</span>
-              <strong>Select prompt</strong>
+              <strong>Select persona</strong>
             </div>
             <div className="hero-flow-step">
               <span>03</span>
+              <strong>Select prompt</strong>
+            </div>
+            <div className="hero-flow-step">
+              <span>04</span>
               <strong>Inspect output</strong>
             </div>
           </div>
@@ -471,6 +529,64 @@ export function UploadWorkflow() {
             <div className="workspace-card-head">
               <div>
                 <p className="mini-label">Step 2</p>
+                <h2>Select a persona</h2>
+              </div>
+            </div>
+            <div className="workspace-card-body">
+              {personaError ? <p className="feedback-error">{personaError}</p> : null}
+
+              {personas.length > 0 ? (
+                <div className="template-grid persona-grid">
+                  {personas.map((persona) => {
+                    const isSelected = persona.key === selectedPersonaKey;
+
+                    return (
+                      <button
+                        key={persona.key}
+                        type="button"
+                        className={`template-option persona-option ${isSelected ? "template-option-selected" : ""}`}
+                        onClick={() => setSelectedPersonaKey(persona.key)}
+                      >
+                        <div className="template-option-head">
+                          <div>
+                            <p className="mini-label">{persona.key}</p>
+                            <h3 className="break-text" title={persona.title}>
+                              {persona.title}
+                            </h3>
+                          </div>
+                          {isSelected ? (
+                            <span className="template-option-state">Selected</span>
+                          ) : null}
+                        </div>
+                        <p>{persona.height_cm} cm • {persona.weight_kg} kg</p>
+                        <p
+                          className="break-text"
+                          title={persona.sports_routine}
+                        >
+                          {persona.sports_routine}
+                        </p>
+                        <p
+                          className="break-text"
+                          title={persona.boxing_background}
+                        >
+                          {persona.boxing_background}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="empty-state-card">
+                  <p className="mini-label">No personas loaded</p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="workspace-card">
+            <div className="workspace-card-head">
+              <div>
+                <p className="mini-label">Step 3</p>
                 <h2>Select a prompt</h2>
               </div>
             </div>
@@ -546,7 +662,7 @@ export function UploadWorkflow() {
       <section className="review-stage">
         <div className="review-stage-head">
           <div>
-            <p className="kicker">Step 3</p>
+            <p className="kicker">Step 4</p>
             <h2>Run Gemini and review the result</h2>
           </div>
           <div className="review-stage-actions">
@@ -646,6 +762,15 @@ export function UploadWorkflow() {
                     <dt>Model</dt>
                     <dd className="break-text" title={analysis.model_name ?? "n/a"}>
                       {analysis.model_name ?? "n/a"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Persona</dt>
+                    <dd
+                      className="break-text"
+                      title={analysisPersona?.title ?? analysis.persona_key_snapshot ?? "n/a"}
+                    >
+                      {analysisPersona?.title ?? analysis.persona_key_snapshot ?? "n/a"}
                     </dd>
                   </div>
                 </dl>
