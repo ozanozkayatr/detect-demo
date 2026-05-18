@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DETECT - Athlete Onboarding</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fcf9f8",
+                        "surface-variant": "#e4e2e1",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "surface": "#fcf9f8",
+                        "on-secondary-fixed": "#1c1c19",
+                        "inverse-primary": "#c8c6c5",
+                        "inverse-on-surface": "#f3f0f0",
+                        "primary-container": "#1c1b1b",
+                        "surface-container-low": "#f6f3f2",
+                        "on-background": "#1b1c1c",
+                        "on-tertiary-fixed": "#40000b",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#1c1b1b",
+                        "tertiary-container": "#40000b",
+                        "background": "#fcf9f8",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#e5e2dd",
+                        "secondary-fixed-dim": "#c9c6c2",
+                        "on-tertiary-container": "#e25160",
+                        "on-surface": "#1b1c1c",
+                        "secondary-fixed": "#e5e2dd",
+                        "surface-container-high": "#eae7e7",
+                        "on-tertiary-fixed-variant": "#8e0f28",
+                        "on-secondary-container": "#656461",
+                        "surface-container-highest": "#e4e2e1",
+                        "tertiary-fixed-dim": "#ffb3b5",
+                        "on-error": "#ffffff",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed-variant": "#474743",
+                        "tertiary-fixed": "#ffdada",
+                        "primary": "#000000",
+                        "surface-tint": "#5f5e5e",
+                        "surface-container": "#f0eded",
+                        "on-primary-container": "#858383",
+                        "secondary": "#5f5e5b",
+                        "outline": "#747878",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#303030",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#e5e2e1",
+                        "outline-variant": "#c4c7c7",
+                        "on-surface-variant": "#444748",
+                        "on-primary-fixed-variant": "#474746"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "section-gap": "48px",
+                        "card-padding": "24px",
+                        "unit": "8px",
+                        "gutter": "16px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "stats-number": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "stats-number": ["40px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #FAF9F6; /* Cream base from guidance */
+            color: #1b1c1c;
+        }
+        .canvas-texture {
+            background-image: radial-gradient(#2D2D2D 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            opacity: 0.03;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2D2D2D;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<div class="fixed inset-0 canvas-texture pointer-events-none"></div>
+<!-- Navigation suppressed per "Transactional Rule" for Onboarding Flow -->
+<!-- Content starts here -->
+<main class="relative z-10 max-w-[1120px] mx-auto px-container-margin py-section-gap">
+<!-- STEP 5: PROFILE SUMMARY (Screen 9) - The "Hero" of the response -->
+<div class="space-y-section-gap">
+<!-- HEADER -->
+<div class="text-center md:text-left max-w-2xl">
+<span class="font-label-caps text-label-caps text-on-tertiary-container mb-4 block">ONBOARDING COMPLETE</span>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-4">Review Your Athlete Profile</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Your profile helps us tailor your punch analysis and performance benchmarks against your specific boxing demographic.</p>
+</div>
+<!-- ATHLETE PROFILE CARD (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Main Identity Block -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-primary/10 p-card-padding shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[400px]">
+<div class="flex flex-col md:flex-row gap-8">
+<div class="w-32 h-32 md:w-48 md:h-48 bg-surface-container border border-primary/5 shrink-0 overflow-hidden">
+<img alt="Athlete" class="w-full h-full object-cover grayscale opacity-90" data-alt="A professional close-up studio portrait of a focused athlete with subtle dramatic lighting. The background is a clean, neutral gray canvas with a slight texture. The lighting is crisp and highlights the facial features with a high-performance, elite coaching aesthetic. The image uses a palette of soft whites, deep grays, and natural skin tones to maintain a sophisticated and premium look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqOexE7ipVv6hGE7e3zaxo0Qsxv5tAWJtALWQe5Qu2NfZH7Kt2eS76hZ3KTZs7RnNth_f8Dnqk9R1lPTsE-tcsCLD-225abK3WNTDXq5s9rdgwcDWE3GjDHlhMD708oprfliUItMobkg-syaqf3oZkYsdS_Jduv_HzK83jbOlbX0vrJk4ht4fgs4BG34dIbWz9eOoDYbfNNKCa_OOlAPticEEs12Gc-T7RSE2a3lrDe5ePoPz58r_QOYriPMPQqxBGvMb60mFO7JM"/>
+</div>
+<div class="flex flex-col justify-center">
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tighter">MARCUS REYES</h2>
+<p class="font-label-caps text-label-caps text-on-tertiary-container mt-1">EXPERIENCED COMPETITOR</p>
+<div class="mt-8 grid grid-cols-2 gap-8">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-1">HEIGHT</span>
+<span class="font-stats-number text-stats-number text-primary">185<span class="text-body-md font-body-md ml-1">cm</span></span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-1">WEIGHT</span>
+<span class="font-stats-number text-stats-number text-primary">81<span class="text-body-md font-body-md ml-1">kg</span></span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-12 pt-8 border-t border-outline-variant/20 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">EXPERIENCE</span>
+<span class="font-body-lg text-body-lg font-bold">6 Years</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">AMATEUR BOUTS</span>
+<span class="font-body-lg text-body-lg font-bold">12 Total</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">COACHING</span>
+<span class="font-body-lg text-body-lg font-bold">Certified Professional</span>
+</div>
+</div>
+</div>
+<!-- Secondary Data Block -->
+<div class="md:col-span-4 space-y-gutter">
+<!-- Training Schedule Card -->
+<div class="bg-surface-container-low border border-primary/10 p-card-padding h-full">
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-6">WEEKLY ROUTINE</span>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md">Training Days</span>
+<span class="font-headline-md text-headline-md">5/7</span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="px-3 py-1 bg-primary text-on-primary font-label-caps text-[10px] tracking-widest">SPARRING</span>
+<span class="px-3 py-1 bg-primary text-on-primary font-label-caps text-[10px] tracking-widest">PAD WORK</span>
+<span class="px-3 py-1 bg-primary text-on-primary font-label-caps text-[10px] tracking-widest">BAG WORK</span>
+<span class="px-3 py-1 bg-primary text-on-primary font-label-caps text-[10px] tracking-widest">FOOTWORK</span>
+</div>
+</div>
+<div class="mt-10">
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">LIMITATIONS</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed italic">"Previous right rotator cuff injury. Avoiding heavy overhead presses but cleared for full contact."</p>
+</div>
+</div>
+</div>
+</div>
+<!-- CTAs -->
+<div class="flex flex-col md:flex-row items-center gap-4 pt-8 border-t border-outline-variant/15">
+<button class="w-full md:w-auto px-10 h-14 bg-primary text-on-primary font-label-caps text-label-caps hover:opacity-90 active:scale-95 transition-all">
+                    FINISH SETUP
+                </button>
+<button class="w-full md:w-auto px-10 h-14 border border-outline text-primary font-label-caps text-label-caps hover:bg-surface-variant transition-all">
+                    EDIT ANSWERS
+                </button>
+</div>
+</div>
+<!-- DIVIDER FOR PREVIEW PURPOSES -->
+<div class="my-32 border-b border-outline-variant/30 relative">
+<span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface px-4 font-label-caps text-[10px] text-on-surface-variant/50">ONBOARDING STEPS REFERENCE (SCREENS 5-8)</span>
+</div>
+<!-- FORM STEPS GRID (For layout demonstration) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-section-gap pb-32">
+<!-- STEP 2: BODY PROFILE (Screen 5) -->
+<section class="space-y-8 bg-white border border-primary/5 p-card-padding">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full border border-primary flex items-center justify-center font-label-caps text-[10px]">02</span>
+<h3 class="font-headline-md text-headline-md">Body Profile</h3>
+</div>
+<div class="space-y-12 py-4">
+<!-- Numeric Pickers Simulation -->
+<div class="group">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-4">HEIGHT (CM)</label>
+<div class="flex items-end border-b-2 border-primary/10 group-focus-within:border-primary transition-colors pb-2">
+<input class="w-full bg-transparent border-none p-0 font-stats-number text-stats-number focus:ring-0 placeholder:text-surface-variant" placeholder="180" type="number"/>
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-2">CM</span>
+</div>
+</div>
+<div class="group">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-4">WEIGHT (KG)</label>
+<div class="flex items-end border-b-2 border-primary/10 group-focus-within:border-primary transition-colors pb-2">
+<input class="w-full bg-transparent border-none p-0 font-stats-number text-stats-number focus:ring-0 placeholder:text-surface-variant" placeholder="75" type="number"/>
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-2">KG</span>
+</div>
+</div>
+</div>
+</section>
+<!-- STEP 3: BOXING LEVEL (Screen 6) -->
+<section class="space-y-8 bg-white border border-primary/5 p-card-padding">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full border border-primary flex items-center justify-center font-label-caps text-[10px]">03</span>
+<h3 class="font-headline-md text-headline-md">Boxing Experience</h3>
+</div>
+<div class="grid grid-cols-1 gap-3">
+<!-- Premium Selection Chips -->
+<button class="w-full flex justify-between items-center p-4 border border-outline-variant hover:border-primary transition-all">
+<span class="font-label-caps text-label-caps">COMPLETE BEGINNER</span>
+<span class="material-symbols-outlined text-primary/10">chevron_right</span>
+</button>
+<button class="w-full flex justify-between items-center p-4 border-2 border-primary bg-primary/5 transition-all">
+<span class="font-label-caps text-label-caps font-bold">EXPERIENCED COMPETITOR</span>
+<span class="material-symbols-outlined text-primary">check</span>
+</button>
+<button class="w-full flex justify-between items-center p-4 border border-outline-variant hover:border-primary transition-all">
+<span class="font-label-caps text-label-caps">COACH</span>
+<span class="material-symbols-outlined text-primary/10">chevron_right</span>
+</button>
+</div>
+<div class="mt-4">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-2">YEARS OF EXPERIENCE</label>
+<input class="w-full bg-surface-container-low border-none h-14 px-4 font-headline-md text-headline-md focus:ring-2 ring-primary/20" type="number"/>
+</div>
+</section>
+<!-- STEP 4: WEEKLY ROUTINE (Screen 7) -->
+<section class="space-y-8 bg-white border border-primary/5 p-card-padding">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full border border-primary flex items-center justify-center font-label-caps text-[10px]">04</span>
+<h3 class="font-headline-md text-headline-md">Weekly Routine</h3>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-4">TRAINING DAYS PER WEEK</label>
+<div class="flex justify-between gap-1">
+<!-- Numeric selector -->
+<button class="w-10 h-10 border border-outline-variant flex items-center justify-center font-bold">1</button>
+<button class="w-10 h-10 border border-outline-variant flex items-center justify-center font-bold">2</button>
+<button class="w-10 h-10 border border-outline-variant flex items-center justify-center font-bold">3</button>
+<button class="w-10 h-10 border border-outline-variant flex items-center justify-center font-bold">4</button>
+<button class="w-10 h-10 bg-primary text-white flex items-center justify-center font-bold">5</button>
+<button class="w-10 h-10 border border-outline-variant flex items-center justify-center font-bold text-outline-variant">6</button>
+<button class="w-10 h-10 border border-outline-variant flex items-center justify-center font-bold text-outline-variant">7</button>
+</div>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-4">TRAINING TYPES (MULTI-SELECT)</label>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 bg-primary text-on-primary font-label-caps text-[11px] tracking-widest cursor-pointer">BAG WORK</span>
+<span class="px-4 py-2 bg-primary text-on-primary font-label-caps text-[11px] tracking-widest cursor-pointer">PADS</span>
+<span class="px-4 py-2 bg-primary text-on-primary font-label-caps text-[11px] tracking-widest cursor-pointer">SPARRING</span>
+<span class="px-4 py-2 border border-outline-variant font-label-caps text-[11px] tracking-widest cursor-pointer hover:border-primary">STRENGTH</span>
+<span class="px-4 py-2 border border-outline-variant font-label-caps text-[11px] tracking-widest cursor-pointer hover:border-primary">FOOTWORK</span>
+</div>
+</div>
+</section>
+<!-- STEP 5: BACKGROUND (Screen 8) -->
+<section class="space-y-8 bg-white border border-primary/5 p-card-padding">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full border border-primary flex items-center justify-center font-label-caps text-[10px]">05</span>
+<h3 class="font-headline-md text-headline-md">Boxing Background</h3>
+</div>
+<div class="space-y-6">
+<div class="flex items-center justify-between py-2 border-b border-outline-variant/10">
+<span class="font-body-md">Amateur Bouts</span>
+<div class="w-12 h-6 bg-primary/20 rounded-full relative cursor-pointer">
+<div class="absolute right-0.5 top-0.5 w-5 h-5 bg-primary rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-outline-variant/10">
+<span class="font-body-md">Pro Experience</span>
+<div class="w-12 h-6 bg-surface-variant rounded-full relative cursor-pointer">
+<div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white shadow-sm rounded-full"></div>
+</div>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-4">INJURIES OR LIMITATIONS</label>
+<textarea class="w-full bg-surface-container-low border-none p-4 min-h-[120px] focus:ring-2 ring-primary/20 placeholder:italic" placeholder="List any relevant health information..."></textarea>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Navigation suppressed per relevance check: Transactional Onboarding -->
+<!-- Footer Branding Only -->
+<footer class="w-full h-24 border-t border-outline-variant/10 flex items-center justify-center relative z-10">
+<span class="font-headline-md text-primary tracking-tighter">DETECT</span>
+</footer>
+</body></html>

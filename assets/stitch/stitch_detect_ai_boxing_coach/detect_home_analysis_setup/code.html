@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fcf9f8",
+                        "surface-variant": "#e4e2e1",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "surface": "#fcf9f8",
+                        "on-secondary-fixed": "#1c1c19",
+                        "inverse-primary": "#c8c6c5",
+                        "inverse-on-surface": "#f3f0f0",
+                        "primary-container": "#1c1b1b",
+                        "surface-container-low": "#f6f3f2",
+                        "on-background": "#1b1c1c",
+                        "on-tertiary-fixed": "#40000b",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#1c1b1b",
+                        "tertiary-container": "#40000b",
+                        "background": "#fcf9f8",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#e5e2dd",
+                        "secondary-fixed-dim": "#c9c6c2",
+                        "on-tertiary-container": "#e25160",
+                        "on-surface": "#1b1c1c",
+                        "secondary-fixed": "#e5e2dd",
+                        "surface-container-high": "#eae7e7",
+                        "on-tertiary-fixed-variant": "#8e0f28",
+                        "on-secondary-container": "#656461",
+                        "surface-container-highest": "#e4e2e1",
+                        "tertiary-fixed-dim": "#ffb3b5",
+                        "on-error": "#ffffff",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed-variant": "#474743",
+                        "tertiary-fixed": "#ffdada",
+                        "primary": "#000000",
+                        "surface-tint": "#5f5e5e",
+                        "surface-container": "#f0eded",
+                        "on-primary-container": "#858383",
+                        "secondary": "#5f5e5b",
+                        "outline": "#747878",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#303030",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#e5e2e1",
+                        "outline-variant": "#c4c7c7",
+                        "on-surface-variant": "#444748",
+                        "on-primary-fixed-variant": "#474746"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "section-gap": "48px",
+                        "card-padding": "24px",
+                        "unit": "8px",
+                        "gutter": "16px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "stats-number": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "stats-number": ["40px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .canvas-texture {
+            background-image: radial-gradient(#2d2d2d08 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface canvas-texture min-h-screen">
+<!-- SCREEN 10: Home Dashboard -->
+<section class="max-w-[1120px] mx-auto px-container-margin pb-32" id="screen-10">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full h-16 mb-8 border-b border-outline-variant/15">
+<h1 class="font-headline-lg text-headline-lg tracking-tighter text-primary">DETECT</h1>
+<div class="w-10 h-10 rounded-full bg-secondary-container overflow-hidden">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="A professional portrait of a high-performance athlete in a minimalist, modern studio setting. The lighting is soft and high-key, emphasizing a clean and focused aesthetic. The background is a warm sand tone, maintaining the design's professional and elite atmosphere. The subject exhibits quiet confidence and poise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxUbHguqUYVZ47nGrLlFsrvb4LrWjCtetPK8mq9iFV_Jg_m1bjASgdd58bkKyj2_UcEYNbAlmVvk22aaHyh1wrigrXOL8iarkguL_j7vLyOWFs-LRFsR30kkw4a8TrsTFM5GDr_A52sOEnV8fLlJIA8Hg1KMsJV3BQnlsp3tliqodTMQlmMZm83D8aK1neGW70PhEZd0ndMiyu4lrvS-XxJDqMGHbLHd3vvR-GB6NoKFWcRoFLDTrX8od2yvhn0ppcSf7gnEnXitQ"/>
+</div>
+</header>
+<div class="mb-section-gap">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">MONDAY, OCT 23</p>
+<h2 class="font-display-lg text-display-lg text-primary">Welcome back, Marcus.</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-start">
+<!-- Primary Action Card -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant/15 p-card-padding relative overflow-hidden group cursor-pointer transition-all hover:bg-surface-bright">
+<div class="relative z-10">
+<span class="font-label-caps text-label-caps text-on-tertiary-container mb-4 block">ACTIVE SESSION</span>
+<h3 class="font-headline-lg text-headline-lg mb-6">Start New Analysis</h3>
+<button class="h-14 px-8 bg-primary text-on-primary font-label-caps text-label-caps flex items-center gap-4 hover:opacity-90 transition-opacity">
+                        UPLOAD FOOTAGE
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-y-4 translate-x-4">
+<span class="material-symbols-outlined !text-[120px]">analytics</span>
+</div>
+</div>
+<!-- Profile Snapshot & Progress -->
+<div class="md:col-span-4 space-y-gutter">
+<div class="bg-surface-container-low border border-outline-variant/10 p-card-padding">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined">monitoring</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps">WEEKLY GOAL</p>
+<p class="font-headline-md text-headline-md">75% Complete</p>
+</div>
+</div>
+<div class="h-1 w-full bg-secondary-container mb-2">
+<div class="h-full bg-primary w-3/4"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">3 Sessions this week</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/10 p-card-padding">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-4">PROFILE SNAPSHOT</p>
+<div class="space-y-4">
+<div class="flex justify-between items-center pb-2 border-b border-outline-variant/10">
+<span class="font-body-sm text-on-surface-variant">Avg. Velocity</span>
+<span class="font-label-caps text-primary">4.2 m/s</span>
+</div>
+<div class="flex justify-between items-center pb-2 border-b border-outline-variant/10">
+<span class="font-body-sm text-on-surface-variant">Form Accuracy</span>
+<span class="font-label-caps text-primary">88%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Reviews -->
+<div class="md:col-span-12 mt-unit">
+<h4 class="font-headline-md text-headline-md mb-6">Recent Reviews</h4>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Review Item 1 -->
+<div class="bg-white border border-outline-variant/10 group cursor-pointer overflow-hidden">
+<div class="h-32 bg-surface-dim relative">
+<img class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" data-alt="A cinematic, high-contrast action shot of a boxer hitting a heavy bag in a dimly lit, elite training facility. The scene is captured with sharp detail and surgical precision, emphasizing the movement of the athlete. The lighting is moody with subtle rim lights, reflecting a professional and focused atmosphere in a modern high-end gym." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsU8d3d6NEc9FpGVrGM9VeCYEDox04Yqk5Llc0oSlnJjLNHIHABzLsQlTpF69pY20rgmmW93tgVEaS6CyzKqeY3HNJklVUvkxW-w3blhRifA8jlqnnevajNH3_bumvRWQLlIH5Hj1Cujky1Kffbro1IaPOnh0hVlteou2EfDF3-DTYMA4bXet_K3ZuMB_NZOs_-FzMakZJOr63vU0C8jBjmnhsACSgpHS-9PW19fqOotdvtn9eIMzxDzylSyWL7mxWeUdkU7bdeHM"/>
+<div class="absolute top-2 right-2">
+<span class="bg-primary text-white text-[10px] font-bold px-2 py-1">DEEP ANALYSIS</span>
+</div>
+</div>
+<div class="p-4">
+<p class="font-label-caps text-[10px] text-on-surface-variant mb-1">22 OCT • 14:30</p>
+<p class="font-body-md font-semibold">Heavy Bag Technical Review</p>
+</div>
+</div>
+<!-- Review Item 2 -->
+<div class="bg-white border border-outline-variant/10 group cursor-pointer overflow-hidden">
+<div class="h-32 bg-surface-dim relative">
+<img class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" data-alt="A wide-angle shot of a minimalist, high-end training space with professional gym equipment. The interior features warm sand-colored walls, clean lines, and soft ambient lighting that creates a calm, focused environment. The style is contemporary corporate, prioritizing space and order, typical of a luxury private training club." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYN6BTw5SP1QTg_5-u2g4eniTJhcQgETHK-kj9eSVrmMPJ139y4G1T0ajw9_cqu0kf5B9gs7m36Bn9RXJCLm-pPYLbHERXid1W3EyRyP4ZZd3GzbIp_Mp0I2xRYlqNBj0iQYlu9nMDJ-fbQZOxhCxYV6StTGOJKeD8mic6O509thn8q5EZxlwSyUpQzoE39hJ0dIA8RHfp27h6nutbgRlsPTRviLNKNQ6hrtXyYaIXszGOdS6P1IUbjHieoejJvjkdC4_sxkMFxJY"/>
+</div>
+<div class="p-4">
+<p class="font-label-caps text-[10px] text-on-surface-variant mb-1">21 OCT • 09:15</p>
+<p class="font-body-md font-semibold">Footwork Calibration</p>
+</div>
+</div>
+<!-- Review Item 3 -->
+<div class="bg-white border border-outline-variant/10 group cursor-pointer overflow-hidden">
+<div class="h-32 bg-surface-dim relative">
+<img class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" data-alt="Close-up of professional boxing gloves and training gear resting on a pristine canvas surface. The image is captured with a shallow depth of field, highlighting the tactile texture of the equipment. The lighting is cool and professional, reflecting an atmosphere of elite preparation and serious athletic practice." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwg6MiM2AhY-PLcAgPey5hw3vrhfauTBEzKRBuLh1i_gfqbqm4XKNJHbkOf-9bKWwLNlEmFi2n9fM5wmGAUinZfOF6ZQeYiHyFAhr07TJK8BW0MoQUw4U6lWuZLVoFMwUYJ8daz9p9okuTr1AF4aQSjcEBHD2izPOzcLy9z_2qUbvwNSPSFda7RI027c27fxX3WUDdZ_khRT7QJCMYMvK-3jk_UmeU2sTHVIFCG4nLDHJEXe7x0Kka5dYeUzyUyu_pFoBwxyKfvW8"/>
+</div>
+<div class="p-4">
+<p class="font-label-caps text-[10px] text-on-surface-variant mb-1">19 OCT • 18:00</p>
+<p class="font-body-md font-semibold">Sparring Session Alpha</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-gutter pb-safe h-20 border-t border-outline-variant/10 bg-surface/95 backdrop-blur-md z-50">
+<a class="flex flex-col items-center justify-center text-primary border-t-2 border-on-tertiary-container pt-2 active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 pt-2 hover:text-primary active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-caps text-label-caps">Analyses</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 pt-2 hover:text-primary active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 pt-2 hover:text-primary active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+</section>
+<!-- SCREEN 11: Upload Video -->
+<section class="hidden max-w-[1120px] mx-auto px-container-margin pb-32" id="screen-11">
+<header class="flex items-center w-full h-16 mb-8 border-b border-outline-variant/15">
+<button class="mr-4 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md tracking-tight">Upload Footage</h1>
+</header>
+<div class="mb-section-gap">
+<div class="border-2 border-dashed border-outline-variant/30 bg-surface-container-low aspect-video flex flex-col items-center justify-center p-12 text-center group cursor-pointer hover:border-primary/40 transition-colors">
+<div class="w-16 h-16 bg-white border border-outline-variant/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary !text-[32px]">upload_file</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-2">Select Video Clip</h3>
+<p class="font-body-sm text-on-surface-variant max-w-sm">Drag and drop or browse to upload your training footage. High frame rate (60fps+) recommended for deep analysis.</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/10 p-card-padding flex justify-between items-center">
+<div class="flex gap-8">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">RESOLUTION</p>
+<p class="font-body-md font-semibold">1080p (FHD)</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">DURATION</p>
+<p class="font-body-md font-semibold">01:24</p>
+</div>
+</div>
+<button class="h-12 px-12 bg-primary text-on-primary font-label-caps text-label-caps hover:opacity-90 transition-opacity">
+                CONTINUE
+            </button>
+</div>
+</section>
+<!-- SCREEN 12: Analysis Setup -->
+<section class="hidden max-w-[1120px] mx-auto px-container-margin pb-32" id="screen-12">
+<header class="flex items-center w-full h-16 mb-8 border-b border-outline-variant/15">
+<button class="mr-4 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md tracking-tight">Analysis Configuration</h1>
+</header>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-section-gap">
+<div class="md:col-span-7 space-y-gutter">
+<div class="aspect-video relative overflow-hidden border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="A high-resolution frame from a boxing training video, showing an athlete mid-jab against a heavy bag. The lighting is focused and professional, with a modern gym background in soft focus. The composition emphasizes the biomechanical alignment of the athlete, maintaining the clean, elite aesthetic of the training club brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgX1bTOUVDQdZPCeQdc8dVd00FeACxLrd6jEffpo9WFaOwLIdRe9qxandmjhZzh3DS1jghEvJSlovYQFegcKvJG21DlSbYOqIctZ7MpmIvMnHn2YNDndSoyXceEufDnamGfeltzTjlpQ8bZTpJpkji5hSp4IwCziER76yzvJvwN5lI7jO--M6IaEZbtYwmGaMXsNxYQHleLLIWcxI12Oq1_jcY73CD6WaDAMW8ef3GBp9x_0ImRAXhmc1m7_pvkBljXiGSueuCJHM"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-white !text-[64px]">play_circle</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/10 p-card-padding">
+<label class="font-label-caps text-label-caps text-on-surface-variant mb-3 block">WHAT SHOULD THE COACH FOCUS ON?</label>
+<textarea class="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 focus:ring-0 focus:border-on-tertiary-container transition-colors resize-none font-body-md p-4" placeholder="e.g., Check my lead hand position during the return..." rows="4"></textarea>
+</div>
+</div>
+<div class="md:col-span-5 space-y-gutter">
+<div class="bg-surface-container-low border border-outline-variant/10 p-card-padding">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-4">ATHLETE PROFILE</p>
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 bg-white border border-outline-variant/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+<div>
+<p class="font-body-md font-bold">Marcus V. Archer</p>
+<p class="font-body-sm text-on-surface-variant">Standard Ortho • Welterweight</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/10 p-card-padding">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-4">ANALYSIS MODE</p>
+<div class="space-y-3">
+<label class="flex items-center gap-4 p-4 border border-outline-variant/20 cursor-pointer hover:border-primary/30">
+<input checked="" class="text-primary focus:ring-primary" name="mode" type="radio"/>
+<div>
+<p class="font-body-md font-bold">Standard Review</p>
+<p class="font-body-sm text-on-surface-variant">Automated metrics &amp; key milestones.</p>
+</div>
+</label>
+<label class="flex items-center gap-4 p-4 border border-on-tertiary-container bg-on-tertiary-container/5 cursor-pointer">
+<input class="text-on-tertiary-container focus:ring-on-tertiary-container" name="mode" type="radio"/>
+<div>
+<p class="font-body-md font-bold text-on-tertiary-container">Deep Technical Analysis</p>
+<p class="font-body-sm text-on-tertiary-container/70">Frame-by-frame biomechanical breakdown.</p>
+</div>
+</label>
+</div>
+</div>
+<button class="w-full h-14 bg-primary text-on-primary font-label-caps text-label-caps flex items-center justify-center gap-4 hover:opacity-90 transition-opacity">
+                    RUN ANALYSIS
+                    <span class="material-symbols-outlined">bolt</span>
+</button>
+</div>
+</div>
+</section>
+<!-- SCREEN 13: Analysis Running -->
+<section class="hidden fixed inset-0 z-[100] bg-surface flex flex-col items-center justify-center px-container-margin canvas-texture" id="screen-13">
+<div class="w-full max-w-2xl text-center">
+<div class="relative w-full aspect-video mb-12 border border-outline-variant/20 overflow-hidden shadow-2xl">
+<img class="w-full h-full object-cover blur-lg scale-110 opacity-60" data-alt="A blurred, cinematic preview of a boxing analysis in progress. The video frame is soft-focused with an overlay of technical grid lines and analytical UI elements. The lighting is dramatic and elite, focusing on the movement of the athlete. The scene conveys a sense of high-end processing and surgical precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbbDycvudZZBq-Wb6EB54CDiAcPwk88lw2U9hkojzEbEinBBV_u3echOrlOLHfWf78QIitfUI8A3vuEbCH-ICepGTTQxlcG-3cgUxPvEWJhektZYmaO6N1zpRRKOVYZe75aJ5XSXKUUpGjc4cvxLr33-BgEvdFptlAWiIcJWOaAzP9KpkAVsZipXZL_HEQP9OEgn4BErTlmFTnqU8-J_BHCm_1BAPMj9OQ3lkIkulUrWhmbZ07tsd5R9g3r769yJuSCWjZAElzaHo"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="relative">
+<div class="w-24 h-24 border-2 border-primary/20 rounded-full animate-ping"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary !text-[48px]">sync</span>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<h2 class="font-headline-lg text-headline-lg tracking-tight">Processing technical layers...</h2>
+<div class="space-y-4 max-w-md mx-auto">
+<div class="flex items-center gap-4 text-left">
+<span class="material-symbols-outlined text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<p class="font-body-md text-on-surface">Reviewing visible movement...</p>
+</div>
+<div class="flex items-center gap-4 text-left opacity-50">
+<div class="w-5 h-5 border-2 border-primary/30 rounded-full border-t-primary animate-spin"></div>
+<p class="font-body-md text-on-surface">Calibrating to your level...</p>
+</div>
+<div class="flex items-center gap-4 text-left opacity-30">
+<span class="material-symbols-outlined">radio_button_unchecked</span>
+<p class="font-body-md text-on-surface-variant">Extracting biometric data...</p>
+</div>
+</div>
+<div class="pt-8">
+<div class="h-1 w-full bg-secondary-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[42%] transition-all duration-1000"></div>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-4">42% CALCULATED</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Navigation logic mockup (hidden for layout demo) -->
+<div class="fixed top-4 right-4 z-[200] flex gap-2">
+<button class="bg-black/5 p-2 rounded text-[10px] font-bold" onclick="document.querySelectorAll('section').forEach(s =&gt; s.classList.add('hidden')); document.getElementById('screen-10').classList.remove('hidden')">10</button>
+<button class="bg-black/5 p-2 rounded text-[10px] font-bold" onclick="document.querySelectorAll('section').forEach(s =&gt; s.classList.add('hidden')); document.getElementById('screen-11').classList.remove('hidden')">11</button>
+<button class="bg-black/5 p-2 rounded text-[10px] font-bold" onclick="document.querySelectorAll('section').forEach(s =&gt; s.classList.add('hidden')); document.getElementById('screen-12').classList.remove('hidden')">12</button>
+<button class="bg-black/5 p-2 rounded text-[10px] font-bold" onclick="document.querySelectorAll('section').forEach(s =&gt; s.classList.add('hidden')); document.getElementById('screen-13').classList.remove('hidden')">13</button>
+</div>
+</body></html>

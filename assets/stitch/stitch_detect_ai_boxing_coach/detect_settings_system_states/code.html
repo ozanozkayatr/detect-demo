@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#fcf9f8",
+                    "surface-variant": "#e4e2e1",
+                    "on-tertiary": "#ffffff",
+                    "surface-dim": "#dcd9d9",
+                    "surface": "#fcf9f8",
+                    "on-secondary-fixed": "#1c1c19",
+                    "inverse-primary": "#c8c6c5",
+                    "inverse-on-surface": "#f3f0f0",
+                    "primary-container": "#1c1b1b",
+                    "surface-container-low": "#f6f3f2",
+                    "on-background": "#1b1c1c",
+                    "on-tertiary-fixed": "#40000b",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed": "#1c1b1b",
+                    "tertiary-container": "#40000b",
+                    "background": "#fcf9f8",
+                    "on-secondary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#e5e2dd",
+                    "secondary-fixed-dim": "#c9c6c2",
+                    "on-tertiary-container": "#e25160",
+                    "on-surface": "#1b1c1c",
+                    "secondary-fixed": "#e5e2dd",
+                    "surface-container-high": "#eae7e7",
+                    "on-tertiary-fixed-variant": "#8e0f28",
+                    "on-secondary-container": "#656461",
+                    "surface-container-highest": "#e4e2e1",
+                    "tertiary-fixed-dim": "#ffb3b5",
+                    "on-error": "#ffffff",
+                    "tertiary": "#000000",
+                    "on-secondary-fixed-variant": "#474743",
+                    "tertiary-fixed": "#ffdada",
+                    "primary": "#000000",
+                    "surface-tint": "#5f5e5e",
+                    "surface-container": "#f0eded",
+                    "on-primary-container": "#858383",
+                    "secondary": "#5f5e5b",
+                    "outline": "#747878",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "inverse-surface": "#303030",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#e5e2e1",
+                    "outline-variant": "#c4c7c7",
+                    "on-surface-variant": "#444748",
+                    "on-primary-fixed-variant": "#474746"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "section-gap": "48px",
+                    "card-padding": "24px",
+                    "unit": "8px",
+                    "gutter": "16px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "stats-number": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-sm": ["Inter"],
+                    "label-caps": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "stats-number": ["40px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24
+    }
+.canvas-texture {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDAGlGIGc0bkk4-Ua7ea9_sE9M0e67NHIPHHaeVX_c8s1L8WevEmw49ov-i7yFNidFOYpZzGDPxFdWljE8Wjc_hGJimTuRtxTPvo43zu9k6UOpqRn5Ffc7dB6SwF0lydnw0xeWB2GezcEnRxa36ltnVbSsEotl8t4sZcmu-HpwhxD94AAVD0VMkWdVucxRbPGfWghdrh5i82OOHuz3QXSz5HlpzGRykk8oFYB7KmoZrEqteemkavrlcbJ-hsKW9ro8DlnRrnFPuH5Q);
+    background-repeat: repeat;
+    opacity: 0.03
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface selection:bg-on-tertiary-container selection:text-white">
+<!-- Screen 18: Settings -->
+<main class="min-h-screen pb-32">
+<header class="bg-surface dark:bg-surface-container-low border-b border-outline-variant/15 flex justify-between items-center w-full px-container-margin h-16 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-on-surface cursor-pointer active:scale-95 transition-transform duration-200">arrow_back</span>
+<h1 class="font-headline-md text-headline-md tracking-tight text-primary dark:text-on-surface">Settings</h1>
+</div>
+<div class="h-8 w-8 rounded-full bg-secondary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a high-performance athlete in a minimalist, high-key studio setting. The lighting is soft and directional, creating subtle highlights on the subject's face. The aesthetic is clean and modern, reflecting an elite training club atmosphere with a palette of whites, soft greys, and warm sand tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOUWIwbG--4ND0RwpVImZfyzWmLgh6WQlyP8pmC32OglrA7vwbdEfPtodSK2ygOC3AZdvGZrm_nhPQUX1YEFv_zvKkbxG_pQs4SaeH3D1wM2YTJkM55LWw0tbfUFOuOQkJUabcx5MNCk_LPDPL8Siwx9HxeOxIyLT7uBZ7tPJGkF5OU-8iacGsJV8Sf9VG2NAESdg9kFEZ_apkP85kWZhKCRYLRHm-N0bDqqISy56A5EG-pNSio-2CmM0IgP9fL0K2FE_VgFv5bRw"/>
+</div>
+</header>
+<section class="max-w-[1120px] mx-auto px-container-margin mt-10">
+<div class="grid grid-cols-1 gap-1">
+<!-- Notifications -->
+<div class="flex items-center justify-between p-card-padding bg-surface-container-lowest border border-outline-variant/10 hover:opacity-80 transition-opacity cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<div>
+<p class="font-headline-md text-body-lg">Notifications</p>
+<p class="font-body-sm text-on-surface-variant">Manage your alerts and daily reminders</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary">chevron_right</span>
+</div>
+<!-- Privacy -->
+<div class="flex items-center justify-between p-card-padding bg-surface-container-lowest border border-outline-variant/10 hover:opacity-80 transition-opacity cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">shield</span>
+<div>
+<p class="font-headline-md text-body-lg">Privacy</p>
+<p class="font-body-sm text-on-surface-variant">Data sharing and security settings</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary">chevron_right</span>
+</div>
+<!-- Support -->
+<div class="flex items-center justify-between p-card-padding bg-surface-container-lowest border border-outline-variant/10 hover:opacity-80 transition-opacity cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">help</span>
+<div>
+<p class="font-headline-md text-body-lg">Support</p>
+<p class="font-body-sm text-on-surface-variant">Get help or send feedback to our team</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary">chevron_right</span>
+</div>
+<!-- Account -->
+<div class="flex items-center justify-between p-card-padding bg-surface-container-lowest border border-outline-variant/10 hover:opacity-80 transition-opacity cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">person</span>
+<div>
+<p class="font-headline-md text-body-lg">Account</p>
+<p class="font-body-sm text-on-surface-variant">Personal info, subscription, and email</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary">chevron_right</span>
+</div>
+<!-- Analysis Preferences -->
+<div class="flex items-center justify-between p-card-padding bg-surface-container-lowest border border-outline-variant/10 hover:opacity-80 transition-opacity cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">analytics</span>
+<div>
+<p class="font-headline-md text-body-lg">Analysis Preferences</p>
+<p class="font-body-sm text-on-surface-variant">Metric displays and AI coaching style</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary">chevron_right</span>
+</div>
+</div>
+<div class="mt-12 flex justify-center">
+<button class="font-label-caps text-label-caps text-on-tertiary-container hover:underline tracking-widest uppercase">Sign Out</button>
+</div>
+</section>
+</main>
+<!-- Screen 19: Empty States -->
+<main class="min-h-screen bg-surface-container-low pb-32">
+<div class="max-w-[1120px] mx-auto px-container-margin py-section-gap grid grid-cols-1 md:grid-cols-2 gap-12">
+<!-- No Analyses Yet -->
+<div class="flex flex-col items-center justify-center text-center p-12 bg-surface-container-lowest border border-outline-variant/10 relative overflow-hidden">
+<div class="absolute inset-0 canvas-texture pointer-events-none"></div>
+<div class="w-24 h-24 mb-8 bg-surface-container flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-[48px] text-on-surface-variant/40">monitoring</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg mb-4 text-primary">No Analyses Yet</h2>
+<p class="font-body-md text-on-surface-variant mb-10 max-w-sm">Upload your first session to unlock deep-learning insights and tactical performance reviews.</p>
+<button class="h-14 px-8 bg-primary text-on-primary font-label-caps text-label-caps tracking-widest uppercase flex items-center gap-3 hover:opacity-90 transition-opacity active:scale-95 duration-200">
+                    Start Training
+                    <span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Profile Incomplete -->
+<div class="flex flex-col items-center justify-center text-center p-12 bg-surface-container-lowest border border-outline-variant/10 relative overflow-hidden">
+<div class="absolute inset-0 canvas-texture pointer-events-none"></div>
+<div class="w-24 h-24 mb-8 bg-surface-container flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-[48px] text-on-surface-variant/40">badge</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg mb-4 text-primary">Profile Incomplete</h2>
+<p class="font-body-md text-on-surface-variant mb-10 max-w-sm">Help our AI understand your physical metrics for more accurate caloric and power output analysis.</p>
+<button class="h-14 px-8 border border-primary text-primary font-label-caps text-label-caps tracking-widest uppercase flex items-center gap-3 hover:bg-primary hover:text-on-primary transition-all active:scale-95 duration-200">
+                    Finish Setup
+                    <span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Screen 20: Error States -->
+<main class="min-h-screen pb-32">
+<div class="max-w-[1120px] mx-auto px-container-margin py-section-gap grid grid-cols-1 md:grid-cols-2 gap-12">
+<!-- Upload Failed -->
+<div class="flex flex-col items-center justify-center text-center p-12 border border-error/20 bg-surface-bright relative">
+<div class="w-16 h-16 mb-6 flex items-center justify-center rounded-full bg-error-container text-error">
+<span class="material-symbols-outlined text-[32px]">cloud_off</span>
+</div>
+<h2 class="font-headline-md text-headline-md mb-3 text-on-surface">Upload Failed</h2>
+<p class="font-body-sm text-on-surface-variant mb-8 max-w-xs">We encountered an issue processing your video file. This might be due to a network interruption or unsupported format.</p>
+<div class="flex gap-4">
+<button class="h-12 px-6 border border-outline-variant text-on-surface font-label-caps text-label-caps tracking-widest uppercase hover:bg-surface-container transition-colors">Discard</button>
+<button class="h-12 px-6 bg-primary text-on-primary font-label-caps text-label-caps tracking-widest uppercase hover:opacity-90 transition-opacity">Retry Upload</button>
+</div>
+</div>
+<!-- Service Unavailable -->
+<div class="flex flex-col items-center justify-center text-center p-12 border border-outline-variant/20 bg-surface-bright relative">
+<div class="w-16 h-16 mb-6 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined text-[32px]">sync_problem</span>
+</div>
+<h2 class="font-headline-md text-headline-md mb-3 text-on-surface">Service Unavailable</h2>
+<p class="font-body-sm text-on-surface-variant mb-8 max-w-xs">Our analytical engines are currently undergoing maintenance to improve precision. We'll be back shortly.</p>
+<div class="flex flex-col gap-3 w-full max-w-[240px]">
+<button class="h-12 px-6 bg-primary text-on-primary font-label-caps text-label-caps tracking-widest uppercase hover:opacity-90 transition-opacity">Check Status</button>
+<button class="h-12 px-6 border border-outline-variant text-on-surface font-label-caps text-label-caps tracking-widest uppercase hover:bg-surface-container transition-colors">Contact Support</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Mandatory Shell) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-gutter pb-safe h-20 bg-surface dark:bg-surface-container-lowest border-t border-outline-variant/10 backdrop-blur-md z-50">
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant pt-2 cursor-pointer hover:text-primary transition-all duration-150 active:scale-90">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant pt-2 cursor-pointer hover:text-primary transition-all duration-150 active:scale-90">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-caps text-label-caps mt-1">Analyses</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant pt-2 cursor-pointer hover:text-primary transition-all duration-150 active:scale-90">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</div>
+<div class="flex flex-col items-center justify-center text-primary dark:text-on-tertiary-container border-t-2 border-on-tertiary-container pt-2 cursor-pointer transition-all duration-150 active:scale-90">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-label-caps text-label-caps mt-1">Settings</span>
+</div>
+</nav>
+</body></html>

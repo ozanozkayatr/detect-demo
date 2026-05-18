@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DETECT - AI Boxing Review</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#fcf9f8",
+                    "surface-variant": "#e4e2e1",
+                    "on-tertiary": "#ffffff",
+                    "surface-dim": "#dcd9d9",
+                    "surface": "#fcf9f8",
+                    "on-secondary-fixed": "#1c1c19",
+                    "inverse-primary": "#c8c6c5",
+                    "inverse-on-surface": "#f3f0f0",
+                    "primary-container": "#1c1b1b",
+                    "surface-container-low": "#f6f3f2",
+                    "on-background": "#1b1c1c",
+                    "on-tertiary-fixed": "#40000b",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed": "#1c1b1b",
+                    "tertiary-container": "#40000b",
+                    "background": "#fcf9f8",
+                    "on-secondary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#e5e2dd",
+                    "secondary-fixed-dim": "#c9c6c2",
+                    "on-tertiary-container": "#e25160",
+                    "on-surface": "#1b1c1c",
+                    "secondary-fixed": "#e5e2dd",
+                    "surface-container-high": "#eae7e7",
+                    "on-tertiary-fixed-variant": "#8e0f28",
+                    "on-secondary-container": "#656461",
+                    "surface-container-highest": "#e4e2e1",
+                    "tertiary-fixed-dim": "#ffb3b5",
+                    "on-error": "#ffffff",
+                    "tertiary": "#000000",
+                    "on-secondary-fixed-variant": "#474743",
+                    "tertiary-fixed": "#ffdada",
+                    "primary": "#000000",
+                    "surface-tint": "#5f5e5e",
+                    "surface-container": "#f0eded",
+                    "on-primary-container": "#858383",
+                    "secondary": "#5f5e5b",
+                    "outline": "#747878",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "inverse-surface": "#303030",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#e5e2e1",
+                    "outline-variant": "#c4c7c7",
+                    "on-surface-variant": "#444748",
+                    "on-primary-fixed-variant": "#474746"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "section-gap": "48px",
+                    "card-padding": "24px",
+                    "unit": "8px",
+                    "gutter": "16px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "stats-number": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-sm": ["Inter"],
+                    "label-caps": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "stats-number": ["40px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .canvas-texture {
+            background-image: radial-gradient(#2D2D2D 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            opacity: 0.03;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md overflow-x-hidden selection:bg-tertiary-container selection:text-on-tertiary-container">
+<!-- SCREEN 1: Welcome -->
+<section class="relative min-h-screen flex flex-col items-center justify-center px-container-margin py-section-gap">
+<div class="absolute inset-0 canvas-texture pointer-events-none"></div>
+<div class="w-full max-w-screen-xl mx-auto flex flex-col items-center text-center">
+<header class="mb-12">
+<span class="font-label-caps text-label-caps text-on-tertiary-container bg-tertiary-container/10 px-4 py-1 mb-6 inline-block">ELITE PERFORMANCE</span>
+<h1 class="font-display-lg text-display-lg text-primary tracking-tighter mb-2">DETECT</h1>
+<p class="font-headline-md text-headline-md text-secondary">AI-Assisted Boxing Review</p>
+</header>
+<div class="relative w-full max-w-[560px] aspect-[4/5] mb-12 overflow-hidden border border-outline-variant/20 shadow-sm bg-surface-container-low">
+<img class="w-full h-full object-cover" data-alt="A cinematic, low-angle shot of a minimalist boxing gym with a single heavy bag hanging in the center. The lighting is dramatic high-key, highlighting the texture of the canvas floor and the matte black finish of the equipment. The color palette is strictly limited to cream, deep charcoal, and subtle oxblood accents. The mood is focused and professional, reflecting an elite training environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOkQiOszBHArRzA3L3NJi7rxXaeUP6KSNeqDMVvbe9KQSr6dZav86XDVIkbsBuBJlSFwhIuZk9OPJ0VukShlF4IzD67f10DWEcJuRbBtEQYOFuP_2NDJ7WnGPFyG-014nwSLzQNRrsQaLaj09Agv_Zz30P0toQOerZGf1pB3awm7dZW9q9qDofIgyh6cWFcQZ2kdburxIJwE5_je9cw9vfefnlqAMawRT_WGLohlaK8cBXY9B0TPBgovOPD8inzkw4gnlz-3Qs23Q"/>
+<div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-surface to-transparent">
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">
+                        Personalized coaching feedback built for repeat improvement.
+                    </p>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+<button class="flex-1 h-14 bg-on-tertiary-fixed text-on-tertiary font-label-caps text-label-caps hover:opacity-90 transition-all active:scale-95 flex items-center justify-center">
+                    GET STARTED
+                </button>
+<button class="flex-1 h-14 border border-outline text-primary font-label-caps text-label-caps hover:bg-surface-container transition-all active:scale-95 flex items-center justify-center">
+                    SIGN IN
+                </button>
+</div>
+</div>
+</section>
+<!-- SCREEN 2: Sign Up -->
+<section class="min-h-screen bg-surface-container-low flex flex-col px-container-margin py-section-gap">
+<div class="w-full max-w-md mx-auto flex flex-col">
+<div class="mb-12">
+<button class="mb-8 p-2 -ml-2 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_back">arrow_back</span>
+</button>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-2">Create your account</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Access your training history from any device.</p>
+</div>
+<div class="space-y-6">
+<div class="group">
+<label class="font-label-caps text-label-caps text-secondary mb-2 block group-focus-within:text-on-tertiary-fixed-variant transition-colors">EMAIL OR PHONE</label>
+<input class="w-full h-14 bg-transparent border-b-2 border-outline-variant focus:border-on-tertiary-fixed-variant focus:ring-0 transition-all outline-none text-body-lg" placeholder="name@example.com" type="text"/>
+</div>
+<button class="w-full h-14 bg-primary text-on-primary font-label-caps text-label-caps active:scale-[0.98] transition-all">
+                    CONTINUE
+                </button>
+<div class="relative py-4 flex items-center">
+<div class="flex-grow border-t border-outline-variant/30"></div>
+<span class="flex-shrink mx-4 font-label-caps text-[10px] text-outline">OR</span>
+<div class="flex-grow border-t border-outline-variant/30"></div>
+</div>
+<div class="space-y-3">
+<button class="w-full h-14 border border-outline-variant bg-surface flex items-center justify-center gap-3 px-6 hover:bg-surface-container-highest transition-colors font-body-md">
+<img class="w-5 h-5" data-alt="Google logo icon for social authentication" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8J9uBqecXKxO9FiGdLfUrRSGC83nfFnA3j10mWCq9U9F40adewc_zqv7IMoCsWSrNLyNBUrThjJUZBnUdHqfoetrQDHc49YKsMv3ZVgBIPd24M0BplVakSXS6y0EVzcHmFTqUY6FhkvvfPQezCElL7Z_lSzufFVNRFoRZOUOm_1fTAFA-IUlpDqGYwjENZnbLF3_upWp561qYyenm1bb3m0cniRohIH7LVV04l-78kwOAKAvbwUQtSWpNXR-UOBXsHM5lYeQc38o"/>
+<span>Continue with Google</span>
+</button>
+<button class="w-full h-14 border border-outline-variant bg-surface flex items-center justify-center gap-3 px-6 hover:bg-surface-container-highest transition-colors font-body-md">
+<span class="material-symbols-outlined text-primary" data-icon="apple" style="font-variation-settings: 'FILL' 1;">ios</span>
+<span>Continue with Apple</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- SCREEN 3: Athlete Profile Onboarding Intro -->
+<section class="min-h-screen bg-surface flex flex-col px-container-margin py-section-gap">
+<div class="w-full max-w-lg mx-auto">
+<header class="mb-12">
+<h2 class="font-display-lg text-display-lg text-primary leading-tight mb-4">Set up your athlete profile</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">We use your profile context to calibrate analysis quality and coaching level.</p>
+</header>
+<div class="space-y-0 mb-12">
+<div class="group flex items-center py-6 border-b border-outline-variant/20 hover:bg-surface-container-low transition-colors px-4 -mx-4 cursor-default">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container text-primary mr-6">
+<span class="material-symbols-outlined" data-icon="accessibility_new">accessibility_new</span>
+</div>
+<div class="flex-1">
+<h4 class="font-headline-md text-body-lg font-semibold">Body Profile</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Weight, reach, and center of gravity data.</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="group flex items-center py-6 border-b border-outline-variant/20 hover:bg-surface-container-low transition-colors px-4 -mx-4 cursor-default">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container text-primary mr-6">
+<span class="material-symbols-outlined" data-icon="sports_martial_arts">sports_martial_arts</span>
+</div>
+<div class="flex-1">
+<h4 class="font-headline-md text-body-lg font-semibold">Boxing Experience</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Years training and competitive record.</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="group flex items-center py-6 border-b border-outline-variant/20 hover:bg-surface-container-low transition-colors px-4 -mx-4 cursor-default">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container text-primary mr-6">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</div>
+<div class="flex-1">
+<h4 class="font-headline-md text-body-lg font-semibold">Weekly Routine</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Frequency and type of training sessions.</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="group flex items-center py-6 border-b border-outline-variant/20 hover:bg-surface-container-low transition-colors px-4 -mx-4 cursor-default">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container text-primary mr-6">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+</div>
+<div class="flex-1">
+<h4 class="font-headline-md text-body-lg font-semibold">Training Background</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Other sports and athletic history.</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<button class="w-full h-16 bg-primary text-on-primary font-label-caps text-label-caps tracking-widest hover:bg-opacity-90 transition-all active:scale-[0.98]">
+                CONTINUE TO IDENTITY
+            </button>
+</div>
+</section>
+<!-- SCREEN 4: Onboarding Step 1 - Identity -->
+<section class="min-h-screen bg-surface-bright flex flex-col px-container-margin pt-8 pb-section-gap">
+<div class="w-full max-w-lg mx-auto">
+<!-- Progress Indicator -->
+<div class="mb-12">
+<div class="flex justify-between items-end mb-4">
+<span class="font-label-caps text-label-caps text-on-tertiary-fixed-variant">STEP 1 OF 4</span>
+<span class="font-label-caps text-[10px] text-outline">IDENTITY</span>
+</div>
+<div class="h-1 bg-surface-container overflow-hidden">
+<div class="h-full bg-on-tertiary-fixed-variant w-1/4"></div>
+</div>
+</div>
+<header class="mb-12">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-2">Basic Identity</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">This helps us personalize your coaching dashboard.</p>
+</header>
+<div class="space-y-12">
+<!-- Name Input -->
+<div class="space-y-3">
+<label class="font-label-caps text-label-caps text-secondary block">FULL NAME</label>
+<input class="w-full h-14 bg-surface-container-low border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all px-4 text-body-lg" placeholder="John Doe" type="text"/>
+</div>
+<!-- Age Input -->
+<div class="space-y-3">
+<label class="font-label-caps text-label-caps text-secondary block">AGE (OPTIONAL)</label>
+<input class="w-24 h-14 bg-surface-container-low border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all px-4 text-body-lg" placeholder="25" type="number"/>
+</div>
+<!-- Stance Segmented Control -->
+<div class="space-y-4">
+<label class="font-label-caps text-label-caps text-secondary block">FIGHTING STANCE</label>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+<button class="h-14 border border-primary bg-primary text-on-primary font-body-md transition-all">
+                            Orthodox
+                        </button>
+<button class="h-14 border border-outline-variant text-on-surface-variant font-body-md hover:border-primary transition-all">
+                            Southpaw
+                        </button>
+<button class="h-14 border border-outline-variant text-on-surface-variant font-body-md hover:border-primary transition-all">
+                            Switch
+                        </button>
+<button class="h-14 border border-outline-variant text-on-surface-variant font-body-md hover:border-primary transition-all text-sm">
+                            Not Sure
+                        </button>
+</div>
+<p class="font-body-sm text-[12px] text-outline italic">Your lead hand determines stance-specific biomechanic analysis.</p>
+</div>
+<div class="pt-8">
+<button class="w-full h-16 bg-primary text-on-primary font-label-caps text-label-caps tracking-widest active:scale-[0.98] transition-all">
+                        NEXT STEP
+                    </button>
+<button class="w-full mt-4 py-2 font-label-caps text-[10px] text-outline hover:text-primary transition-colors">
+                        SAVE AND FINISH LATER
+                    </button>
+</div>
+</div>
+</div>
+</section>
+</body></html>

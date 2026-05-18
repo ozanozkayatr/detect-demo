@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.canvas-texture {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuAf-By8K3yXG1n5msytAQ4SD6VelNENGAU9iQW9aL2SaRtoAlryuq4aKE0NPEKrGSRWhPKWj3AESIhrvPTxkdqxVJV-yyBtTg6oHJ9XCA738ZixJEgvtyAkyjfBIysGJwMXjjIswHwejIMY_3cK8U4vUSlxm24hh3RR9y_0g48nAAkN_BX117pGvtp-oSaAX8Mt6-D-3Ex0wdzbYugv2SQD85unXMdUclVOAaNIu7JplJGsm3NOJ6YrOwudLrQ6n1wLhzHY6Klzu5Q);
+    opacity: 0.03
+    }</style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fcf9f8",
+                        "surface-variant": "#e4e2e1",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "surface": "#fcf9f8",
+                        "on-secondary-fixed": "#1c1c19",
+                        "inverse-primary": "#c8c6c5",
+                        "inverse-on-surface": "#f3f0f0",
+                        "primary-container": "#1c1b1b",
+                        "surface-container-low": "#f6f3f2",
+                        "on-background": "#1b1c1c",
+                        "on-tertiary-fixed": "#40000b",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#1c1b1b",
+                        "tertiary-container": "#40000b",
+                        "background": "#fcf9f8",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#e5e2dd",
+                        "secondary-fixed-dim": "#c9c6c2",
+                        "on-tertiary-container": "#e25160",
+                        "on-surface": "#1b1c1c",
+                        "secondary-fixed": "#e5e2dd",
+                        "surface-container-high": "#eae7e7",
+                        "on-tertiary-fixed-variant": "#8e0f28",
+                        "on-secondary-container": "#656461",
+                        "surface-container-highest": "#e4e2e1",
+                        "tertiary-fixed-dim": "#ffb3b5",
+                        "on-error": "#ffffff",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed-variant": "#474743",
+                        "tertiary-fixed": "#ffdada",
+                        "primary": "#000000",
+                        "surface-tint": "#5f5e5e",
+                        "surface-container": "#f0eded",
+                        "on-primary-container": "#858383",
+                        "secondary": "#5f5e5b",
+                        "outline": "#747878",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#303030",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#e5e2e1",
+                        "outline-variant": "#c4c7c7",
+                        "on-surface-variant": "#444748",
+                        "on-primary-fixed-variant": "#474746"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "section-gap": "48px",
+                        "card-padding": "24px",
+                        "unit": "8px",
+                        "gutter": "16px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "stats-number": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "stats-number": ["40px", {"lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md overflow-x-hidden min-h-screen">
+<div class="fixed inset-0 pointer-events-none canvas-texture z-0"></div>
+<!-- SCREEN 14: Analysis Result -->
+<main class="relative z-10 max-w-screen-xl mx-auto pb-24">
+<!-- TopAppBar Contextual -->
+<header class="flex justify-between items-center w-full px-container-margin h-16 border-b border-outline-variant/15 bg-surface">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer active:scale-95 transition-transform">arrow_back</span>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block">MAY 24, 2024</span>
+<span class="font-headline-md text-headline-md tracking-tight">DETECT</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container font-label-caps text-[10px] rounded">INTERMEDIATE</span>
+<img class="w-8 h-8 rounded-full object-cover border border-outline-variant/30" data-alt="A professional close-up studio portrait of a high-performance athlete with a focused expression. The lighting is dramatic and cinematic, using high-contrast shadows and cool tones to emphasize facial structure and intensity. The background is a blurred, dark training environment, maintaining a clean and premium athletic aesthetic consistent with an elite sports brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATrX16qiIXgHfFZd7fcFiSI2IcoFP05hgcxx_4XovgNrtPYDgm9oz-yyLwjxaKXTIGpRlDjMc5ek-9tKqkQzcwpD4wnbosdx0ood2inrKvGNTOjclXHigjfyBApR5WIhmEb97p0d9fty0M0I9xzBAK2ZP_X-3qOHPK0WuwwxHM2XoFFDy0Mumt1uPZ2MY5qzNN6fmq1XtXHfPzQXcdKjmzbGnifIN_RAomqJLQ5iyKH47jzcx9I2jR425mLyVRQi51BwOQmKarWMQ"/>
+</div>
+</header>
+<div class="px-container-margin mt-8 space-y-section-gap">
+<!-- Video Player -->
+<div class="relative aspect-video bg-black rounded overflow-hidden border border-outline-variant/20 shadow-sm">
+<img class="w-full h-full object-cover opacity-60" data-alt="High-resolution wide shot of a professional boxing gym at dawn, with soft morning light filtering through high windows. A single athlete is captured in mid-motion during a shadow-boxing session, with surgical-precision lighting highlighting the musculature and form. The color palette is composed of muted greys, creams, and deep charcoal, creating a sophisticated and elite training atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF2C3Y9_JnJivamMwTY4HsCL06aaBkztrkWLS7sA1Fk8UWq_PrDbK04i_ZylnTVYcAIVPIo7Yvetk_qT2YgFX2Bz5xUZCq4AOg_esNC5hRlQXF3-3rEzVL5cDK3_xMcTIhkhV1GbPwZgo-kD3cUTSzZSurvl6CCWI8j5-L8MAQc7shvd7rkbek7SfVUO0GnX66gxoi_srZBFRWMpVaMhH_6uOSCOGgpRD0YqcgcUTBdMrAI73EU1Oj9lc9OkSfYYAoexdAqV18fq0"/>
+<div class="absolute inset-0 flex flex-col justify-between p-6">
+<div class="flex justify-between">
+<span class="bg-tertiary-container text-on-tertiary-container px-3 py-1 font-label-caps text-label-caps">ANALYSIS LIVE</span>
+<span class="bg-black/50 text-white px-2 py-1 font-label-caps text-[10px] backdrop-blur-sm">00:42 / 01:15</span>
+</div>
+<div class="flex justify-center items-center gap-8">
+<span class="material-symbols-outlined text-white text-4xl cursor-pointer">replay_10</span>
+<span class="material-symbols-outlined text-on-tertiary-container text-6xl cursor-pointer" data-weight="fill">play_circle</span>
+<span class="material-symbols-outlined text-white text-4xl cursor-pointer">forward_10</span>
+</div>
+<div class="h-1 bg-white/20 w-full rounded-full overflow-hidden">
+<div class="h-full bg-on-tertiary-container w-2/3"></div>
+</div>
+</div>
+</div>
+<!-- AI Summary Bento -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant/10 p-card-padding">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-on-tertiary-container" data-weight="fill">neurology</span>
+<h2 class="font-label-caps text-label-caps text-on-tertiary-container">COACH INSIGHT</h2>
+</div>
+<p class="font-headline-md text-headline-md mb-4 text-primary">Solid output today. Your lead hook is showing elite-level snap, but your recovery path is leaving the chin exposed.</p>
+<p class="font-body-md text-body-md text-on-surface-variant">We've identified a 12% decrease in defensive alignment compared to last week. You're dominating the center, but the 'lazy' hand return is a tactical liability against counter-punchers.</p>
+</div>
+<div class="md:col-span-4 bg-primary-container text-white p-card-padding flex flex-col justify-center">
+<span class="font-label-caps text-label-caps text-on-primary-container mb-2">EFFICIENCY RATING</span>
+<div class="font-stats-number text-stats-number">84<span class="text-headline-md">%</span></div>
+<div class="mt-4 h-1 bg-white/10 w-full">
+<div class="h-full bg-on-tertiary-container w-[84%]"></div>
+</div>
+</div>
+</section>
+<!-- Strengths & Improvements -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-section-gap">
+<div>
+<h3 class="font-label-caps text-label-caps text-secondary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">check_circle</span> STRENGTHS
+                    </h3>
+<ul class="space-y-4">
+<li class="pb-4 border-b border-outline-variant/10">
+<span class="font-headline-md text-body-lg block">Kinetic Chain Integration</span>
+<span class="font-body-sm text-on-surface-variant">Power generation from the floor is near perfect on rear-hand strikes.</span>
+</li>
+<li class="pb-4 border-b border-outline-variant/10">
+<span class="font-headline-md text-body-lg block">Volume Management</span>
+<span class="font-body-sm text-on-surface-variant">Sustainable output maintained throughout the 3-minute capture.</span>
+</li>
+</ul>
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-on-tertiary-container mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined">warning</span> CRITICAL IMPROVEMENTS
+                    </h3>
+<ul class="space-y-4">
+<li class="pb-4 border-b border-outline-variant/10">
+<span class="font-headline-md text-body-lg block">Defensive Recovery</span>
+<span class="font-body-sm text-on-surface-variant">Dropping the left hand after the jab. Chin exposed for 240ms.</span>
+</li>
+<li class="pb-4 border-b border-outline-variant/10">
+<span class="font-headline-md text-body-lg block">Footwork Pivot</span>
+<span class="font-body-sm text-on-surface-variant">Heel remains planted on the cross, limiting reach by 4 inches.</span>
+</li>
+</ul>
+</div>
+</section>
+<!-- Next Steps -->
+<section class="bg-surface-container-low p-card-padding">
+<h3 class="font-label-caps text-label-caps text-primary mb-6">NEXT DRILLS (ACTIONABLE)</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="bg-white p-4 border border-outline-variant/10">
+<span class="text-on-tertiary-container font-label-caps text-[10px] mb-2 block">DRILL 01</span>
+<p class="font-headline-md text-[18px] mb-2">The Wall-Jab</p>
+<p class="font-body-sm text-on-surface-variant">Reset jab against a wall to force tight recovery paths.</p>
+<div class="mt-4 flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-label-caps text-[10px]">3 ROUNDS</span>
+</div>
+</div>
+<div class="bg-white p-4 border border-outline-variant/10">
+<span class="text-on-tertiary-container font-label-caps text-[10px] mb-2 block">DRILL 02</span>
+<p class="font-headline-md text-[18px] mb-2">Pivot Focus</p>
+<p class="font-body-sm text-on-surface-variant">Isolated rear foot pivots. 50 repetitions each side.</p>
+<div class="mt-4 flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-label-caps text-[10px]">10 MIN</span>
+</div>
+</div>
+<div class="bg-white p-4 border border-outline-variant/10">
+<span class="text-on-tertiary-container font-label-caps text-[10px] mb-2 block">DRILL 03</span>
+<p class="font-headline-md text-[18px] mb-2">Shadow Counter</p>
+<p class="font-body-sm text-on-surface-variant">Focus solely on defensive reset after every single shot.</p>
+<div class="mt-4 flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-label-caps text-[10px]">5 ROUNDS</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Raw Data Accordion -->
+<section class="border-t border-outline-variant/20 pt-8">
+<button class="w-full flex justify-between items-center py-4 text-left">
+<span class="font-label-caps text-label-caps text-on-surface-variant">RAW MODEL DATA (.JSON)</span>
+<span class="material-symbols-outlined">expand_more</span>
+</button>
+<div class="hidden p-4 bg-surface-container-high font-mono text-[11px] text-on-surface-variant overflow-x-auto">
+                    { "model_version": "V4.2_TACTICAL", "frame_confidence": 0.982, "posture_deviation": [0.02, 0.14, 0.05] }
+                </div>
+</section>
+<!-- CTA Actions -->
+<div class="flex flex-col md:flex-row gap-4 pt-8">
+<button class="flex-1 h-14 bg-primary text-white font-label-caps text-label-caps hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                    ANALYZE ANOTHER CLIP
+                    <span class="material-symbols-outlined text-sm">add</span>
+</button>
+<button class="flex-1 h-14 border border-primary text-primary font-label-caps text-label-caps hover:bg-surface-container transition-colors">
+                    DONE
+                </button>
+</div>
+</div>
+</main>
+<!-- SCREEN 15: Analysis History -->
+<section class="hidden relative z-10 max-w-screen-xl mx-auto pb-32">
+<header class="px-container-margin h-24 flex items-end pb-4 border-b border-outline-variant/15">
+<h1 class="font-display-lg text-display-lg">History</h1>
+</header>
+<div class="px-container-margin mt-8 space-y-4">
+<!-- Search / Filter -->
+<div class="flex gap-4 mb-8">
+<div class="flex-1 h-12 border-b-2 border-primary flex items-center px-2">
+<span class="material-symbols-outlined mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 w-full font-body-md" placeholder="Search sessions..." type="text"/>
+</div>
+<button class="h-12 w-12 flex items-center justify-center border border-outline-variant/30">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+<!-- History List -->
+<div class="space-y-4">
+<div class="flex gap-4 p-4 bg-surface-container-lowest border border-outline-variant/10 group cursor-pointer hover:border-primary/30 transition-all">
+<div class="w-24 h-24 bg-surface-dim relative shrink-0">
+<img class="w-full h-full object-cover" data-alt="A gritty, cinematic black and white close-up of a well-used heavy bag in a quiet gym. The lighting is low-key, focusing on the texture of the worn leather and the subtle dust motes in the air. The mood is contemplative and serious, evoking a sense of discipline and the history of many training sessions." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF9_05GyzFRdl7rA6Nka7FubdfwH9lcsL5o4fA8qxNLCzAiruWGNwslGOXpnmP_WNBVxBm23kdu1o-PlnjXaJtmcux0wtBvP6F5NlZvmbrqvywwf6Vl4KeLCRyQaVwImXZLHhQr4xmwSApZdwzLFYDrDieHhm4BdLde4bqdWqEgSmbuWwOxH8WZF4fKPGP7SFzpOXDAZIOYKnvpHAj2x9jDlSgD-FC46_PzPWKkvCFU_T2MHlUKU8U-NPkmkX-zNwpRKFdSh5M6Fg"/>
+<div class="absolute inset-0 bg-primary/20 group-hover:bg-transparent transition-colors"></div>
+</div>
+<div class="flex-1 py-1">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-[10px] text-on-tertiary-container">MAY 24, 2024</span>
+<span class="font-label-caps text-[10px] px-1 bg-secondary-container">INTERMEDIATE</span>
+</div>
+<h4 class="font-headline-md text-[18px] mt-1">Lead Hook Analysis</h4>
+<p class="font-body-sm text-on-surface-variant line-clamp-1 mt-1">Recovery path deviation detected. 84% efficiency rating.</p>
+<div class="mt-2 flex gap-4 text-on-surface-variant">
+<span class="flex items-center gap-1 font-label-caps text-[10px]"><span class="material-symbols-outlined text-[14px]">videocam</span> 01:15</span>
+<span class="flex items-center gap-1 font-label-caps text-[10px]"><span class="material-symbols-outlined text-[14px]">bolt</span> HIGH INTENSITY</span>
+</div>
+</div>
+</div>
+<div class="flex gap-4 p-4 bg-surface-container-lowest border border-outline-variant/10 group cursor-pointer hover:border-primary/30 transition-all">
+<div class="w-24 h-24 bg-surface-dim relative shrink-0">
+<img class="w-full h-full object-cover" data-alt="A focused high-angle shot of a boxer's hand being meticulously wrapped in white bandages. The background is a minimalist, high-end gym with neutral tones and clean lines. The lighting is soft and even, highlighting the ritual and preparation of a high-performance athlete, maintaining a premium and professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwKVTjCGKl8q-rqK8zyTvclF4U2EDBFW-hmi0XjEU-ZXyWzMu8aqH4skS3SLrR0idFDKovFch83PgV0F5VnI3ZSPgu1Uz03vmIYNMOk54e68DCVxs_-Xzn2V98z0AoPf434a6TQ-9MovIAs2fbZk3H8X1ZxfJ3lUYG1b_I5Dd1Hcf6RT4FShe95UvwxAyBcEbXKSKoj7RHM15Y1TGMp_YIkpuNf3ph7jYqnuG4FJeFeawrnPulyb9Qi9wimbPc_3Hgyjg6WeRad8E"/>
+</div>
+<div class="flex-1 py-1">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-[10px] text-on-tertiary-container">MAY 21, 2024</span>
+<span class="font-label-caps text-[10px] px-1 bg-secondary-container">INTERMEDIATE</span>
+</div>
+<h4 class="font-headline-md text-[18px] mt-1">Shadow Boxing Flow</h4>
+<p class="font-body-sm text-on-surface-variant line-clamp-1 mt-1">Excellent head movement integration. Mobility +12%.</p>
+<div class="mt-2 flex gap-4 text-on-surface-variant">
+<span class="flex items-center gap-1 font-label-caps text-[10px]"><span class="material-symbols-outlined text-[14px]">videocam</span> 03:00</span>
+<span class="flex items-center gap-1 font-label-caps text-[10px]"><span class="material-symbols-outlined text-[14px]">bolt</span> FLOW STATE</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SCREEN 16: Profile -->
+<section class="hidden relative z-10 max-w-screen-xl mx-auto pb-32">
+<div class="px-container-margin pt-12">
+<div class="flex flex-col items-center text-center">
+<div class="relative">
+<img class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl" data-alt="A professional studio portrait of a high-performance athlete, looking directly at the camera with quiet confidence. The lighting is high-key and clean, against a minimalist soft grey background. The athlete is dressed in sleek, high-end performance gear. The overall style is refined and elite, consistent with a premium athletic club brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlOiMH8j65Gay_tsIRJSBoNsFm7ArAtisotd7R2Vxy98ztgHteuNMMIuvrRa2zoFbUAUFxLRfKtgBxQ_2-9W8AAhdJOMmFKvQ_kTqVjquA791UkMJ3V8hgBMZZsYdWukSqGiMSfgtvM-DWNvcLCzkqz0EGbFGsBFrbwG8kbl2L2ZlRD-8hKJdWpsY0ImWnrTQKLtgmx8BrP75rY_smdtrTHSXQuo3K7ZAc7eGevEAzuXZg3celqBDxAHeOHaU2nhjBxb3wbLUvp_Y"/>
+<div class="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full border-2 border-white">
+<span class="material-symbols-outlined text-sm">edit</span>
+</div>
+</div>
+<h1 class="font-display-lg text-headline-lg mt-6">Marcus Thorne</h1>
+<p class="font-label-caps text-label-caps text-on-tertiary-container">ELITE PRACTITIONER</p>
+</div>
+<!-- Profile Summary Card -->
+<div class="mt-12 bg-primary-container text-white p-card-padding">
+<h3 class="font-label-caps text-label-caps text-on-primary-container mb-8">ATHLETE METRICS</h3>
+<div class="grid grid-cols-2 gap-8">
+<div>
+<span class="font-stats-number text-[32px] block">24</span>
+<span class="font-label-caps text-[10px] text-on-primary-container">TOTAL ANALYSES</span>
+</div>
+<div>
+<span class="font-stats-number text-[32px] block">12.4<span class="text-lg">hrs</span></span>
+<span class="font-label-caps text-[10px] text-on-primary-container">TRAINING TIME</span>
+</div>
+<div>
+<span class="font-stats-number text-[32px] block">INTER</span>
+<span class="font-label-caps text-[10px] text-on-primary-container">CURRENT LEVEL</span>
+</div>
+<div>
+<span class="font-stats-number text-[32px] block">88<span class="text-lg">%</span></span>
+<span class="font-label-caps text-[10px] text-on-primary-container">AVG EFFICIENCY</span>
+</div>
+</div>
+</div>
+<div class="mt-8 space-y-4">
+<button class="w-full h-14 border border-outline-variant/30 flex items-center justify-between px-6 hover:bg-surface-container transition-colors">
+<span class="font-headline-md text-body-lg">Training Routine</span>
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<button class="w-full h-14 border border-outline-variant/30 flex items-center justify-between px-6 hover:bg-surface-container transition-colors">
+<span class="font-headline-md text-body-lg">Body Composition</span>
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<button class="w-full h-14 border border-primary text-primary font-label-caps text-label-caps flex items-center justify-center gap-2 mt-8">
+                    EDIT PROFILE
+                    <span class="material-symbols-outlined text-sm">settings_suggest</span>
+</button>
+</div>
+</div>
+</section>
+<!-- SCREEN 17: Edit Athlete Profile -->
+<section class="hidden relative z-10 max-w-screen-xl mx-auto pb-12">
+<header class="flex justify-between items-center w-full px-container-margin h-16 border-b border-outline-variant/15 bg-surface sticky top-0 z-20">
+<span class="material-symbols-outlined text-primary cursor-pointer">close</span>
+<h2 class="font-headline-md text-headline-md tracking-tight">Edit Profile</h2>
+<button class="font-label-caps text-label-caps text-on-tertiary-container font-bold">SAVE</button>
+</header>
+<div class="px-container-margin mt-12 space-y-12">
+<!-- Form Section: Identity -->
+<div class="space-y-6">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">BASIC IDENTITY</h3>
+<div class="space-y-8">
+<div class="relative">
+<input class="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-headline-md text-body-lg" type="text" value="Marcus Thorne"/>
+<label class="absolute -top-4 left-0 font-label-caps text-[10px] text-on-surface-variant">FULL NAME</label>
+</div>
+<div class="relative">
+<select class="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-headline-md text-body-lg appearance-none">
+<option>Intermediate</option>
+<option>Beginner</option>
+<option>Advanced</option>
+<option>Elite</option>
+</select>
+<label class="absolute -top-4 left-0 font-label-caps text-[10px] text-on-surface-variant">ATHLETE LEVEL</label>
+</div>
+</div>
+</div>
+<!-- Form Section: Physical -->
+<div class="space-y-6">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">PHYSICAL PROFILE</h3>
+<div class="grid grid-cols-2 gap-gutter">
+<div class="relative">
+<input class="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-headline-md text-body-lg" type="text" value="182 cm"/>
+<label class="absolute -top-4 left-0 font-label-caps text-[10px] text-on-surface-variant">HEIGHT</label>
+</div>
+<div class="relative">
+<input class="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-headline-md text-body-lg" type="text" value="84 kg"/>
+<label class="absolute -top-4 left-0 font-label-caps text-[10px] text-on-surface-variant">WEIGHT</label>
+</div>
+</div>
+</div>
+<!-- Form Section: Routine -->
+<div class="space-y-6">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">TRAINING ROUTINE</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-4 bg-surface-container-low border border-outline-variant/10">
+<span class="font-body-md">Morning Shadowboxing</span>
+<input checked="" class="text-primary focus:ring-primary rounded-sm w-5 h-5" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low border border-outline-variant/10">
+<span class="font-body-md">Heavy Bag Power-Work</span>
+<input checked="" class="text-primary focus:ring-primary rounded-sm w-5 h-5" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low border border-outline-variant/10">
+<span class="font-body-md">Technical Sparring</span>
+<input class="text-primary focus:ring-primary rounded-sm w-5 h-5" type="checkbox"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Shared BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-gutter pb-safe h-20 border-t border-outline-variant/10 bg-surface/95 backdrop-blur-md z-50">
+<div class="flex flex-col items-center justify-center text-primary dark:text-on-tertiary-container border-t-2 border-on-tertiary-container pt-2 active:scale-90 transition-all duration-150 cursor-pointer">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant pt-2 hover:text-primary active:scale-90 transition-all duration-150 cursor-pointer">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-caps text-label-caps mt-1">Analyses</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant pt-2 hover:text-primary active:scale-90 transition-all duration-150 cursor-pointer">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 dark:text-on-surface-variant pt-2 hover:text-primary active:scale-90 transition-all duration-150 cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps mt-1">Settings</span>
+</div>
+</nav>
+</body></html>
