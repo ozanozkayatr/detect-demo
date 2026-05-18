@@ -55,6 +55,12 @@ class TemplateExecutionPolicy:
     temperature: float
 
 
+@dataclass(slots=True)
+class PersonaExecutionPolicy:
+    audience_level: str
+    system_instruction_lines: list[str]
+
+
 NORMALIZED_ANALYSIS_JSON_SCHEMA = {
     "type": "object",
     "properties": {
@@ -68,8 +74,52 @@ NORMALIZED_ANALYSIS_JSON_SCHEMA = {
 }
 
 
-def build_template_policy(prompt_template: PromptTemplate) -> TemplateExecutionPolicy:
+def build_persona_execution_policy(persona: PersonaProfile) -> PersonaExecutionPolicy:
+    persona_key = persona.key.strip().lower()
+
+    if persona_key == "experienced_boxer_coach":
+        return PersonaExecutionPolicy(
+            audience_level="experienced",
+            system_instruction_lines=[
+                "This athlete is highly experienced: 15 years of amateur/professional boxing and active coaching.",
+                "Calibrate feedback to an advanced boxer, not a beginner.",
+                "Use a higher technical standard when evaluating visible movement quality, balance, guard discipline, timing, distance management, punch selection, and defensive responsibility.",
+                "Do not give generic beginner advice unless the video clearly shows a fundamental mistake.",
+                "Prefer sharper technical critique, efficiency improvements, and higher-level corrections over basic reminders.",
+                "Assume the athlete can understand boxing terminology, but stay concise and evidence-based.",
+                "Next steps may be more advanced, but they must still stay directly grounded in what is visible in the clip.",
+            ],
+        )
+
+    if persona_key == "beginner_amateur":
+        return PersonaExecutionPolicy(
+            audience_level="beginner",
+            system_instruction_lines=[
+                "This athlete is a beginner with less than one year of boxing experience.",
+                "Calibrate feedback to a novice athlete, not an experienced competitor.",
+                "Prioritize fundamentals, clarity, and a small number of actionable corrections.",
+                "Do not give advanced tactical advice, specialist adjustments, or pro-level assumptions unless the video clearly justifies it.",
+                "Explain feedback in simpler coaching language when possible.",
+                "Prefer 1 to 3 practical next steps that a beginner can realistically apply in training.",
+                "Avoid overloading the response with high-level detail, rare terminology, or overly advanced drills.",
+            ],
+        )
+
+    return PersonaExecutionPolicy(
+        audience_level="general",
+        system_instruction_lines=[
+            "Use the athlete persona to calibrate feedback level, language difficulty, and next-step expectations.",
+            "Do not let persona context override what is clearly visible in the clip.",
+        ],
+    )
+
+
+def build_template_policy(
+    prompt_template: PromptTemplate,
+    persona: PersonaProfile,
+) -> TemplateExecutionPolicy:
     template_key = prompt_template.key.strip().lower()
+    persona_policy = build_persona_execution_policy(persona)
     system_instruction_lines = [
         "You are a careful boxing video analyst for a local demo app.",
         "Analyze only what is clearly visible in the uploaded video.",
@@ -78,8 +128,11 @@ def build_template_policy(prompt_template: PromptTemplate) -> TemplateExecutionP
         "Do not assume there is a partner, target, or exchange unless it is clearly visible.",
         "Do not name an exact punch type unless the visual evidence is clear enough to support it.",
         "If angle, framing, motion blur, speed, or occlusion limit confidence, say that explicitly.",
-        "Keep the result concise, beginner-friendly, and useful for review.",
+        "Use the athlete persona to calibrate feedback difficulty, vocabulary, technical depth, and next-step expectations.",
+        "Do not let persona context override observable evidence.",
+        "Keep the result concise and useful for review.",
     ]
+    system_instruction_lines.extend(persona_policy.system_instruction_lines)
 
     if template_key == "boxing_structured":
         system_instruction_lines.extend(
@@ -87,6 +140,7 @@ def build_template_policy(prompt_template: PromptTemplate) -> TemplateExecutionP
                 "This template is the default structured boxing review.",
                 "Return stable, compact, evidence-first output that is easy to parse.",
                 "If a conclusion is uncertain, put that uncertainty in notes instead of guessing.",
+                "Make sure strengths, issues, and next_steps are clearly calibrated to the athlete persona.",
             ]
         )
     elif template_key == "observable_only":
@@ -94,13 +148,14 @@ def build_template_policy(prompt_template: PromptTemplate) -> TemplateExecutionP
             [
                 "This template is intentionally conservative.",
                 "Prefer direct observation over interpretation, and call out visibility limitations early.",
+                "Even in this conservative mode, choose wording and level of critique that match the athlete persona.",
             ]
         )
     elif template_key == "coach_summary":
         system_instruction_lines.extend(
             [
                 "This template should sound supportive and practical, but still remain evidence-based.",
-                "Do not become overly technical if simpler language is sufficient.",
+                "Match the coaching tone and complexity to the athlete persona.",
             ]
         )
 
@@ -192,6 +247,7 @@ def build_analysis_instruction(
 ) -> str:
     template_key = prompt_template.key.strip().lower()
     base_instruction = prompt_template.prompt_body.strip()
+    persona_policy = build_persona_execution_policy(persona)
     persona_instruction = "\n".join(
         [
             "Athlete persona context:",
@@ -200,7 +256,8 @@ def build_analysis_instruction(
             f"- Weight: {persona.weight_kg} kg",
             f"- Sports routine: {persona.sports_routine}",
             f"- Boxing background: {persona.boxing_background}",
-            "Use this persona only as context for expectations and feedback level.",
+            f"- Coaching calibration: {persona_policy.audience_level}",
+            "Take this persona seriously when deciding how advanced, strict, or basic the feedback should be.",
             "Do not let persona context override what is clearly visible in the video.",
         ]
     )
@@ -211,18 +268,19 @@ def build_analysis_instruction(
             "summary, strengths, issues, next_steps, notes. "
             "Use short strings and short arrays. Return empty arrays instead of guessing. "
             "Only include specific punch names when they are visually clear. "
-            "Use notes for visibility caveats and uncertainty."
+            "Use notes for visibility caveats and uncertainty. "
+            "Make sure the summary and next_steps match the athlete's actual experience level."
         )
     elif template_key == "coach_summary":
         format_instruction = (
             "Return five labeled sections exactly named Summary, Strengths, Issues, "
-            "Next Steps, and Notes. Keep the summary short, practical, supportive, and grounded in visible evidence."
+            "Next Steps, and Notes. Keep the summary short, practical, supportive, grounded in visible evidence, and matched to the athlete's level."
         )
     else:
         format_instruction = (
             "Return the result in five labeled sections exactly named: "
             "Summary, Strengths, Issues, Next Steps, and Notes. "
-            "Use bullets where useful, and place uncertainty or visibility limits in Notes."
+            "Use bullets where useful, place uncertainty or visibility limits in Notes, and match the feedback level to the athlete persona."
         )
 
     user_prompt_instruction = build_user_prompt_instruction(user_prompt)
@@ -399,7 +457,7 @@ def run_gemini_video_analysis(
 
     client = genai.Client(api_key=settings.gemini_api_key)
     uploaded_file: Any | None = None
-    template_policy = build_template_policy(prompt_template)
+    template_policy = build_template_policy(prompt_template, persona)
 
     try:
         upload_config = build_upload_config(video)
