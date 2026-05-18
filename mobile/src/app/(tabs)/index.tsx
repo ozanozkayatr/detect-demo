@@ -9,13 +9,15 @@ import { ProfileSummaryCard } from '@/components/profile-summary-card';
 import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, radii, spacing, typography } from '@/design/theme';
+import { useAnalysisHistory } from '@/features/analysis-history/analysis-history-context';
 import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
 import { fetchHealth, type HealthResponse } from '@/lib/api';
 import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
 export default function HomeTab() {
   const router = useRouter();
-  const { profile, hasProfile } = useAthleteProfile();
+  const { profile } = useAthleteProfile();
+  const { latestAnalysis } = useAnalysisHistory();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,34 +39,42 @@ export default function HomeTab() {
     <AppScreen
       eyebrow="Detect"
       title="AI boxing review that feels like a private coach."
-      subtitle="FastAPI stays as the system backbone. This Expo app is the new mobile shell for onboarding, upload, analysis, and long-term training review.">
-      <SectionCard tone="accent">
-        <StatusPill label={hasProfile ? 'Profile ready' : 'Profile needed'} tone={hasProfile ? 'success' : 'warning'} />
+      subtitle="Move straight into upload, analysis, and structured boxing feedback.">
+      <SectionCard>
+        <StatusPill label="Profile ready" tone="success" />
         <Text style={styles.heroTitle}>
-          {hasProfile
-            ? 'The athlete profile is set. Move into repeat video review.'
-            : 'Start by building the athlete profile that will shape future analysis.'}
+          Review a boxing clip with an active athlete profile.
         </Text>
         <Text style={styles.heroBody}>
-          {hasProfile
-            ? 'The next product step is native clip upload, Gemini analysis, and structured result review.'
-            : 'Height, weight, stance, experience level, and weekly routine should all be captured before the first real mobile analysis.'}
+          Upload a clip, choose the analysis prompt, and read structured Gemini feedback in one pass.
         </Text>
         <PrimaryButton
-          label={hasProfile ? 'Start the mobile analysis flow' : 'Set up athlete profile'}
-          hint={
-            hasProfile
-              ? 'Open the first native analysis setup screen'
-              : 'Run the guided onboarding flow now'
-          }
+          label="Review a boxing clip"
+          hint="Open the analysis flow"
           icon={<Feather name="arrow-right" size={20} color="#ffffff" />}
-          onPress={() => router.push(hasProfile ? '/analysis/new' : '/onboarding')}
+          onPress={() => router.push('/analysis/new')}
         />
       </SectionCard>
 
       {profile ? <ProfileSummaryCard profile={profile} /> : null}
 
-      <SectionCard title="Backend readiness" caption="Live check against the existing FastAPI service.">
+      {latestAnalysis ? (
+        <SectionCard title="Latest review" caption="The most recent mobile analysis in this session.">
+          <Text style={styles.latestTitle}>{latestAnalysis.prompt_template.title}</Text>
+          <Text style={styles.bodyText}>
+            {latestAnalysis.parsed_response?.summary ||
+              latestAnalysis.raw_response ||
+              'Analysis completed.'}
+          </Text>
+          <PrimaryButton
+            label="Open analyses"
+            hint="Jump to the review log"
+            onPress={() => router.push('/(tabs)/analyses')}
+          />
+        </SectionCard>
+      ) : null}
+
+      <SectionCard title="System status" caption="Live check against the current local backend.">
         {loading ? (
           <View style={styles.statusRow}>
             <ActivityIndicator color={palette.accent} />
@@ -101,21 +111,19 @@ export default function HomeTab() {
         )}
       </SectionCard>
 
-      <SectionCard title="How this mobile repo should evolve">
+      <SectionCard title="Demo flow">
         <View style={styles.stepList}>
           <View style={styles.stepItem}>
             <Text style={styles.stepLabel}>01</Text>
-            <Text style={styles.stepText}>
-              Guided athlete profile onboarding replaces demo personas.
-            </Text>
+            <Text style={styles.stepText}>Your athlete profile is already active.</Text>
           </View>
           <View style={styles.stepItem}>
             <Text style={styles.stepLabel}>02</Text>
-            <Text style={styles.stepText}>Native clip upload and focus note feed the existing FastAPI analysis API.</Text>
+            <Text style={styles.stepText}>Choose a clip, add an optional focus note, and run Gemini.</Text>
           </View>
           <View style={styles.stepItem}>
             <Text style={styles.stepLabel}>03</Text>
-            <Text style={styles.stepText}>Results become a structured training log with progress over time.</Text>
+            <Text style={styles.stepText}>Review structured feedback and keep the session in the in-app log.</Text>
           </View>
         </View>
       </SectionCard>
@@ -160,6 +168,12 @@ const styles = StyleSheet.create({
   bodyText: {
     fontSize: typography.body,
     lineHeight: 24,
+    color: palette.text,
+  },
+  latestTitle: {
+    fontSize: typography.heading,
+    lineHeight: 28,
+    fontWeight: '700',
     color: palette.text,
   },
   metaText: {

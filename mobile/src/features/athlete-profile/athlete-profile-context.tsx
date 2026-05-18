@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { createContext, useContext, useState } from 'react';
 
+import { createSeedAthleteProfile } from '@/features/athlete-profile/options';
 import type { AthleteProfile } from '@/features/athlete-profile/types';
 
 type AthleteProfileContextValue = {
@@ -13,7 +14,7 @@ type AthleteProfileContextValue = {
 const AthleteProfileContext = createContext<AthleteProfileContextValue | null>(null);
 
 export function AthleteProfileProvider({ children }: PropsWithChildren) {
-  const [profile, setProfileState] = useState<AthleteProfile | null>(null);
+  const [profile, setProfileState] = useState<AthleteProfile | null>(createSeedAthleteProfile());
 
   return (
     <AthleteProfileContext.Provider
@@ -21,7 +22,7 @@ export function AthleteProfileProvider({ children }: PropsWithChildren) {
         profile,
         hasProfile: profile !== null,
         setProfile: setProfileState,
-        clearProfile: () => setProfileState(null),
+        clearProfile: () => setProfileState(createSeedAthleteProfile()),
       }}>
       {children}
     </AthleteProfileContext.Provider>

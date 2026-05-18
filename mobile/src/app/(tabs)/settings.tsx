@@ -10,8 +10,8 @@ export default function SettingsTab() {
   return (
     <AppScreen
       eyebrow="Settings"
-      title="Keep local development clear while the mobile product grows."
-      subtitle="This screen currently documents the app environment and the backend connection assumptions.">
+      title="Keep the local environment clear."
+      subtitle="This screen documents how the mobile app is currently connected to the local FastAPI backend.">
       <SectionCard title="API environment">
         <View style={styles.stack}>
           <StatusPill

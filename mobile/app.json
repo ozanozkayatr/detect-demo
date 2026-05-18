@@ -26,6 +26,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Detect to access your media library so you can upload boxing videos."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#fcf9f8",

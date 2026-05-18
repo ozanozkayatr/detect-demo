@@ -131,7 +131,7 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
 
         <View style={styles.header}>
           <Text style={styles.eyebrow}>
-            {mode === 'create' ? 'Athlete profile setup' : 'Edit athlete profile'}
+            {mode === 'create' ? 'Athlete profile' : 'Edit athlete profile'}
           </Text>
           <Text style={styles.title}>{titles[stepIndex]}</Text>
           <Text style={styles.subtitle}>{captions[stepIndex]}</Text>

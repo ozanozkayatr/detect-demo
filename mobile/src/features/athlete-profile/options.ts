@@ -118,3 +118,45 @@ export function getStanceLabel(value: Stance) {
 export function getTrainingTypeLabel(value: TrainingType) {
   return trainingTypeLabels.get(value) ?? value;
 }
+
+export function createSeedAthleteProfile(): AthleteProfile {
+  return {
+    name: 'Mert Yilmaz',
+    ageRange: '25–34',
+    stance: 'orthodox',
+    heightCm: 181,
+    weightKg: 76,
+    experienceLevel: 'advanced_amateur',
+    yearsBoxing: 6,
+    weeklyTrainingDays: 5,
+    trainingTypes: ['bag_work', 'pads', 'sparring', 'strength', 'conditioning'],
+    routineSummary:
+      'Five sessions per week split between technical bag work, pads, light sparring, and strength conditioning.',
+    hasAmateurBouts: true,
+    hasProfessionalExperience: false,
+    hasCoachingExperience: false,
+    limitations: '',
+    additionalContext:
+      'Advanced amateur athlete profile with steady technical training volume and regular sparring.',
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function getBackendPersonaKey(profile: AthleteProfile) {
+  const advancedLevels: ExperienceLevel[] = [
+    'advanced_amateur',
+    'experienced_competitor',
+    'coach_or_former_competitor',
+  ];
+
+  if (
+    advancedLevels.includes(profile.experienceLevel) ||
+    (profile.yearsBoxing !== null && profile.yearsBoxing >= 8) ||
+    profile.hasProfessionalExperience ||
+    profile.hasCoachingExperience
+  ) {
+    return 'experienced_boxer_coach';
+  }
+
+  return 'beginner_amateur';
+}

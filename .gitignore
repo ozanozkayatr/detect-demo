@@ -31,3 +31,8 @@ backend/data/uploads/*
 # misc
 coverage/
 .coverage
+
+# local demo videos
+assets/demo-videos/*
+!assets/demo-videos/.gitkeep
+!assets/demo-videos/README.md
