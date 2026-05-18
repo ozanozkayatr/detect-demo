@@ -5,6 +5,7 @@ Local-first monorepo for a boxing video analysis demo. The current iteration inc
 ## Stack
 
 - Frontend: Next.js App Router with TypeScript
+- Mobile: Expo + React Native with Expo Router
 - Backend: FastAPI with SQLAlchemy, Alembic, and the Google GenAI SDK
 - Database: PostgreSQL (`detect_demo`)
 - Prompt assets: local files under [`prompts/`](./prompts)
@@ -16,6 +17,7 @@ detect-demo/
 ├── backend/
 ├── docs/
 ├── frontend/
+├── mobile/
 ├── prompts/
 ├── .env.example
 └── README.md
@@ -42,6 +44,7 @@ psql postgres -c "CREATE DATABASE detect_demo;"
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env.local
+cp mobile/.env.example mobile/.env
 ```
 
 Update values if your local PostgreSQL user, password, or ports differ.
@@ -88,6 +91,35 @@ Frontend pages:
 - `http://127.0.0.1:3001/status`
 - `http://127.0.0.1:3001/upload`
 
+### 5. Install and run the mobile app
+
+```bash
+cd mobile
+npm install
+npm run start
+```
+
+For iOS simulator:
+
+```bash
+cd mobile
+npm run ios
+```
+
+For Android emulator:
+
+```bash
+cd mobile
+npm run android
+```
+
+Mobile env:
+
+- `EXPO_PUBLIC_API_BASE_URL`
+
+Use `http://127.0.0.1:8000/api/v1` for simulator-based testing.
+Use your computer's LAN IP instead of `127.0.0.1` when testing on a physical phone with Expo Go.
+
 ## Environment Variables
 
 ### Backend
@@ -109,6 +141,12 @@ Defined in [`frontend/.env.example`](./frontend/.env.example):
 
 - `NEXT_PUBLIC_API_BASE_URL`
 
+### Mobile
+
+Defined in [`mobile/.env.example`](./mobile/.env.example):
+
+- `EXPO_PUBLIC_API_BASE_URL`
+
 ## Development Notes
 
 - Uploads are stored locally under `backend/data/uploads/`.
@@ -117,6 +155,7 @@ Defined in [`frontend/.env.example`](./frontend/.env.example):
 - Real analysis is synchronous: the request uploads the saved local video to Gemini, waits for video processing, runs the selected prompt template, stores the result, and returns it to the frontend.
 - The backend stores both `raw_response` and a lightweight best-effort `parsed_response`.
 - When Gemini is not configured, analysis creation fails cleanly with a typed backend error and the failed analysis row is stored with `status=failed`.
+- The new `mobile/` Expo app is the long-term frontend direction. The existing `frontend/` Next.js app can remain as a working local demo/reference during the transition.
 
 ## Prompt Template Sync
 

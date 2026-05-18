@@ -15,6 +15,10 @@ __pycache__/
 # frontend
 frontend/.next/
 frontend/node_modules/
+mobile/.expo/
+mobile/node_modules/
+mobile/dist/
+mobile/.env
 
 # backend
 backend/.env
