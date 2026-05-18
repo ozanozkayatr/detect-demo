@@ -4,9 +4,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppScreen } from '@/components/app-screen';
 import { PrimaryButton } from '@/components/primary-button';
+import { ProfileSummaryCard } from '@/components/profile-summary-card';
 import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, radii, spacing, typography } from '@/design/theme';
+import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
 
 const steps = [
   {
@@ -29,6 +31,7 @@ const steps = [
 
 export default function NewAnalysisScreen() {
   const router = useRouter();
+  const { profile, hasProfile } = useAthleteProfile();
 
   return (
     <>
@@ -43,9 +46,18 @@ export default function NewAnalysisScreen() {
           </Pressable>
         }>
         <SectionCard tone="accent">
-          <StatusPill label="Foundation only" tone="warning" />
-          <Text style={styles.heroText}>The backend is ready. The mobile product flow is the next implementation track.</Text>
+          <StatusPill
+            label={hasProfile ? 'Ready for upload next' : 'Profile required first'}
+            tone={hasProfile ? 'success' : 'warning'}
+          />
+          <Text style={styles.heroText}>
+            {hasProfile
+              ? 'The backend is ready. Native upload and result review are the next implementation track.'
+              : 'Before native upload, the app needs the athlete profile that will calibrate future analysis.'}
+          </Text>
         </SectionCard>
+
+        {profile ? <ProfileSummaryCard profile={profile} /> : null}
 
         <SectionCard title="Native flow breakdown">
           <View style={styles.stepList}>
@@ -60,9 +72,13 @@ export default function NewAnalysisScreen() {
         </SectionCard>
 
         <PrimaryButton
-          label="Back to mobile home"
-          hint="Keep the shell in place, then implement upload and analysis next"
-          onPress={() => router.replace('/')}
+          label={hasProfile ? 'Back to mobile home' : 'Set up athlete profile first'}
+          hint={
+            hasProfile
+              ? 'Keep the shell in place, then implement upload and analysis next'
+              : 'Open the guided onboarding flow now'
+          }
+          onPress={() => router.replace(hasProfile ? '/' : '/onboarding')}
         />
       </AppScreen>
     </>
