@@ -45,6 +45,9 @@ def create_analysis(
 ) -> Analysis:
     video = db.get(Video, payload.video_id)
     prompt_template = db.get(PromptTemplate, payload.prompt_template_id)
+    normalized_user_prompt = (
+        payload.user_prompt.strip() if payload.user_prompt else None
+    ) or None
     try:
         persona = get_persona_by_key(payload.persona_key)
     except PersonaConfigurationError as exc:
@@ -89,6 +92,7 @@ def create_analysis(
         json_parse_succeeded=None,
         template_key_snapshot=prompt_template.key,
         persona_key_snapshot=persona.key,
+        user_prompt_snapshot=normalized_user_prompt,
     )
     db.add(analysis)
     db.commit()
@@ -99,6 +103,7 @@ def create_analysis(
             video=video,
             prompt_template=prompt_template,
             persona=persona,
+            user_prompt=normalized_user_prompt,
             model_name=selected_model_name,
         )
         analysis.status = "completed"
@@ -110,6 +115,7 @@ def create_analysis(
         analysis.json_parse_succeeded = result.json_parse_succeeded
         analysis.template_key_snapshot = result.template_key_snapshot
         analysis.persona_key_snapshot = persona.key
+        analysis.user_prompt_snapshot = normalized_user_prompt
         db.commit()
     except GeminiConfigurationError as exc:
         analysis.status = "failed"

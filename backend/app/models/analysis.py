@@ -28,6 +28,7 @@ class Analysis(Base):
     json_parse_succeeded: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     template_key_snapshot: Mapped[str | None] = mapped_column(String(100), nullable=True)
     persona_key_snapshot: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    user_prompt_snapshot: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utcnow,

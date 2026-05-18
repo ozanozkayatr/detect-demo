@@ -84,6 +84,7 @@ type AnalysisRecord = {
   json_parse_succeeded: boolean | null;
   template_key_snapshot: string | null;
   persona_key_snapshot: string | null;
+  user_prompt_snapshot: string | null;
   created_at: string;
   updated_at: string;
   video: VideoRecord;
@@ -208,6 +209,7 @@ export function UploadWorkflow() {
   const [selectedPromptTemplateId, setSelectedPromptTemplateId] = useState("");
   const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
   const [selectedModelName, setSelectedModelName] = useState("");
+  const [userPrompt, setUserPrompt] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
   const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null);
 
@@ -421,6 +423,7 @@ export function UploadWorkflow() {
           persona_key: selectedPersonaKey,
           prompt_template_id: Number(selectedPromptTemplateId),
           model_name: selectedModelName || undefined,
+          user_prompt: userPrompt.trim() || undefined,
         }),
       });
 
@@ -618,6 +621,17 @@ export function UploadWorkflow() {
                 </label>
               ) : null}
 
+              <label className="field field-centered field-note">
+                <span>Optional focus note</span>
+                <textarea
+                  className="input-control input-control-textarea"
+                  value={userPrompt}
+                  onChange={(event) => setUserPrompt(event.target.value)}
+                  maxLength={1200}
+                  placeholder="Example: I'm the boxer on the right. Focus on what I am doing wrong."
+                />
+              </label>
+
               {promptTemplates.length > 0 ? (
                 <div className="template-grid">
                   {promptTemplates.map((template) => {
@@ -774,6 +788,15 @@ export function UploadWorkflow() {
                     </dd>
                   </div>
                 </dl>
+
+                {analysis.user_prompt_snapshot ? (
+                  <div className="analysis-note-card">
+                    <p className="mini-label">User focus note</p>
+                    <p className="review-summary-text break-text">
+                      {analysis.user_prompt_snapshot}
+                    </p>
+                  </div>
+                ) : null}
               </div>
 
               <div className="normalized-grid normalized-grid-showcase">
