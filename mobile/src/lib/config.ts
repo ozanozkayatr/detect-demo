@@ -4,6 +4,17 @@ export const mobileConfig = {
   apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? fallbackApiBaseUrl,
 };
 
+export function resolveBackendUrl(path: string): string {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  const apiBase = mobileConfig.apiBaseUrl.replace(/\/+$/, '');
+  const apiRoot = apiBase.replace(/\/api\/v1$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${apiRoot}${normalizedPath}`;
+}
+
 export function isLoopbackApiBaseUrl(url: string): boolean {
   return url.includes('127.0.0.1') || url.includes('localhost');
 }

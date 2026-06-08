@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -15,14 +16,26 @@ import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, radii, spacing, typography } from '@/design/theme';
 import { fetchAnalysisById, type AnalysisRecord } from '@/lib/api';
+import { resolveBackendUrl } from '@/lib/config';
 
 export default function AnalysisDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const analysisId = useMemo(() => Number(params.id), [params.id]);
   const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
+  const videoUrl = useMemo(
+    () =>
+      analysis?.video?.file_url ? resolveBackendUrl(analysis.video.file_url) : null,
+    [analysis],
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const player = useVideoPlayer(
+    videoUrl ? { uri: videoUrl } : null,
+    (currentPlayer) => {
+      currentPlayer.loop = false;
+    },
+  );
 
   useEffect(() => {
     if (!Number.isFinite(analysisId)) {
@@ -89,6 +102,19 @@ export default function AnalysisDetailScreen() {
           </SectionCard>
         ) : analysis ? (
           <>
+            {videoUrl ? (
+              <SectionCard title="Clip review" caption="Playback of the uploaded training video.">
+                <VideoView
+                  style={styles.videoPlayer}
+                  player={player}
+                  nativeControls
+                  allowsPictureInPicture
+                  contentFit="contain"
+                />
+                <Text style={styles.metaText}>{analysis.video.original_filename}</Text>
+              </SectionCard>
+            ) : null}
+
             <SectionCard title={analysis.prompt_template.title}>
               <View style={styles.headerMeta}>
                 <StatusPill
@@ -172,6 +198,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  videoPlayer: {
+    width: '100%',
+    aspectRatio: 9 / 16,
+    borderRadius: radii.md,
+    backgroundColor: '#000000',
+    overflow: 'hidden',
   },
   headerMeta: {
     gap: spacing.sm,
