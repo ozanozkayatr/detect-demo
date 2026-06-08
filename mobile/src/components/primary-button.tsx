@@ -8,13 +8,25 @@ type PrimaryButtonProps = {
   hint?: string;
   icon?: ReactNode;
   onPress?: () => void;
+  disabled?: boolean;
 };
 
-export function PrimaryButton({ label, hint, icon, onPress }: PrimaryButtonProps) {
+export function PrimaryButton({
+  label,
+  hint,
+  icon,
+  onPress,
+  disabled = false,
+}: PrimaryButtonProps) {
   return (
     <Pressable
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+      style={({ pressed }) => [
+        styles.button,
+        disabled && styles.disabled,
+        pressed && !disabled && styles.pressed,
+      ]}>
       <View style={styles.copy}>
         <Text style={styles.label}>{label}</Text>
         {hint ? <Text style={styles.hint}>{hint}</Text> : null}
@@ -38,6 +50,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.9,
+  },
+  disabled: {
+    opacity: 0.5,
   },
   copy: {
     flex: 1,

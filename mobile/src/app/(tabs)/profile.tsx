@@ -11,7 +11,7 @@ import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-co
 
 export default function ProfileTab() {
   const router = useRouter();
-  const { profile } = useAthleteProfile();
+  const { bootstrapError, isBootstrapping, profile } = useAthleteProfile();
 
   return (
     <AppScreen
@@ -19,16 +19,34 @@ export default function ProfileTab() {
       title="One athlete profile shapes every review."
       subtitle="Adjust the athlete profile whenever you want to tune the coaching context.">
       <SectionCard>
-        <StatusPill label="Profile active" tone="success" />
+        <StatusPill
+          label={
+            isBootstrapping
+              ? 'Loading profile'
+              : bootstrapError
+                ? 'Profile unavailable'
+                : 'Profile active'
+          }
+          tone={
+            isBootstrapping ? 'neutral' : bootstrapError ? 'warning' : 'success'
+          }
+        />
         <Text style={styles.heroText}>
           One athlete context, edited over time, driving analysis tone and difficulty.
         </Text>
       </SectionCard>
 
+      {bootstrapError ? (
+        <SectionCard tone="muted">
+          <Text style={styles.bodyText}>{bootstrapError}</Text>
+        </SectionCard>
+      ) : null}
+
       {profile ? <ProfileSummaryCard profile={profile} /> : null}
       <PrimaryButton
-        label="Edit athlete profile"
-        hint="Update the one profile that future analyses should use"
+        label={profile ? 'Edit athlete profile' : 'Create athlete profile'}
+        hint="Update the profile that future analyses should use"
+        disabled={isBootstrapping}
         onPress={() => router.push('/profile/edit')}
       />
     </AppScreen>
@@ -40,6 +58,11 @@ const styles = StyleSheet.create({
     fontSize: typography.title,
     lineHeight: 34,
     fontWeight: '700',
+    color: palette.text,
+  },
+  bodyText: {
+    fontSize: typography.body,
+    lineHeight: 24,
     color: palette.text,
   },
 });

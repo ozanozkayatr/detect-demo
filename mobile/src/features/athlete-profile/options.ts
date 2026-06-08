@@ -5,6 +5,7 @@ import type {
   Stance,
   TrainingType,
 } from '@/features/athlete-profile/types';
+import type { AthleteProfileRecord } from '@/lib/api';
 
 export const stanceOptions: Array<{ value: Stance; label: string }> = [
   { value: 'orthodox', label: 'Orthodox' },
@@ -119,26 +120,51 @@ export function getTrainingTypeLabel(value: TrainingType) {
   return trainingTypeLabels.get(value) ?? value;
 }
 
-export function createSeedAthleteProfile(): AthleteProfile {
+export function createProfileFromApiRecord(
+  record: AthleteProfileRecord,
+): AthleteProfile {
   return {
-    name: 'Mert Yilmaz',
-    ageRange: '25–34',
-    stance: 'orthodox',
-    heightCm: 181,
-    weightKg: 76,
-    experienceLevel: 'advanced_amateur',
-    yearsBoxing: 6,
-    weeklyTrainingDays: 5,
-    trainingTypes: ['bag_work', 'pads', 'sparring', 'strength', 'conditioning'],
-    routineSummary:
-      'Five sessions per week split between technical bag work, pads, light sparring, and strength conditioning.',
-    hasAmateurBouts: true,
-    hasProfessionalExperience: false,
-    hasCoachingExperience: false,
-    limitations: '',
-    additionalContext:
-      'Advanced amateur athlete profile with steady technical training volume and regular sparring.',
-    updatedAt: new Date().toISOString(),
+    name: record.name,
+    ageRange: record.age_range,
+    stance: record.stance as Stance,
+    heightCm: record.height_cm,
+    weightKg: record.weight_kg,
+    experienceLevel: record.experience_level as ExperienceLevel,
+    yearsBoxing: record.years_boxing,
+    weeklyTrainingDays: record.weekly_training_days,
+    trainingTypes: record.training_types as TrainingType[],
+    routineSummary: record.routine_summary,
+    hasAmateurBouts: record.has_amateur_bouts,
+    hasProfessionalExperience: record.has_professional_experience,
+    hasCoachingExperience: record.has_coaching_experience,
+    limitations: record.limitations,
+    additionalContext: record.additional_context,
+    updatedAt: record.updated_at,
+  };
+}
+
+export function createAthleteProfilePayload(
+  profile: AthleteProfile,
+): Omit<
+  AthleteProfileRecord,
+  'id' | 'user_id' | 'created_at' | 'updated_at'
+> {
+  return {
+    name: profile.name,
+    age_range: profile.ageRange,
+    stance: profile.stance,
+    height_cm: profile.heightCm,
+    weight_kg: profile.weightKg,
+    experience_level: profile.experienceLevel,
+    years_boxing: profile.yearsBoxing,
+    weekly_training_days: profile.weeklyTrainingDays,
+    training_types: profile.trainingTypes,
+    routine_summary: profile.routineSummary,
+    has_amateur_bouts: profile.hasAmateurBouts,
+    has_professional_experience: profile.hasProfessionalExperience,
+    has_coaching_experience: profile.hasCoachingExperience,
+    limitations: profile.limitations,
+    additional_context: profile.additionalContext,
   };
 }
 

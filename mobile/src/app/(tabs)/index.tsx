@@ -16,7 +16,7 @@ import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
 export default function HomeTab() {
   const router = useRouter();
-  const { profile } = useAthleteProfile();
+  const { bootstrapError, isBootstrapping, profile } = useAthleteProfile();
   const { latestAnalysis } = useAnalysisHistory();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,18 @@ export default function HomeTab() {
       title="AI boxing review that feels like a private coach."
       subtitle="Move straight into upload, analysis, and structured boxing feedback.">
       <SectionCard>
-        <StatusPill label="Profile ready" tone="success" />
+        <StatusPill
+          label={
+            isBootstrapping
+              ? 'Loading profile'
+              : bootstrapError
+                ? 'Profile unavailable'
+                : 'Profile ready'
+          }
+          tone={
+            isBootstrapping ? 'neutral' : bootstrapError ? 'warning' : 'success'
+          }
+        />
         <Text style={styles.heroTitle}>
           Review a boxing clip with an active athlete profile.
         </Text>
@@ -52,9 +63,16 @@ export default function HomeTab() {
           label="Review a boxing clip"
           hint="Open the analysis flow"
           icon={<Feather name="arrow-right" size={20} color="#ffffff" />}
+          disabled={isBootstrapping || Boolean(bootstrapError)}
           onPress={() => router.push('/analysis/new')}
         />
       </SectionCard>
+
+      {bootstrapError ? (
+        <SectionCard tone="muted" title="Profile loading issue">
+          <Text style={styles.bodyText}>{bootstrapError}</Text>
+        </SectionCard>
+      ) : null}
 
       {profile ? <ProfileSummaryCard profile={profile} /> : null}
 
@@ -111,7 +129,7 @@ export default function HomeTab() {
         )}
       </SectionCard>
 
-      <SectionCard title="Demo flow">
+      <SectionCard title="How it works">
         <View style={styles.stepList}>
           <View style={styles.stepItem}>
             <Text style={styles.stepLabel}>01</Text>

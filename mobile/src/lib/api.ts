@@ -11,6 +11,42 @@ export type HealthResponse = {
   error: string | null;
 };
 
+export type AppUserRecord = {
+  id: number;
+  display_name: string;
+  email: string | null;
+  phone_number: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AthleteProfileRecord = {
+  id: number;
+  user_id: number;
+  name: string;
+  age_range: string;
+  stance: string;
+  height_cm: number | null;
+  weight_kg: number | null;
+  experience_level: string;
+  years_boxing: number | null;
+  weekly_training_days: number | null;
+  training_types: string[];
+  routine_summary: string;
+  has_amateur_bouts: boolean;
+  has_professional_experience: boolean;
+  has_coaching_experience: boolean;
+  limitations: string;
+  additional_context: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AppSessionRecord = {
+  user: AppUserRecord;
+  athlete_profile: AthleteProfileRecord;
+};
+
 export type VideoRecord = {
   id: number;
   original_filename: string;
@@ -97,6 +133,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function fetchHealth(signal?: AbortSignal) {
   return request<HealthResponse>('/health', { signal });
+}
+
+export function fetchAppSession(signal?: AbortSignal) {
+  return request<AppSessionRecord>('/app/session', { signal });
+}
+
+export function saveAthleteProfile(payload: Omit<AthleteProfileRecord, 'id' | 'user_id' | 'created_at' | 'updated_at'>) {
+  return request<AthleteProfileRecord>('/athlete-profile', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
 export function fetchPromptTemplates(signal?: AbortSignal) {

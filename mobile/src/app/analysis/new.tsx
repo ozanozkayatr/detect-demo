@@ -45,7 +45,7 @@ type LocalVideoAsset = {
 export default function NewAnalysisScreen() {
   const router = useRouter();
   const { addAnalysis } = useAnalysisHistory();
-  const { profile } = useAthleteProfile();
+  const { bootstrapError, isBootstrapping, profile } = useAthleteProfile();
   const [localAsset, setLocalAsset] = useState<LocalVideoAsset | null>(null);
   const [uploadedVideo, setUploadedVideo] = useState<VideoRecord | null>(null);
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplateRecord[]>([]);
@@ -217,11 +217,18 @@ export default function NewAnalysisScreen() {
             <Feather name="x" size={20} color={palette.text} />
           </Pressable>
         }>
+        {bootstrapError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{bootstrapError}</Text>
+          </View>
+        ) : null}
+
         <SectionCard title="1. Choose a boxing clip" caption="The file is uploaded to FastAPI immediately after selection.">
           <PrimaryButton
             label={localAsset ? 'Choose another clip' : 'Choose a boxing clip'}
             hint="Open the device video library"
             icon={<Feather name="upload" size={20} color="#ffffff" />}
+            disabled={isBootstrapping || Boolean(bootstrapError)}
             onPress={handlePickVideo}
           />
 
@@ -334,8 +341,23 @@ export default function NewAnalysisScreen() {
           <PrimaryButton
             label={runningAnalysis ? 'Running Gemini analysis...' : 'Run Gemini analysis'}
             hint="Upload must finish and a prompt must be selected"
+            disabled={
+              isBootstrapping ||
+              Boolean(bootstrapError) ||
+              runningAnalysis ||
+              !uploadedVideo ||
+              !selectedPrompt ||
+              !personaKey
+            }
             onPress={handleRunAnalysis}
           />
+
+          {isBootstrapping ? (
+            <View style={styles.inlineStatus}>
+              <ActivityIndicator color={palette.accent} />
+              <Text style={styles.bodyText}>Loading the active athlete profile...</Text>
+            </View>
+          ) : null}
 
           {runningAnalysis ? (
             <View style={styles.inlineStatus}>

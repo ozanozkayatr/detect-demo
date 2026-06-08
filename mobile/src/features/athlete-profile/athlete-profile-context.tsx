@@ -1,29 +1,89 @@
 import type { PropsWithChildren } from 'react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import { createSeedAthleteProfile } from '@/features/athlete-profile/options';
+import {
+  createAthleteProfilePayload,
+  createProfileFromApiRecord,
+} from '@/features/athlete-profile/options';
 import type { AthleteProfile } from '@/features/athlete-profile/types';
+import {
+  fetchAppSession,
+  saveAthleteProfile,
+  type AppUserRecord,
+} from '@/lib/api';
 
 type AthleteProfileContextValue = {
+  user: AppUserRecord | null;
   profile: AthleteProfile | null;
   hasProfile: boolean;
-  setProfile: (profile: AthleteProfile) => void;
-  clearProfile: () => void;
+  isBootstrapping: boolean;
+  isSaving: boolean;
+  bootstrapError: string | null;
+  saveProfile: (profile: AthleteProfile) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AthleteProfileContext = createContext<AthleteProfileContextValue | null>(null);
 
 export function AthleteProfileProvider({ children }: PropsWithChildren) {
-  const [profile, setProfileState] = useState<AthleteProfile | null>(createSeedAthleteProfile());
+  const [user, setUser] = useState<AppUserRecord | null>(null);
+  const [profile, setProfile] = useState<AthleteProfile | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+
+  async function refreshProfile() {
+    setBootstrapError(null);
+    setIsBootstrapping(true);
+    try {
+      const session = await fetchAppSession();
+      setUser(session.user);
+      setProfile(createProfileFromApiRecord(session.athlete_profile));
+    } catch (error) {
+      setBootstrapError(
+        error instanceof Error ? error.message : 'Could not load app session.',
+      );
+    } finally {
+      setIsBootstrapping(false);
+    }
+  }
+
+  useEffect(() => {
+    refreshProfile();
+  }, []);
+
+  const value = useMemo<AthleteProfileContextValue>(
+    () => ({
+      user,
+      profile,
+      hasProfile: profile !== null,
+      isBootstrapping,
+      isSaving,
+      bootstrapError,
+      saveProfile: async (nextProfile) => {
+        setIsSaving(true);
+        setBootstrapError(null);
+        try {
+          const savedProfile = await saveAthleteProfile(
+            createAthleteProfilePayload(nextProfile),
+          );
+          setProfile(createProfileFromApiRecord(savedProfile));
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : 'Could not save athlete profile.';
+          setBootstrapError(message);
+          throw error;
+        } finally {
+          setIsSaving(false);
+        }
+      },
+      refreshProfile,
+    }),
+    [bootstrapError, isBootstrapping, isSaving, profile, user],
+  );
 
   return (
-    <AthleteProfileContext.Provider
-      value={{
-        profile,
-        hasProfile: profile !== null,
-        setProfile: setProfileState,
-        clearProfile: () => setProfileState(createSeedAthleteProfile()),
-      }}>
+    <AthleteProfileContext.Provider value={value}>
       {children}
     </AthleteProfileContext.Provider>
   );

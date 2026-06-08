@@ -1,7 +1,8 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -34,11 +35,13 @@ const totalSteps = 6;
 
 export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
   const router = useRouter();
-  const { profile, setProfile } = useAthleteProfile();
+  const { bootstrapError, isBootstrapping, isSaving, profile, saveProfile } =
+    useAthleteProfile();
   const [stepIndex, setStepIndex] = useState(0);
   const [draft, setDraft] = useState<AthleteProfileDraft>(() =>
     mode === 'edit' && profile ? createDraftFromProfile(profile) : createEmptyAthleteProfileDraft(),
   );
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const titles = [
     'Start with the athlete basics.',
@@ -57,6 +60,12 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
     'This keeps the AI grounded in actual training history.',
     'Save once, then use this profile as the single athlete context.',
   ];
+
+  useEffect(() => {
+    if (mode === 'edit' && profile) {
+      setDraft(createDraftFromProfile(profile));
+    }
+  }, [mode, profile]);
 
   function setField<K extends keyof AthleteProfileDraft>(key: K, value: AthleteProfileDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -86,13 +95,21 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
     }
   })();
 
-  function handleContinue() {
+  async function handleContinue() {
     if (stepIndex < totalSteps - 1) {
       setStepIndex((current) => current + 1);
       return;
     }
 
-    setProfile(createProfileFromDraft(draft));
+    setSubmitError(null);
+    try {
+      await saveProfile(createProfileFromDraft(draft));
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : 'Could not save athlete profile.',
+      );
+      return;
+    }
     router.replace('/(tabs)/profile');
   }
 
@@ -137,6 +154,19 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
           <Text style={styles.subtitle}>{captions[stepIndex]}</Text>
         </View>
 
+        {isBootstrapping ? (
+          <View style={styles.loadingCard}>
+            <ActivityIndicator color={palette.accent} />
+            <Text style={styles.loadingText}>Loading the current athlete profile...</Text>
+          </View>
+        ) : null}
+
+        {bootstrapError || submitError ? (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorText}>{submitError ?? bootstrapError}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.card}>{renderStep(stepIndex, draft, setField, toggleTrainingType)}</View>
 
         <View style={styles.buttonRow}>
@@ -147,11 +177,16 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
           </Pressable>
 
           <Pressable
-            disabled={!canContinue}
+            disabled={!canContinue || isSaving || isBootstrapping}
             onPress={handleContinue}
-            style={[styles.primaryButton, !canContinue && styles.primaryButtonDisabled]}>
+            style={[
+              styles.primaryButton,
+              (!canContinue || isSaving || isBootstrapping) && styles.primaryButtonDisabled,
+            ]}>
             <Text style={styles.primaryButtonText}>
-              {stepIndex === totalSteps - 1
+              {isSaving
+                ? 'Saving...'
+                : stepIndex === totalSteps - 1
                 ? mode === 'create'
                   ? 'Save profile'
                   : 'Save changes'
@@ -519,6 +554,35 @@ const styles = StyleSheet.create({
     borderColor: palette.border,
     backgroundColor: palette.surface,
     padding: spacing.lg,
+  },
+  loadingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  loadingText: {
+    flex: 1,
+    fontSize: typography.body,
+    lineHeight: 24,
+    color: palette.text,
+  },
+  errorCard: {
+    borderWidth: 1,
+    borderColor: 'rgba(186, 26, 26, 0.18)',
+    borderRadius: radii.md,
+    backgroundColor: '#ffefec',
+    padding: spacing.md,
+  },
+  errorText: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: '#93000a',
   },
   stack: {
     gap: spacing.md,
