@@ -38,6 +38,21 @@ def list_analyses(db: Session = Depends(get_db)) -> list[Analysis]:
     return list(db.scalars(statement))
 
 
+@router.get("/{analysis_id}", response_model=AnalysisRead)
+def get_analysis(analysis_id: int, db: Session = Depends(get_db)) -> Analysis:
+    statement = analysis_query().where(Analysis.id == analysis_id)
+    analysis = db.scalars(statement).first()
+
+    if analysis is None:
+        raise api_error(
+            status_code=404,
+            code="analysis_not_found",
+            message="Analysis not found.",
+        )
+
+    return analysis
+
+
 @router.post("", response_model=AnalysisRead, status_code=201)
 def create_analysis(
     payload: AnalysisCreate,
