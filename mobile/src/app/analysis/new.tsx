@@ -18,7 +18,6 @@ import { PrimaryButton } from '@/components/primary-button';
 import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, radii, spacing, typography } from '@/design/theme';
-import { useAnalysisHistory } from '@/features/analysis-history/analysis-history-context';
 import { sampleVideos, type SampleVideo } from '@/features/demo-videos/sample-videos';
 import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
 import {
@@ -29,7 +28,6 @@ import {
   fetchPromptTemplates,
   syncPromptTemplates,
   uploadVideoFile,
-  type AnalysisRecord,
   type PromptTemplateRecord,
   type VideoRecord,
 } from '@/lib/api';
@@ -44,14 +42,12 @@ type LocalVideoAsset = {
 
 export default function NewAnalysisScreen() {
   const router = useRouter();
-  const { addAnalysis } = useAnalysisHistory();
   const { bootstrapError, isBootstrapping, profile } = useAthleteProfile();
   const [localAsset, setLocalAsset] = useState<LocalVideoAsset | null>(null);
   const [uploadedVideo, setUploadedVideo] = useState<VideoRecord | null>(null);
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplateRecord[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState<number | null>(null);
   const [userPrompt, setUserPrompt] = useState('');
-  const [analysis, setAnalysis] = useState<AnalysisRecord | null>(null);
   const [loadingPrompts, setLoadingPrompts] = useState(true);
   const [syncingPrompts, setSyncingPrompts] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -95,7 +91,6 @@ export default function NewAnalysisScreen() {
   async function uploadSelectedVideo(nextAsset: LocalVideoAsset) {
     setLocalAsset(nextAsset);
     setUploadedVideo(null);
-    setAnalysis(null);
 
     setUploading(true);
     try {
@@ -187,7 +182,6 @@ export default function NewAnalysisScreen() {
 
     setError(null);
     setRunningAnalysis(true);
-    setAnalysis(null);
 
     try {
       const result = await createAnalysis({
@@ -196,8 +190,7 @@ export default function NewAnalysisScreen() {
         persona_key: personaKey,
         user_prompt: userPrompt.trim() || null,
       });
-      setAnalysis(result);
-      addAnalysis(result);
+      router.replace(`/analysis/${result.id}`);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Analysis failed.');
     } finally {
@@ -375,42 +368,6 @@ export default function NewAnalysisScreen() {
           ) : null}
         </SectionCard>
 
-        {analysis ? (
-          <SectionCard title="Result" caption="Structured feedback returned from the live analysis flow.">
-            <View style={styles.resultHeader}>
-              <StatusPill
-                label={analysis.status}
-                tone={analysis.status === 'completed' ? 'success' : 'warning'}
-              />
-              {analysis.parser_strategy ? (
-                <Text style={styles.metaText}>Parser: {analysis.parser_strategy}</Text>
-              ) : null}
-            </View>
-
-            {analysis.parsed_response ? (
-              <View style={styles.resultSections}>
-                <ResultSection title="Summary" items={[analysis.parsed_response.summary]} />
-                <ResultSection title="Strengths" items={analysis.parsed_response.strengths} />
-                <ResultSection title="Issues" items={analysis.parsed_response.issues} />
-                <ResultSection title="Next steps" items={analysis.parsed_response.next_steps} />
-                <ResultSection title="Notes" items={analysis.parsed_response.notes} />
-              </View>
-            ) : null}
-
-            {analysis.raw_response ? (
-              <View style={styles.rawResponseBox}>
-                <Text style={styles.fieldLabel}>Raw response</Text>
-                <Text style={styles.rawResponseText}>{analysis.raw_response}</Text>
-              </View>
-            ) : null}
-
-            <PrimaryButton
-              label="Open review log"
-              hint="See this run inside the Analyses tab"
-              onPress={() => router.push('/(tabs)/analyses')}
-            />
-          </SectionCard>
-        ) : null}
       </AppScreen>
     </>
   );
@@ -421,28 +378,6 @@ function InfoCell({ label, value }: { label: string; value: string }) {
     <View style={styles.infoCell}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>
-    </View>
-  );
-}
-
-function ResultSection({ title, items }: { title: string; items: string[] }) {
-  const normalizedItems = items.filter((item) => item.trim().length > 0);
-
-  if (normalizedItems.length === 0) {
-    return null;
-  }
-
-  return (
-    <View style={styles.resultSection}>
-      <Text style={styles.fieldLabel}>{title}</Text>
-      <View style={styles.resultItems}>
-        {normalizedItems.map((item) => (
-          <View key={item} style={styles.resultItem}>
-            <Text style={styles.resultItemBullet}>•</Text>
-            <Text style={styles.resultItemText}>{item}</Text>
-          </View>
-        ))}
-      </View>
     </View>
   );
 }
@@ -637,46 +572,5 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySmall,
     lineHeight: 20,
     color: '#93000a',
-  },
-  resultHeader: {
-    gap: spacing.sm,
-  },
-  resultSections: {
-    gap: spacing.md,
-  },
-  resultSection: {
-    gap: spacing.sm,
-  },
-  resultItems: {
-    gap: spacing.sm,
-  },
-  resultItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  resultItemBullet: {
-    fontSize: typography.body,
-    lineHeight: 24,
-    color: palette.textSoft,
-  },
-  resultItemText: {
-    flex: 1,
-    fontSize: typography.body,
-    lineHeight: 24,
-    color: palette.text,
-  },
-  rawResponseBox: {
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: palette.border,
-    backgroundColor: palette.surfaceMuted,
-    borderRadius: radii.md,
-    padding: spacing.md,
-  },
-  rawResponseText: {
-    fontSize: typography.bodySmall,
-    lineHeight: 22,
-    color: palette.textMuted,
   },
 });

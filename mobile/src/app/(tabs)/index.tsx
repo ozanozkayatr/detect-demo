@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { AppScreen } from '@/components/app-screen';
@@ -9,18 +10,23 @@ import { ProfileSummaryCard } from '@/components/profile-summary-card';
 import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, radii, spacing, typography } from '@/design/theme';
-import { useAnalysisHistory } from '@/features/analysis-history/analysis-history-context';
 import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
-import { fetchHealth, type HealthResponse } from '@/lib/api';
+import {
+  fetchAnalyses,
+  fetchHealth,
+  type AnalysisRecord,
+  type HealthResponse,
+} from '@/lib/api';
 import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
 export default function HomeTab() {
   const router = useRouter();
   const { bootstrapError, isBootstrapping, profile } = useAthleteProfile();
-  const { latestAnalysis } = useAnalysisHistory();
+  const [latestAnalysis, setLatestAnalysis] = useState<AnalysisRecord | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [latestLoading, setLatestLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -32,6 +38,36 @@ export default function HomeTab() {
 
     return () => controller.abort();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const controller = new AbortController();
+      setLatestLoading(true);
+
+      fetchAnalyses(controller.signal)
+        .then((analyses) => {
+          if (!cancelled) {
+            setLatestAnalysis(analyses[0] ?? null);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setLatestAnalysis(null);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLatestLoading(false);
+          }
+        });
+
+      return () => {
+        cancelled = true;
+        controller.abort();
+      };
+    }, []),
+  );
 
   const geminiReady = Boolean(health?.gemini_configured);
 
@@ -76,7 +112,14 @@ export default function HomeTab() {
 
       {profile ? <ProfileSummaryCard profile={profile} /> : null}
 
-      {latestAnalysis ? (
+      {latestLoading ? (
+        <SectionCard title="Latest review" caption="Checking recent analysis history.">
+          <View style={styles.statusRow}>
+            <ActivityIndicator color={palette.accent} />
+            <Text style={styles.bodyText}>Loading the most recent review...</Text>
+          </View>
+        </SectionCard>
+      ) : latestAnalysis ? (
         <SectionCard title="Latest review" caption="The most recent mobile analysis in this session.">
           <Text style={styles.latestTitle}>{latestAnalysis.prompt_template.title}</Text>
           <Text style={styles.bodyText}>
@@ -85,9 +128,9 @@ export default function HomeTab() {
               'Analysis completed.'}
           </Text>
           <PrimaryButton
-            label="Open analyses"
-            hint="Jump to the review log"
-            onPress={() => router.push('/(tabs)/analyses')}
+            label="Open review"
+            hint="See the full structured result"
+            onPress={() => router.push(`/analysis/${latestAnalysis.id}`)}
           />
         </SectionCard>
       ) : null}

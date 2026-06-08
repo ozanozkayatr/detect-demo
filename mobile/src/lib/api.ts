@@ -153,6 +153,14 @@ export function fetchPromptTemplates(signal?: AbortSignal) {
   return request<PromptTemplateRecord[]>('/prompt-templates', { signal });
 }
 
+export function fetchAnalyses(signal?: AbortSignal) {
+  return request<AnalysisRecord[]>('/analyses', { signal });
+}
+
+export function fetchAnalysisById(analysisId: number, signal?: AbortSignal) {
+  return request<AnalysisRecord>(`/analyses/${analysisId}`, { signal });
+}
+
 export function syncPromptTemplates() {
   return request('/prompt-templates/sync', { method: 'POST' });
 }
