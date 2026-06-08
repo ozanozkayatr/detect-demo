@@ -36,3 +36,6 @@ coverage/
 assets/demo-videos/*
 !assets/demo-videos/.gitkeep
 !assets/demo-videos/README.md
+mobile/assets/demo-videos/*
+!mobile/assets/demo-videos/.gitkeep
+!mobile/assets/demo-videos/README.md

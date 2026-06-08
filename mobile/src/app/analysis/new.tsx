@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { Asset } from 'expo-asset';
 import { Stack, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useState } from 'react';
@@ -18,6 +19,7 @@ import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, radii, spacing, typography } from '@/design/theme';
 import { useAnalysisHistory } from '@/features/analysis-history/analysis-history-context';
+import { sampleVideos, type SampleVideo } from '@/features/demo-videos/sample-videos';
 import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
 import {
   getBackendPersonaKey,
@@ -90,6 +92,22 @@ export default function NewAnalysisScreen() {
   );
   const personaKey = profile ? getBackendPersonaKey(profile) : null;
 
+  async function uploadSelectedVideo(nextAsset: LocalVideoAsset) {
+    setLocalAsset(nextAsset);
+    setUploadedVideo(null);
+    setAnalysis(null);
+
+    setUploading(true);
+    try {
+      const video = await uploadVideoFile(nextAsset);
+      setUploadedVideo(video);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function handlePickVideo() {
     setError(null);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -118,18 +136,32 @@ export default function NewAnalysisScreen() {
       durationMs: asset.duration ?? null,
     };
 
-    setLocalAsset(nextAsset);
-    setUploadedVideo(null);
-    setAnalysis(null);
+    await uploadSelectedVideo(nextAsset);
+  }
 
-    setUploading(true);
+  async function handleUseSampleVideo(sampleVideo: SampleVideo) {
+    setError(null);
     try {
-      const video = await uploadVideoFile(nextAsset);
-      setUploadedVideo(video);
+      const asset = Asset.fromModule(sampleVideo.moduleId);
+      if (!asset.localUri) {
+        await asset.downloadAsync();
+      }
+
+      const nextAsset: LocalVideoAsset = {
+        uri: asset.localUri ?? asset.uri,
+        name: sampleVideo.filename,
+        mimeType: sampleVideo.mimeType,
+        sizeBytes: null,
+        durationMs: null,
+      };
+
+      await uploadSelectedVideo(nextAsset);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : 'Upload failed.');
-    } finally {
-      setUploading(false);
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : 'Sample video could not be loaded.',
+      );
     }
   }
 
@@ -192,6 +224,21 @@ export default function NewAnalysisScreen() {
             icon={<Feather name="upload" size={20} color="#ffffff" />}
             onPress={handlePickVideo}
           />
+
+          <View style={styles.stack}>
+            <Text style={styles.fieldLabel}>Or use a local sample clip</Text>
+            <View style={styles.sampleVideoList}>
+              {sampleVideos.map((sampleVideo) => (
+                <Pressable
+                  key={sampleVideo.id}
+                  onPress={() => handleUseSampleVideo(sampleVideo)}
+                  style={styles.sampleVideoButton}>
+                  <Text style={styles.sampleVideoTitle}>{sampleVideo.title}</Text>
+                  <Text style={styles.sampleVideoFilename}>{sampleVideo.filename}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
 
           {uploading ? (
             <View style={styles.inlineStatus}>
@@ -495,6 +542,29 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     lineHeight: 24,
     color: palette.text,
+  },
+  sampleVideoList: {
+    gap: spacing.sm,
+  },
+  sampleVideoButton: {
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  sampleVideoTitle: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  sampleVideoFilename: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
   },
   summaryGrid: {
     gap: spacing.sm,
