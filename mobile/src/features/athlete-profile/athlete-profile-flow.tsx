@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { type PropsWithChildren, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -25,14 +25,27 @@ import {
   stanceOptions,
   trainingTypeOptions,
 } from '@/features/athlete-profile/options';
-import type { AthleteProfileDraft, TrainingType } from '@/features/athlete-profile/types';
+import type {
+  AthleteProfileDraft,
+  ExperienceLevel,
+  TrainingType,
+} from '@/features/athlete-profile/types';
 
 type AthleteProfileFlowProps = {
   mode: 'create' | 'edit';
 };
 
 const totalSteps = 6;
-const stepLabels = ['Basics', 'Body', 'Level', 'Routine', 'Context', 'Review'];
+const stepLabels = ['Identity', 'Body', 'Level', 'Routine', 'Context', 'Review'];
+const trainingDayOptions = ['1', '2', '3', '4', '5', '6', '7'];
+const experienceLevelDescriptions: Record<ExperienceLevel, string> = {
+  complete_beginner: 'No meaningful boxing background yet.',
+  beginner: 'Early-stage training with basic technique work.',
+  intermediate: 'Comfortable with core mechanics and regular sessions.',
+  advanced_amateur: 'Competition-oriented amateur training background.',
+  experienced_competitor: 'High-experience athlete with substantial ring time.',
+  coach_or_former_competitor: 'Experienced athlete or coach who needs higher-level feedback.',
+};
 
 export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
   const router = useRouter();
@@ -45,22 +58,31 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const titles = [
-    'Start with the athlete.',
-    'Set the body profile.',
-    'Set the current level.',
-    'Map the weekly routine.',
-    'Add training context.',
-    'Review the profile.',
+    'Who is this review for?',
+    'What body profile should guide feedback?',
+    'What level should the coach assume?',
+    'How often is this athlete training?',
+    'What background should the coach respect?',
+    'Check the profile before saving.',
   ];
 
   const captions = [
-    'This becomes the default context behind every review.',
-    'Body profile helps keep coaching grounded and proportional.',
-    'Review tone should match actual boxing experience.',
-    'Weekly volume shapes how aggressive the next-step guidance should be.',
-    'Use background details to keep feedback practical and relevant.',
-    'Save once, then use this profile across future sessions.',
+    'This name and stance become the base context behind every saved review.',
+    'Approximate body data helps keep technical feedback grounded and proportional.',
+    'The review should sound different for a beginner than for an experienced boxer.',
+    'Training rhythm changes how demanding the next-step guidance should feel.',
+    'Add history, limitations, and context so the coach avoids generic advice.',
+    'Save once, then use this profile across future sessions and follow-up reviews.',
   ];
+  const screenTitle =
+    mode === 'create' ? 'Build the athlete profile.' : 'Refine the athlete profile.';
+  const screenSubtitle =
+    mode === 'create'
+      ? 'Set the context that will shape coaching tone, difficulty, and progression before the first review.'
+      : 'Update the athlete context so future reviews stay aligned with the current training reality.';
+  const nextStepLabel =
+    stepLabels[stepIndex + 1] ??
+    (mode === 'create' ? 'Save and review' : 'Save changes');
 
   useEffect(() => {
     if (mode === 'edit' && profile) {
@@ -162,32 +184,26 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
         </View>
 
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>
-            {mode === 'create' ? 'Profile setup' : 'Edit athlete profile'}
-          </Text>
-          <Text style={styles.title}>{titles[stepIndex]}</Text>
-          <Text style={styles.subtitle}>{captions[stepIndex]}</Text>
+          <Text style={styles.eyebrow}>{mode === 'create' ? 'Athlete setup' : 'Profile editing'}</Text>
+          <Text style={styles.title}>{screenTitle}</Text>
+          <Text style={styles.subtitle}>{screenSubtitle}</Text>
         </View>
 
-        <View style={styles.stepPills}>
-          {stepLabels.map((label, index) => (
-            <View
-              key={label}
-              style={[
-                styles.stepPill,
-                index === stepIndex && styles.stepPillActive,
-                index < stepIndex && styles.stepPillComplete,
-              ]}>
-              <Text
-                style={[
-                  styles.stepPillLabel,
-                  index === stepIndex && styles.stepPillLabelActive,
-                  index < stepIndex && styles.stepPillLabelComplete,
-                ]}>
-                {label}
-              </Text>
+        <View style={styles.stepOverview}>
+          <View style={styles.stepOverviewHeader}>
+            <View style={styles.stepOverviewCopy}>
+              <Text style={styles.stepOverviewLabel}>Current focus</Text>
+              <Text style={styles.stepOverviewTitle}>{titles[stepIndex]}</Text>
             </View>
-          ))}
+            <View style={styles.stepBadge}>
+              <Text style={styles.stepBadgeText}>{stepLabels[stepIndex]}</Text>
+            </View>
+          </View>
+          <Text style={styles.stepOverviewBody}>{captions[stepIndex]}</Text>
+          <View style={styles.stepOverviewMeta}>
+            <StepMeta label="Progress" value={`${stepIndex + 1}/${totalSteps}`} />
+            <StepMeta label="Next" value={nextStepLabel} />
+          </View>
         </View>
 
         {isBootstrapping ? (
@@ -230,8 +246,8 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
                 ? 'Saving...'
                 : stepIndex === totalSteps - 1
                 ? mode === 'create'
-                  ? 'Save profile'
-                  : 'Save changes'
+                  ? 'Save and start reviewing'
+                  : 'Save profile changes'
                 : 'Continue'}
             </Text>
           </Pressable>
@@ -251,166 +267,222 @@ function renderStep(
     case 0:
       return (
         <View style={styles.stack}>
-          <FieldLabel label="Athlete name" />
-          <TextInput
-            value={draft.name}
-            onChangeText={(value) => setField('name', value)}
-            placeholder="Mert Yilmaz"
-            placeholderTextColor={palette.textSoft}
-            style={styles.textInput}
-          />
+          <QuestionBlock
+            title="Athlete name"
+            caption="Use the real name or the label you want to see in saved reviews.">
+            <TextInput
+              value={draft.name}
+              onChangeText={(value) => setField('name', value)}
+              placeholder="Mert Yilmaz"
+              placeholderTextColor={palette.textSoft}
+              style={styles.textInput}
+            />
+          </QuestionBlock>
 
-          <FieldLabel label="Age range (optional)" />
-          <TextInput
-            value={draft.ageRange}
-            onChangeText={(value) => setField('ageRange', value)}
-            placeholder="25–34"
-            placeholderTextColor={palette.textSoft}
-            style={styles.textInput}
-          />
+          <QuestionBlock
+            title="Age range"
+            caption="Optional. Use this if you want coaching tone to feel more proportional.">
+            <TextInput
+              value={draft.ageRange}
+              onChangeText={(value) => setField('ageRange', value)}
+              placeholder="25–34"
+              placeholderTextColor={palette.textSoft}
+              style={styles.textInput}
+            />
+          </QuestionBlock>
 
-          <FieldLabel label="Stance" />
-          <View style={styles.chipGrid}>
-            {stanceOptions.map((option) => (
-              <SelectableChip
-                key={option.value}
-                label={option.label}
-                selected={draft.stance === option.value}
-                onPress={() => setField('stance', option.value)}
-              />
-            ))}
-          </View>
+          <QuestionBlock
+            title="Stance"
+            caption="This helps the coach interpret guard, balance, and foot position more accurately.">
+            <View style={styles.chipGrid}>
+              {stanceOptions.map((option) => (
+                <SelectableChip
+                  key={option.value}
+                  label={option.label}
+                  selected={draft.stance === option.value}
+                  onPress={() => setField('stance', option.value)}
+                />
+              ))}
+            </View>
+          </QuestionBlock>
         </View>
       );
     case 1:
       return (
         <View style={styles.stack}>
-          <FieldLabel label="Height (cm)" />
-          <TextInput
-            value={draft.heightCm}
-            onChangeText={(value) => setField('heightCm', value)}
-            placeholder="183"
-            placeholderTextColor={palette.textSoft}
-            style={styles.textInput}
-            keyboardType="number-pad"
-          />
-
-          <FieldLabel label="Weight (kg)" />
-          <TextInput
-            value={draft.weightKg}
-            onChangeText={(value) => setField('weightKg', value)}
-            placeholder="81"
-            placeholderTextColor={palette.textSoft}
-            style={styles.textInput}
-            keyboardType="decimal-pad"
-          />
+          <QuestionBlock
+            title="Body profile"
+            caption="Approximate numbers are enough. They help keep movement feedback realistic.">
+            <View style={styles.splitRow}>
+              <View style={styles.splitColumn}>
+                <FieldLabel label="Height (cm)" />
+                <TextInput
+                  value={draft.heightCm}
+                  onChangeText={(value) => setField('heightCm', value)}
+                  placeholder="183"
+                  placeholderTextColor={palette.textSoft}
+                  style={styles.textInput}
+                  keyboardType="number-pad"
+                />
+              </View>
+              <View style={styles.splitColumn}>
+                <FieldLabel label="Weight (kg)" />
+                <TextInput
+                  value={draft.weightKg}
+                  onChangeText={(value) => setField('weightKg', value)}
+                  placeholder="81"
+                  placeholderTextColor={palette.textSoft}
+                  style={styles.textInput}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            </View>
+          </QuestionBlock>
         </View>
       );
     case 2:
       return (
         <View style={styles.stack}>
-          <FieldLabel label="Current boxing level" />
-          <View style={styles.optionColumn}>
-            {experienceLevelOptions.map((option) => (
-              <SelectableRow
-                key={option.value}
-                label={option.label}
-                selected={draft.experienceLevel === option.value}
-                onPress={() => setField('experienceLevel', option.value)}
-              />
-            ))}
-          </View>
+          <QuestionBlock
+            title="Current boxing level"
+            caption="Pick the level that best matches current ability, not idealized potential.">
+            <View style={styles.optionColumn}>
+              {experienceLevelOptions.map((option) => (
+                <SelectableRow
+                  key={option.value}
+                  label={option.label}
+                  description={experienceLevelDescriptions[option.value]}
+                  selected={draft.experienceLevel === option.value}
+                  onPress={() => setField('experienceLevel', option.value)}
+                />
+              ))}
+            </View>
+          </QuestionBlock>
 
-          <FieldLabel label="Years boxing (optional)" />
-          <TextInput
-            value={draft.yearsBoxing}
-            onChangeText={(value) => setField('yearsBoxing', value)}
-            placeholder="10"
-            placeholderTextColor={palette.textSoft}
-            style={styles.textInput}
-            keyboardType="decimal-pad"
-          />
+          <QuestionBlock
+            title="Years boxing"
+            caption="Optional. Useful when overall level and total time in the sport differ.">
+            <TextInput
+              value={draft.yearsBoxing}
+              onChangeText={(value) => setField('yearsBoxing', value)}
+              placeholder="10"
+              placeholderTextColor={palette.textSoft}
+              style={styles.textInput}
+              keyboardType="decimal-pad"
+            />
+          </QuestionBlock>
         </View>
       );
     case 3:
       return (
         <View style={styles.stack}>
-          <FieldLabel label="Training days per week" />
-          <TextInput
-            value={draft.weeklyTrainingDays}
-            onChangeText={(value) => setField('weeklyTrainingDays', value)}
-            placeholder="4"
-            placeholderTextColor={palette.textSoft}
-            style={styles.textInput}
-            keyboardType="number-pad"
-          />
+          <QuestionBlock
+            title="Training days per week"
+            caption="Pick the usual rhythm. This helps the coach size the next steps realistically.">
+            <View style={styles.chipGrid}>
+              {trainingDayOptions.map((option) => (
+                <SelectableChip
+                  key={option}
+                  label={`${option} day${option === '1' ? '' : 's'}`}
+                  selected={draft.weeklyTrainingDays === option}
+                  onPress={() => setField('weeklyTrainingDays', option)}
+                />
+              ))}
+            </View>
+            <TextInput
+              value={draft.weeklyTrainingDays}
+              onChangeText={(value) => setField('weeklyTrainingDays', value)}
+              placeholder="Or type a number"
+              placeholderTextColor={palette.textSoft}
+              style={styles.textInput}
+              keyboardType="number-pad"
+            />
+          </QuestionBlock>
 
-          <FieldLabel label="Training types" />
-          <View style={styles.chipGrid}>
-            {trainingTypeOptions.map((option) => (
-              <SelectableChip
-                key={option.value}
-                label={option.label}
-                selected={draft.trainingTypes.includes(option.value)}
-                onPress={() => toggleTrainingType(option.value)}
-              />
-            ))}
-          </View>
+          <QuestionBlock
+            title="Training types"
+            caption="Select the session types that define the current training week.">
+            <View style={styles.chipGrid}>
+              {trainingTypeOptions.map((option) => (
+                <SelectableChip
+                  key={option.value}
+                  label={option.label}
+                  selected={draft.trainingTypes.includes(option.value)}
+                  onPress={() => toggleTrainingType(option.value)}
+                />
+              ))}
+            </View>
+          </QuestionBlock>
 
-          <FieldLabel label="Routine summary (optional)" />
-          <TextInput
-            value={draft.routineSummary}
-            onChangeText={(value) => setField('routineSummary', value)}
-            placeholder="Bag work, pads, and conditioning after work."
-            placeholderTextColor={palette.textSoft}
-            multiline
-            style={[styles.textInput, styles.multilineInput]}
-          />
+          <QuestionBlock
+            title="Routine summary"
+            caption="Optional. Add one short note about how training is currently structured.">
+            <TextInput
+              value={draft.routineSummary}
+              onChangeText={(value) => setField('routineSummary', value)}
+              placeholder="Bag work, pads, and conditioning after work."
+              placeholderTextColor={palette.textSoft}
+              multiline
+              style={[styles.textInput, styles.multilineInput]}
+            />
+          </QuestionBlock>
         </View>
       );
     case 4:
       return (
         <View style={styles.stack}>
-          <FieldLabel label="Training history" />
-          <View style={styles.optionColumn}>
-            <BooleanRow
-              label="Has amateur bouts"
-              selected={draft.hasAmateurBouts}
-              onPress={() => setField('hasAmateurBouts', !draft.hasAmateurBouts)}
-            />
-            <BooleanRow
-              label="Has professional experience"
-              selected={draft.hasProfessionalExperience}
-              onPress={() =>
-                setField('hasProfessionalExperience', !draft.hasProfessionalExperience)
-              }
-            />
-            <BooleanRow
-              label="Has coaching experience"
-              selected={draft.hasCoachingExperience}
-              onPress={() => setField('hasCoachingExperience', !draft.hasCoachingExperience)}
-            />
-          </View>
+          <QuestionBlock
+            title="Training history"
+            caption="Switch on the background signals that should influence coaching depth and assumptions.">
+            <View style={styles.optionColumn}>
+              <BooleanRow
+                label="Has amateur bouts"
+                description="Useful when the athlete already has ring experience."
+                selected={draft.hasAmateurBouts}
+                onPress={() => setField('hasAmateurBouts', !draft.hasAmateurBouts)}
+              />
+              <BooleanRow
+                label="Has professional experience"
+                description="Signals that the review should avoid beginner framing."
+                selected={draft.hasProfessionalExperience}
+                onPress={() =>
+                  setField('hasProfessionalExperience', !draft.hasProfessionalExperience)
+                }
+              />
+              <BooleanRow
+                label="Has coaching experience"
+                description="Helps the model avoid overly basic explanations."
+                selected={draft.hasCoachingExperience}
+                onPress={() => setField('hasCoachingExperience', !draft.hasCoachingExperience)}
+              />
+            </View>
+          </QuestionBlock>
 
-          <FieldLabel label="Injuries or limitations (optional)" />
-          <TextInput
-            value={draft.limitations}
-            onChangeText={(value) => setField('limitations', value)}
-            placeholder="Right shoulder mobility can tighten after sparring."
-            placeholderTextColor={palette.textSoft}
-            multiline
-            style={[styles.textInput, styles.multilineInput]}
-          />
+          <QuestionBlock
+            title="Injuries or limitations"
+            caption="Optional. Add anything the coach should treat carefully.">
+            <TextInput
+              value={draft.limitations}
+              onChangeText={(value) => setField('limitations', value)}
+              placeholder="Right shoulder mobility can tighten after sparring."
+              placeholderTextColor={palette.textSoft}
+              multiline
+              style={[styles.textInput, styles.multilineInput]}
+            />
+          </QuestionBlock>
 
-          <FieldLabel label="Additional context (optional)" />
-          <TextInput
-            value={draft.additionalContext}
-            onChangeText={(value) => setField('additionalContext', value)}
-            placeholder="Preparing for an amateur bout in 8 weeks."
-            placeholderTextColor={palette.textSoft}
-            multiline
-            style={[styles.textInput, styles.multilineInput]}
-          />
+          <QuestionBlock
+            title="Additional context"
+            caption="Optional. Add goals, upcoming bouts, or anything that should shape the coaching lens.">
+            <TextInput
+              value={draft.additionalContext}
+              onChangeText={(value) => setField('additionalContext', value)}
+              placeholder="Preparing for an amateur bout in 8 weeks."
+              placeholderTextColor={palette.textSoft}
+              multiline
+              style={[styles.textInput, styles.multilineInput]}
+            />
+          </QuestionBlock>
         </View>
       );
     case 5:
@@ -423,8 +495,23 @@ function renderStep(
               {draft.name || 'Athlete profile'}
             </Text>
             <Text style={styles.reviewHeroBody}>
-              This profile will shape review tone, level, and progression in every new analysis.
+              This profile will shape review tone, level, and progression in every new saved review.
             </Text>
+          </View>
+
+          <View style={styles.reviewMetrics}>
+            <ReviewMetric
+              label="Stance"
+              value={getStanceLabel(draft.stance)}
+            />
+            <ReviewMetric
+              label="Level"
+              value={getExperienceLevelLabel(draft.experienceLevel)}
+            />
+            <ReviewMetric
+              label="Rhythm"
+              value={formatTrainingRhythm(draft.weeklyTrainingDays)}
+            />
           </View>
 
           <SummaryRow label="Name" value={draft.name || 'Not set'} />
@@ -439,7 +526,7 @@ function renderStep(
           />
           <SummaryRow
             label="Weekly routine"
-            value={`${draft.weeklyTrainingDays || '—'} days · ${
+            value={`${formatTrainingRhythm(draft.weeklyTrainingDays)} · ${
               draft.trainingTypes.length > 0
                 ? draft.trainingTypes.map(getTrainingTypeLabel).join(', ')
                 : 'No session types selected yet'
@@ -469,8 +556,35 @@ function renderStep(
   }
 }
 
+function QuestionBlock({
+  caption,
+  children,
+  title,
+}: PropsWithChildren<{ caption: string; title: string }>) {
+  return (
+    <View style={styles.questionBlock}>
+      <View style={styles.questionHeader}>
+        <Text style={styles.questionTitle}>{title}</Text>
+        <Text style={styles.questionCaption}>{caption}</Text>
+      </View>
+      {children}
+    </View>
+  );
+}
+
 function FieldLabel({ label }: { label: string }) {
   return <Text style={styles.fieldLabel}>{label}</Text>;
+}
+
+function StepMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.stepMetaCell}>
+      <Text style={styles.stepMetaLabel}>{label}</Text>
+      <Text style={styles.stepMetaValue} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  );
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
@@ -502,18 +616,31 @@ function SelectableChip({
 
 function SelectableRow({
   label,
+  description,
   selected,
   onPress,
 }: {
   label: string;
+  description?: string;
   selected: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable onPress={onPress} style={[styles.rowOption, selected && styles.rowOptionSelected]}>
-      <Text style={[styles.rowOptionLabel, selected && styles.rowOptionLabelSelected]}>
-        {label}
-      </Text>
+      <View style={styles.rowOptionCopy}>
+        <Text style={[styles.rowOptionLabel, selected && styles.rowOptionLabelSelected]}>
+          {label}
+        </Text>
+        {description ? (
+          <Text
+            style={[
+              styles.rowOptionDescription,
+              selected && styles.rowOptionDescriptionSelected,
+            ]}>
+            {description}
+          </Text>
+        ) : null}
+      </View>
       {selected ? <Feather name="check" size={18} color={palette.accent} /> : null}
     </Pressable>
   );
@@ -521,14 +648,40 @@ function SelectableRow({
 
 function BooleanRow({
   label,
+  description,
   selected,
   onPress,
 }: {
   label: string;
+  description?: string;
   selected: boolean;
   onPress: () => void;
 }) {
-  return <SelectableRow label={label} selected={selected} onPress={onPress} />;
+  return (
+    <SelectableRow
+      label={label}
+      description={description}
+      selected={selected}
+      onPress={onPress}
+    />
+  );
+}
+
+function ReviewMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.reviewMetric}>
+      <Text style={styles.reviewMetricLabel}>{label}</Text>
+      <Text style={styles.reviewMetricValue}>{value}</Text>
+    </View>
+  );
+}
+
+function formatTrainingRhythm(value: string) {
+  if (!value) {
+    return 'Not set yet';
+  }
+
+  return `${value} day${value === '1' ? '' : 's'} / week`;
 }
 
 const styles = StyleSheet.create({
@@ -600,38 +753,85 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: palette.textMuted,
   },
-  stepPills: {
+  stepOverview: {
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(106, 31, 42, 0.18)',
+    borderRadius: radii.lg,
+    backgroundColor: palette.accentSoft,
+    padding: spacing.lg,
+  },
+  stepOverviewHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: spacing.sm,
   },
-  stepPill: {
+  stepOverviewCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  stepOverviewLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  stepOverviewTitle: {
+    fontSize: typography.heading,
+    lineHeight: 30,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  stepOverviewBody: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    color: palette.textMuted,
+  },
+  stepBadge: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: palette.border,
+    borderColor: 'rgba(106, 31, 42, 0.18)',
     backgroundColor: palette.surface,
   },
-  stepPillActive: {
-    borderColor: 'rgba(106, 31, 42, 0.2)',
-    backgroundColor: palette.accentSoft,
-  },
-  stepPillComplete: {
-    borderColor: 'rgba(46, 77, 49, 0.16)',
-    backgroundColor: palette.successSoft,
-  },
-  stepPillLabel: {
+  stepBadgeText: {
     fontSize: typography.bodySmall,
     lineHeight: 20,
-    fontWeight: '600',
-    color: palette.textMuted,
-  },
-  stepPillLabelActive: {
+    fontWeight: '700',
     color: palette.accent,
   },
-  stepPillLabelComplete: {
-    color: palette.success,
+  stepOverviewMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  stepMetaCell: {
+    flexGrow: 1,
+    minWidth: 110,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(106, 31, 42, 0.12)',
+    borderRadius: radii.md,
+    backgroundColor: palette.surface,
+  },
+  stepMetaLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  stepMetaValue: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.text,
   },
   card: {
     borderRadius: radii.lg,
@@ -685,6 +885,26 @@ const styles = StyleSheet.create({
   stack: {
     gap: spacing.md,
   },
+  questionBlock: {
+    gap: spacing.sm,
+    paddingBottom: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.borderStrong,
+  },
+  questionHeader: {
+    gap: spacing.xs,
+  },
+  questionTitle: {
+    fontSize: typography.heading,
+    lineHeight: 28,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  questionCaption: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
   fieldLabel: {
     fontSize: typography.label,
     fontWeight: '700',
@@ -706,6 +926,16 @@ const styles = StyleSheet.create({
   multilineInput: {
     minHeight: 110,
     textAlignVertical: 'top',
+  },
+  splitRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  splitColumn: {
+    flex: 1,
+    minWidth: 130,
+    gap: spacing.sm,
   },
   chipGrid: {
     flexDirection: 'row',
@@ -753,8 +983,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(106, 31, 42, 0.2)',
     backgroundColor: palette.accentSoft,
   },
-  rowOptionLabel: {
+  rowOptionCopy: {
     flex: 1,
+    gap: spacing.xs,
+  },
+  rowOptionLabel: {
     fontSize: typography.body,
     lineHeight: 24,
     color: palette.text,
@@ -762,6 +995,14 @@ const styles = StyleSheet.create({
   rowOptionLabelSelected: {
     color: palette.accent,
     fontWeight: '700',
+  },
+  rowOptionDescription: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
+  rowOptionDescriptionSelected: {
+    color: palette.accent,
   },
   summaryRow: {
     gap: spacing.xs,
@@ -807,6 +1048,35 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySmall,
     lineHeight: 20,
     color: palette.textMuted,
+  },
+  reviewMetrics: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  reviewMetric: {
+    flexGrow: 1,
+    minWidth: 96,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  reviewMetricLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  reviewMetricValue: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.text,
   },
   buttonRow: {
     flexDirection: 'row',
