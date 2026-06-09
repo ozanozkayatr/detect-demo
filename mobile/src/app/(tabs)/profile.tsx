@@ -16,8 +16,8 @@ export default function ProfileTab() {
   return (
     <AppScreen
       eyebrow="Athlete profile"
-      title="One athlete profile shapes every review."
-      subtitle="Adjust the athlete profile whenever you want to tune the coaching context.">
+      title="One profile calibrates every review."
+      subtitle="Keep the athlete context current so coaching stays relevant across every session.">
       <SectionCard>
         <StatusPill
           label={
@@ -32,7 +32,9 @@ export default function ProfileTab() {
           }
         />
         <Text style={styles.heroText}>
-          One athlete context, edited over time, driving analysis tone and difficulty.
+          {hasProfile
+            ? 'Update the athlete profile whenever training volume, experience, or goals shift.'
+            : 'Create the athlete profile once before you begin reviewing clips.'}
         </Text>
       </SectionCard>
 
@@ -45,7 +47,11 @@ export default function ProfileTab() {
       {profile ? <ProfileSummaryCard profile={profile} /> : null}
       <PrimaryButton
         label={profile ? 'Edit athlete profile' : 'Create athlete profile'}
-        hint="Update the profile that future analyses should use"
+        hint={
+          profile
+            ? 'Update the profile used in future reviews'
+            : 'Create the profile used in future reviews'
+        }
         disabled={isBootstrapping}
         onPress={() => router.push(hasProfile ? '/profile/edit' : '/onboarding')}
       />
