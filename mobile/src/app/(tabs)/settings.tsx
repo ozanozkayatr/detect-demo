@@ -18,6 +18,7 @@ export default function SettingsTab() {
     isBootstrapping,
     profile,
     refreshProfile,
+    reviewSubject,
     user,
   } = useAthleteProfile();
   const [refreshing, setRefreshing] = useState(false);
@@ -78,7 +79,7 @@ export default function SettingsTab() {
         />
         <Text style={styles.body}>
           {hasProfile
-            ? `${profile?.name ?? 'Athlete'} is the current context for future reviews.`
+            ? reviewSubject?.description ?? `${profile?.name ?? 'Athlete'} is the current context for future reviews.`
             : 'Create the athlete profile before running the first review.'}
         </Text>
         <PrimaryButton

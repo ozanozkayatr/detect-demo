@@ -5,6 +5,10 @@ import {
   createAthleteProfilePayload,
   createProfileFromApiRecord,
 } from '@/features/athlete-profile/options';
+import {
+  createReviewSubject,
+  type ReviewSubject,
+} from '@/features/athlete-profile/review-subject';
 import type { AthleteProfile } from '@/features/athlete-profile/types';
 import {
   fetchAppSession,
@@ -15,6 +19,7 @@ import {
 type AthleteProfileContextValue = {
   user: AppUserRecord | null;
   profile: AthleteProfile | null;
+  reviewSubject: ReviewSubject | null;
   hasProfile: boolean;
   isBootstrapping: boolean;
   isSaving: boolean;
@@ -60,6 +65,7 @@ export function AthleteProfileProvider({ children }: PropsWithChildren) {
     () => ({
       user,
       profile,
+      reviewSubject: createReviewSubject({ user, profile }),
       hasProfile: profile !== null,
       isBootstrapping,
       isSaving,

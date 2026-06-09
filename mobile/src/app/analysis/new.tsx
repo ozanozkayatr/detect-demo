@@ -43,7 +43,13 @@ type LocalVideoAsset = {
 
 export default function NewAnalysisScreen() {
   const router = useRouter();
-  const { bootstrapError, hasProfile, isBootstrapping, profile } = useAthleteProfile();
+  const {
+    bootstrapError,
+    hasProfile,
+    isBootstrapping,
+    profile,
+    reviewSubject,
+  } = useAthleteProfile();
   const [localAsset, setLocalAsset] = useState<LocalVideoAsset | null>(null);
   const [uploadedVideo, setUploadedVideo] = useState<VideoRecord | null>(null);
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplateRecord[]>([]);
@@ -361,6 +367,16 @@ export default function NewAnalysisScreen() {
         </SectionCard>
 
         <SectionCard title="4. Run analysis" caption="This uses the current synchronous FastAPI + Gemini execution path.">
+          <View style={styles.stack}>
+            <StatusPill
+              label={reviewSubject?.shortLabel ?? 'Profile required'}
+              tone={reviewSubject ? 'success' : 'warning'}
+            />
+            <Text style={styles.metaText}>
+              Review target: {reviewSubject?.displayName ?? 'No athlete selected yet'}
+            </Text>
+          </View>
+
           <PrimaryButton
             label={runningAnalysis ? 'Running Gemini analysis...' : 'Run Gemini analysis'}
             hint="Upload must finish and a prompt must be selected"
