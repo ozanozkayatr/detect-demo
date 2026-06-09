@@ -93,9 +93,9 @@ export default function AnalysisDetailScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <AppScreen
-        eyebrow="Analysis"
-        title="Analysis review"
-        subtitle="Saved Gemini run with normalized boxing feedback."
+        eyebrow="Saved review"
+        title="Review result"
+        subtitle="Saved clip, context, and normalized Gemini feedback."
         onRefresh={handleRefresh}
         refreshing={refreshing}
         rightSlot={
@@ -111,7 +111,7 @@ export default function AnalysisDetailScreen() {
             </View>
           </SectionCard>
         ) : error ? (
-          <SectionCard title="Could not load analysis" tone="muted">
+          <SectionCard title="Could not load review" tone="muted">
             <Text style={styles.bodyText}>{error}</Text>
             <PrimaryButton
               label="Retry review"
@@ -154,7 +154,7 @@ export default function AnalysisDetailScreen() {
             </SectionCard>
 
             {videoUrl ? (
-              <SectionCard title="Clip review">
+              <SectionCard title="Saved clip">
                 <VideoView
                   style={styles.videoPlayer}
                   player={player}
@@ -179,24 +179,24 @@ export default function AnalysisDetailScreen() {
               </SectionCard>
             ) : null}
 
-            <SectionCard title="Run overview">
+            <SectionCard title="Review context">
               <View style={styles.detailGrid}>
                 <DetailCell
-                  label="Recorded"
+                  label="Saved"
                   value={formatTimestamp(analysis.created_at)}
                 />
                 <DetailCell label="Model" value={analysis.model_name ?? 'n/a'} />
                 <DetailCell label="Parser" value={analysis.parser_strategy ?? 'best effort'} />
                 <DetailCell
-                  label="Template"
+                  label="Review mode"
                   value={analysis.template_key_snapshot ?? analysis.prompt_template.key}
                 />
                 <DetailCell
-                  label="Athlete lens"
+                  label="Review target"
                   value={formatPersonaLabel(analysis.persona_key_snapshot)}
                 />
                 <DetailCell
-                  label="JSON parse"
+                  label="Structured parse"
                   value={
                     analysis.json_parse_succeeded === null
                       ? 'n/a'
@@ -245,6 +245,16 @@ export default function AnalysisDetailScreen() {
                   tone="muted"
                   emptyText="No extra caveats or visibility notes were stored."
                 />
+              </SectionCard>
+            ) : null}
+
+            {!hasObservedFeedback && !hasImprovementPlan ? (
+              <SectionCard title="Structured feedback" tone="muted">
+                <Text style={styles.bodyText}>
+                  This run saved the raw model output, but it did not produce normalized
+                  strengths, issues, or next steps. Open the model output below for the
+                  full response.
+                </Text>
               </SectionCard>
             ) : null}
 

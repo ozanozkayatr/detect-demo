@@ -101,6 +101,22 @@ export default function NewAnalysisScreen() {
     [promptTemplates, selectedPromptId],
   );
   const personaKey = profile ? getBackendPersonaKey(profile) : null;
+  const focusNote = userPrompt.trim();
+  const runReadinessHint = useMemo(() => {
+    if (!reviewSubject) {
+      return 'Set up the athlete profile before you run the first review.';
+    }
+
+    if (!uploadedVideo) {
+      return 'Choose a clip before you run the review.';
+    }
+
+    if (!selectedPrompt) {
+      return 'Select a review mode before you continue.';
+    }
+
+    return null;
+  }, [reviewSubject, selectedPrompt, uploadedVideo]);
 
   async function uploadSelectedVideo(nextAsset: LocalVideoAsset) {
     setUploadError(null);
@@ -215,9 +231,9 @@ export default function NewAnalysisScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <AppScreen
-        eyebrow="New analysis"
+        eyebrow="Review setup"
         title="Review a boxing clip."
-        subtitle="Choose a clip, pick the review mode, add optional context, and save the result."
+        subtitle="Choose the clip, set the review mode, and save the result."
         rightSlot={
           <Pressable onPress={() => router.back()} style={styles.closeButton}>
             <Feather name="x" size={20} color={palette.text} />
@@ -237,7 +253,7 @@ export default function NewAnalysisScreen() {
           </View>
         ) : null}
 
-        <SectionCard title="1. Choose a boxing clip" caption="The clip uploads as soon as you pick it.">
+        <SectionCard title="1. Save a boxing clip" caption="The clip uploads as soon as you pick it.">
           <PrimaryButton
             label={localAsset ? 'Choose another clip' : 'Choose a boxing clip'}
             hint="Open the device video library"
@@ -310,12 +326,12 @@ export default function NewAnalysisScreen() {
           ) : null}
         </SectionCard>
 
-        <SectionCard title="2. Choose the prompt" caption="Pick the review mode for this clip.">
+        <SectionCard title="2. Choose the review mode" caption="Pick the prompt that should guide the review.">
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.stepBody}>
               {loadingPrompts
-                ? 'Loading prompt templates...'
-                : 'Select the prompt template that should guide the review.'}
+                ? 'Loading review modes...'
+                : 'Choose the review mode for this clip.'}
             </Text>
             <Pressable onPress={handleSyncPromptTemplates} style={styles.smallActionButton}>
               <Text style={styles.smallActionLabel}>
@@ -372,7 +388,7 @@ export default function NewAnalysisScreen() {
           ) : null}
         </SectionCard>
 
-        <SectionCard title="3. Optional focus note" caption="Use this for clip-specific context, not ground truth.">
+        <SectionCard title="3. Add a focus note" caption="Optional clip-specific context. Do not use it as ground truth.">
           <TextInput
             value={userPrompt}
             onChangeText={setUserPrompt}
@@ -383,20 +399,46 @@ export default function NewAnalysisScreen() {
           />
         </SectionCard>
 
-        <SectionCard title="4. Run analysis" caption="Run the review and save it to the training log.">
-          <View style={styles.stack}>
-            <StatusPill
-              label={reviewSubject?.shortLabel ?? 'Profile required'}
-              tone={reviewSubject ? 'success' : 'warning'}
-            />
-            <Text style={styles.metaText}>
-              Review target: {reviewSubject?.displayName ?? 'No athlete selected yet'}
-            </Text>
+        <SectionCard title="4. Review context" caption="Confirm the saved clip and review settings.">
+          <View style={styles.contextCard}>
+            <View style={styles.contextRow}>
+              <Text style={styles.contextLabel}>Saved clip</Text>
+              <Text style={styles.contextValue}>
+                {uploadedVideo?.original_filename ?? localAsset?.name ?? 'No clip saved yet'}
+              </Text>
+            </View>
+            <View style={styles.contextRow}>
+              <Text style={styles.contextLabel}>Review target</Text>
+              <Text style={styles.contextValue}>
+                {reviewSubject?.displayName ?? 'No athlete selected yet'}
+              </Text>
+            </View>
+            <View style={styles.contextRow}>
+              <Text style={styles.contextLabel}>Review mode</Text>
+              <Text style={styles.contextValue}>
+                {selectedPrompt?.title ?? 'No review mode selected yet'}
+              </Text>
+            </View>
+            {selectedPrompt?.description ? (
+              <Text style={styles.contextBody}>{selectedPrompt.description}</Text>
+            ) : null}
+            {focusNote ? (
+              <View style={styles.contextNote}>
+                <Text style={styles.contextLabel}>Focus note</Text>
+                <Text style={styles.contextValue}>{focusNote}</Text>
+              </View>
+            ) : null}
           </View>
 
+          {runReadinessHint && !runningAnalysis ? (
+            <View style={styles.helperCard}>
+              <Text style={styles.helperText}>{runReadinessHint}</Text>
+            </View>
+          ) : null}
+
           <PrimaryButton
-            label={runningAnalysis ? 'Running Gemini analysis...' : 'Run Gemini analysis'}
-            hint="Upload must finish and a prompt must be selected"
+            label={runningAnalysis ? 'Running review...' : 'Run review'}
+            hint="Saved clip, review mode, and athlete profile are required"
             disabled={
               isBootstrapping ||
               Boolean(bootstrapError) ||
@@ -419,7 +461,7 @@ export default function NewAnalysisScreen() {
             <View style={styles.inlineStatus}>
               <ActivityIndicator color={palette.accent} />
               <Text style={styles.bodyText}>
-                Upload completed. Waiting for the review to return structured feedback.
+                Sending the saved clip and context to Gemini.
               </Text>
             </View>
           ) : null}
@@ -517,6 +559,54 @@ const styles = StyleSheet.create({
     color: palette.text,
   },
   promptDescription: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
+  contextCard: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  contextRow: {
+    gap: spacing.xs,
+  },
+  contextLabel: {
+    fontSize: typography.label,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  contextValue: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    color: palette.text,
+  },
+  contextBody: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
+  contextNote: {
+    gap: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.borderStrong,
+  },
+  helperCard: {
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  helperText: {
     fontSize: typography.bodySmall,
     lineHeight: 20,
     color: palette.textMuted,
