@@ -32,6 +32,7 @@ type AthleteProfileFlowProps = {
 };
 
 const totalSteps = 6;
+const stepLabels = ['Basics', 'Body', 'Level', 'Routine', 'Context', 'Review'];
 
 export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
   const router = useRouter();
@@ -166,6 +167,27 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
           </Text>
           <Text style={styles.title}>{titles[stepIndex]}</Text>
           <Text style={styles.subtitle}>{captions[stepIndex]}</Text>
+        </View>
+
+        <View style={styles.stepPills}>
+          {stepLabels.map((label, index) => (
+            <View
+              key={label}
+              style={[
+                styles.stepPill,
+                index === stepIndex && styles.stepPillActive,
+                index < stepIndex && styles.stepPillComplete,
+              ]}>
+              <Text
+                style={[
+                  styles.stepPillLabel,
+                  index === stepIndex && styles.stepPillLabelActive,
+                  index < stepIndex && styles.stepPillLabelComplete,
+                ]}>
+                {label}
+              </Text>
+            </View>
+          ))}
         </View>
 
         {isBootstrapping ? (
@@ -395,6 +417,16 @@ function renderStep(
     default:
       return (
         <View style={styles.stack}>
+          <View style={styles.reviewHero}>
+            <Text style={styles.reviewHeroEyebrow}>Ready to save</Text>
+            <Text style={styles.reviewHeroTitle}>
+              {draft.name || 'Athlete profile'}
+            </Text>
+            <Text style={styles.reviewHeroBody}>
+              This profile will shape review tone, level, and progression in every new analysis.
+            </Text>
+          </View>
+
           <SummaryRow label="Name" value={draft.name || 'Not set'} />
           <SummaryRow label="Stance" value={getStanceLabel(draft.stance)} />
           <SummaryRow
@@ -568,6 +600,39 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: palette.textMuted,
   },
+  stepPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  stepPill: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  stepPillActive: {
+    borderColor: 'rgba(106, 31, 42, 0.2)',
+    backgroundColor: palette.accentSoft,
+  },
+  stepPillComplete: {
+    borderColor: 'rgba(46, 77, 49, 0.16)',
+    backgroundColor: palette.successSoft,
+  },
+  stepPillLabel: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    fontWeight: '600',
+    color: palette.textMuted,
+  },
+  stepPillLabelActive: {
+    color: palette.accent,
+  },
+  stepPillLabelComplete: {
+    color: palette.success,
+  },
   card: {
     borderRadius: radii.lg,
     borderWidth: 1,
@@ -715,6 +780,33 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     lineHeight: 24,
     color: palette.text,
+  },
+  reviewHero: {
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(106, 31, 42, 0.18)',
+    borderRadius: radii.md,
+    backgroundColor: palette.accentSoft,
+    padding: spacing.md,
+  },
+  reviewHeroEyebrow: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  reviewHeroTitle: {
+    fontSize: typography.heading,
+    lineHeight: 28,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  reviewHeroBody: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
   },
   buttonRow: {
     flexDirection: 'row',
