@@ -172,8 +172,31 @@ export default function AnalysisDetailScreen() {
                 />
                 <DetailCell label="Model" value={analysis.model_name ?? 'n/a'} />
                 <DetailCell label="Parser" value={analysis.parser_strategy ?? 'best effort'} />
-                <DetailCell label="Template" value={analysis.prompt_template.key} />
+                <DetailCell
+                  label="Template"
+                  value={analysis.template_key_snapshot ?? analysis.prompt_template.key}
+                />
+                <DetailCell
+                  label="Athlete lens"
+                  value={formatPersonaLabel(analysis.persona_key_snapshot)}
+                />
+                <DetailCell
+                  label="JSON parse"
+                  value={
+                    analysis.json_parse_succeeded === null
+                      ? 'n/a'
+                      : analysis.json_parse_succeeded
+                        ? 'successful'
+                        : 'fallback parser'
+                  }
+                />
               </View>
+              {analysis.user_prompt_snapshot ? (
+                <View style={styles.snapshotBlock}>
+                  <Text style={styles.snapshotLabel}>Focus note</Text>
+                  <Text style={styles.snapshotText}>{analysis.user_prompt_snapshot}</Text>
+                </View>
+              ) : null}
             </SectionCard>
 
             {hasObservedFeedback ? (
@@ -330,6 +353,22 @@ function formatFileSize(sizeBytes: number) {
   return `${sizeBytes} B`;
 }
 
+function formatPersonaLabel(personaKey: string | null) {
+  switch (personaKey) {
+    case 'experienced_boxer_coach':
+      return 'Experienced boxer / coach';
+    case 'beginner_amateur':
+      return 'Beginner amateur';
+    case null:
+      return 'n/a';
+    default:
+      return personaKey
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+  }
+}
+
 const styles = StyleSheet.create({
   closeButton: {
     width: 40,
@@ -445,6 +484,24 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: typography.bodySmall,
     lineHeight: 20,
+    color: palette.text,
+  },
+  snapshotBlock: {
+    gap: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: palette.border,
+  },
+  snapshotLabel: {
+    fontSize: typography.label,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  snapshotText: {
+    fontSize: typography.body,
+    lineHeight: 24,
     color: palette.text,
   },
   feedbackBlock: {

@@ -108,6 +108,10 @@ export default function AnalysesTab() {
                     'Analysis completed.'}
                 </Text>
                 <Text style={styles.metaText}>
+                  {(analysis.template_key_snapshot ?? analysis.prompt_template.key)} ·{' '}
+                  {formatPersonaLabel(analysis.persona_key_snapshot)}
+                </Text>
+                <Text style={styles.metaText}>
                   Model: {analysis.model_name ?? 'n/a'} · Video #{analysis.video_id}
                 </Text>
               </SectionCard>
@@ -154,3 +158,19 @@ const styles = StyleSheet.create({
     color: palette.textMuted,
   },
 });
+
+function formatPersonaLabel(personaKey: string | null) {
+  switch (personaKey) {
+    case 'experienced_boxer_coach':
+      return 'Experienced boxer / coach';
+    case 'beginner_amateur':
+      return 'Beginner amateur';
+    case null:
+      return 'No athlete lens';
+    default:
+      return personaKey
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+  }
+}
