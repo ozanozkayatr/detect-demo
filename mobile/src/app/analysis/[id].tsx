@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -31,6 +31,7 @@ export default function AnalysisDetailScreen() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const player = useVideoPlayer(
     videoUrl ? { uri: videoUrl } : null,
     (currentPlayer) => {
@@ -45,41 +46,48 @@ export default function AnalysisDetailScreen() {
   const notes = parsedResponse?.notes ?? [];
   const hasObservedFeedback = strengths.length > 0 || issues.length > 0;
   const hasImprovementPlan = nextSteps.length > 0 || notes.length > 0;
+  const loadAnalysis = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!Number.isFinite(analysisId)) {
+        setAnalysis(null);
+        setError('This analysis id is not valid.');
+        setLoading(false);
+        return;
+      }
 
-  useEffect(() => {
-    if (!Number.isFinite(analysisId)) {
-      setError('This analysis id is not valid.');
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-
-    fetchAnalysisById(analysisId, controller.signal)
-      .then((nextAnalysis) => {
-        if (!cancelled) {
-          setAnalysis(nextAnalysis);
+      setLoading(true);
+      setError(null);
+      try {
+        const nextAnalysis = await fetchAnalysisById(analysisId, signal);
+        setAnalysis(nextAnalysis);
+      } catch (nextError) {
+        if (signal?.aborted) {
+          return;
         }
-      })
-      .catch((nextError: Error) => {
-        if (!cancelled) {
-          setError(nextError.message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
+        setAnalysis(null);
+        setError(nextError instanceof Error ? nextError.message : 'Could not load this review.');
+      } finally {
+        if (!signal?.aborted) {
           setLoading(false);
         }
-      });
+      }
+    },
+    [analysisId],
+  );
 
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadAnalysis(controller.signal);
     return () => {
-      cancelled = true;
       controller.abort();
     };
-  }, [analysisId]);
+  }, [loadAnalysis]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadAnalysis();
+    setRefreshing(false);
+  }, [loadAnalysis]);
 
   return (
     <>
@@ -88,6 +96,8 @@ export default function AnalysisDetailScreen() {
         eyebrow="Analysis"
         title="Analysis review"
         subtitle="Saved Gemini run with normalized boxing feedback."
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
         rightSlot={
           <Pressable onPress={() => router.back()} style={styles.closeButton}>
             <Feather name="x" size={20} color={palette.text} />
@@ -103,6 +113,11 @@ export default function AnalysisDetailScreen() {
         ) : error ? (
           <SectionCard title="Could not load analysis" tone="muted">
             <Text style={styles.bodyText}>{error}</Text>
+            <PrimaryButton
+              label="Retry review"
+              hint="Fetch this analysis again"
+              onPress={() => void loadAnalysis()}
+            />
             <PrimaryButton
               label="Back to reviews"
               hint="Return to the training log"
