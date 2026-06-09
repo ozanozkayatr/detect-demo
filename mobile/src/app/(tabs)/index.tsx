@@ -132,7 +132,7 @@ export default function HomeTab() {
         <Text style={styles.heroBody}>
           {hasProfile
             ? `${reviewSubject?.displayName ?? profile?.name ?? 'Your athlete profile'} is the active context for the next saved review.`
-            : 'This profile sets coaching tone, difficulty, and progression for every future analysis.'}
+            : 'This profile sets coaching tone, difficulty, and progression for every future review.'}
         </Text>
         <PrimaryButton
           label={hasProfile ? 'Review a boxing clip' : 'Set up athlete profile'}
@@ -193,7 +193,7 @@ export default function HomeTab() {
           <Text style={styles.bodyText}>{latestError}</Text>
           <PrimaryButton
             label="Retry latest review"
-            hint="Check the most recent analysis again"
+            hint="Check the most recent review again"
             onPress={() => void loadLatestAnalysis()}
           />
         </SectionCard>
@@ -203,7 +203,7 @@ export default function HomeTab() {
           <Text style={styles.bodyText}>
             {latestAnalysis.parsed_response?.summary ||
               latestAnalysis.raw_response ||
-              'Analysis completed.'}
+              'Review completed.'}
           </Text>
           <PrimaryButton
             label="Open review"

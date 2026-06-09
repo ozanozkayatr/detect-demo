@@ -25,6 +25,6 @@ export function createReviewSubject({
     kind: 'self',
     displayName,
     shortLabel: 'Self review',
-    description: `${displayName} is the active solo review target for future analyses.`,
+    description: `${displayName} is the active solo review target for future reviews.`,
   };
 }

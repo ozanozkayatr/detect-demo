@@ -221,7 +221,7 @@ export default function NewAnalysisScreen() {
       });
       router.replace(`/analysis/${result.id}`);
     } catch (nextError) {
-      setAnalysisError(nextError instanceof Error ? nextError.message : 'Analysis failed.');
+      setAnalysisError(nextError instanceof Error ? nextError.message : 'Review failed.');
     } finally {
       setRunningAnalysis(false);
     }
@@ -242,7 +242,7 @@ export default function NewAnalysisScreen() {
         {!isBootstrapping && !bootstrapError && !hasProfile ? (
           <SectionCard title="Athlete profile required" tone="muted">
             <Text style={styles.bodyText}>
-              Set up the athlete profile before starting the first analysis.
+              Set up the athlete profile before starting the first review.
             </Text>
           </SectionCard>
         ) : null}

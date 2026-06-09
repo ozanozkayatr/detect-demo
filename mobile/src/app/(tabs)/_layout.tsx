@@ -35,7 +35,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="analyses"
         options={{
-          title: 'Analyses',
+          title: 'Reviews',
           tabBarIcon: ({ color, size }) => (
             <Feather name="film" size={size} color={color} />
           ),
@@ -51,7 +51,7 @@ export default function TabsLayout() {
             <View style={styles.createButtonWrapper}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Start a new analysis"
+                accessibilityLabel="Start a new review"
                 onPress={() => router.push('/analysis/new')}
                 style={({ pressed }) => [
                   styles.createButton,

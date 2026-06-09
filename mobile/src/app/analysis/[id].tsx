@@ -50,7 +50,7 @@ export default function AnalysisDetailScreen() {
     async (signal?: AbortSignal) => {
       if (!Number.isFinite(analysisId)) {
         setAnalysis(null);
-        setError('This analysis id is not valid.');
+        setError('This review id is not valid.');
         setLoading(false);
         return;
       }
@@ -107,7 +107,7 @@ export default function AnalysisDetailScreen() {
           <SectionCard title="Loading review">
             <View style={styles.inlineStatus}>
               <ActivityIndicator color={palette.accent} />
-              <Text style={styles.bodyText}>Fetching the saved analysis result...</Text>
+              <Text style={styles.bodyText}>Fetching the saved review result...</Text>
             </View>
           </SectionCard>
         ) : error ? (
@@ -283,7 +283,7 @@ export default function AnalysisDetailScreen() {
 
             <PrimaryButton
               label="Back to review log"
-              hint="Open the full analyses list"
+              hint="Open the full review log"
               onPress={() => router.replace('/(tabs)/analyses')}
             />
           </>

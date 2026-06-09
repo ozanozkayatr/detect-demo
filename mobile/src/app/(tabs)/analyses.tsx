@@ -28,7 +28,7 @@ export default function AnalysesTab() {
       if (signal?.aborted) {
         return;
       }
-      setError(nextError instanceof Error ? nextError.message : 'Could not load analyses.');
+      setError(nextError instanceof Error ? nextError.message : 'Could not load reviews.');
     } finally {
       if (!signal?.aborted) {
         setLoading(false);
@@ -89,7 +89,7 @@ export default function AnalysesTab() {
         </View>
         <PrimaryButton
           label={latestAnalysis ? 'Review another clip' : 'Start first review'}
-          hint="Open the analysis flow"
+          hint="Open the review flow"
           icon={<Feather name="arrow-right" size={20} color="#ffffff" />}
           onPress={() => router.push('/analysis/new')}
         />
@@ -107,7 +107,7 @@ export default function AnalysesTab() {
           <Text style={styles.rowText}>{error}</Text>
           <PrimaryButton
             label="Retry log"
-            hint="Fetch analysis history again"
+            hint="Fetch review history again"
             onPress={() => void loadAnalyses()}
           />
         </SectionCard>
@@ -194,7 +194,7 @@ export default function AnalysesTab() {
           </Text>
           <PrimaryButton
             label="Start first review"
-            hint="Open the analysis flow"
+            hint="Open the review flow"
             onPress={() => router.push('/analysis/new')}
           />
         </SectionCard>
