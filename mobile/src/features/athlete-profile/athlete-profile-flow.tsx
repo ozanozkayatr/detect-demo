@@ -44,21 +44,21 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const titles = [
-    'Start with the athlete basics.',
-    'Add the body profile.',
-    'Calibrate boxing level.',
-    'Capture the weekly routine.',
-    'Add background context.',
-    'Review the final profile.',
+    'Start with the athlete.',
+    'Set the body profile.',
+    'Set the current level.',
+    'Map the weekly routine.',
+    'Add training context.',
+    'Review the profile.',
   ];
 
   const captions = [
-    'This profile will shape future analysis tone and difficulty.',
-    'Height and weight help frame feedback more realistically.',
-    'We should never coach a 10-year competitor like a day-one beginner.',
-    'Weekly rhythm matters for how specific the next steps should be.',
-    'This keeps the AI grounded in actual training history.',
-    'Save once, then use this profile as the single athlete context.',
+    'This becomes the default context behind every review.',
+    'Body profile helps keep coaching grounded and proportional.',
+    'Review tone should match actual boxing experience.',
+    'Weekly volume shapes how aggressive the next-step guidance should be.',
+    'Use background details to keep feedback practical and relevant.',
+    'Save once, then use this profile across future sessions.',
   ];
 
   useEffect(() => {
@@ -92,6 +92,20 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
         return draft.weeklyTrainingDays.trim().length > 0;
       default:
         return true;
+    }
+  })();
+  const continueHint = (() => {
+    switch (stepIndex) {
+      case 0:
+        return 'Add the athlete name to continue.';
+      case 1:
+        return 'Enter height and weight to continue.';
+      case 2:
+        return 'Choose the current boxing level to continue.';
+      case 3:
+        return 'Enter training days per week to continue.';
+      default:
+        return null;
     }
   })();
 
@@ -148,7 +162,7 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
 
         <View style={styles.header}>
           <Text style={styles.eyebrow}>
-            {mode === 'create' ? 'Athlete profile' : 'Edit athlete profile'}
+            {mode === 'create' ? 'Profile setup' : 'Edit athlete profile'}
           </Text>
           <Text style={styles.title}>{titles[stepIndex]}</Text>
           <Text style={styles.subtitle}>{captions[stepIndex]}</Text>
@@ -168,6 +182,12 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
         ) : null}
 
         <View style={styles.card}>{renderStep(stepIndex, draft, setField, toggleTrainingType)}</View>
+
+        {!canContinue && continueHint ? (
+          <View style={styles.helperCard}>
+            <Text style={styles.helperText}>{continueHint}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.buttonRow}>
           <Pressable onPress={handleBack} style={styles.secondaryButton}>
@@ -213,7 +233,7 @@ function renderStep(
           <TextInput
             value={draft.name}
             onChangeText={(value) => setField('name', value)}
-            placeholder="Ozan"
+            placeholder="Mert Yilmaz"
             placeholderTextColor={palette.textSoft}
             style={styles.textInput}
           />
@@ -571,6 +591,19 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     lineHeight: 24,
     color: palette.text,
+  },
+  helperCard: {
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  helperText: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
   },
   errorCard: {
     borderWidth: 1,
