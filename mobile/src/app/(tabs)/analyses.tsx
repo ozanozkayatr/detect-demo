@@ -111,8 +111,8 @@ export default function AnalysesTab() {
                   {(analysis.template_key_snapshot ?? analysis.prompt_template.key)} ·{' '}
                   {formatPersonaLabel(analysis.persona_key_snapshot)}
                 </Text>
-                <Text style={styles.metaText}>
-                  Model: {analysis.model_name ?? 'n/a'} · Video #{analysis.video_id}
+                <Text style={styles.metaText} numberOfLines={1}>
+                  Model: {analysis.model_name ?? 'n/a'} · Clip {analysis.video.original_filename}
                 </Text>
               </SectionCard>
             </Pressable>

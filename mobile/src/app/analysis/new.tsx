@@ -296,9 +296,9 @@ export default function NewAnalysisScreen() {
 
           {uploadedVideo ? (
             <View style={styles.uploadedState}>
-              <StatusPill label="Stored locally" tone="success" />
+              <StatusPill label="Clip saved" tone="success" />
               <Text style={styles.metaText}>
-                Backend video id: {uploadedVideo.id} · {uploadedVideo.original_filename}
+                Ready to review: {uploadedVideo.original_filename}
               </Text>
             </View>
           ) : null}
@@ -319,7 +319,7 @@ export default function NewAnalysisScreen() {
             </Text>
             <Pressable onPress={handleSyncPromptTemplates} style={styles.smallActionButton}>
               <Text style={styles.smallActionLabel}>
-                {syncingPrompts ? 'Syncing...' : 'Sync templates'}
+                {syncingPrompts ? 'Refreshing...' : 'Refresh prompts'}
               </Text>
             </Pressable>
           </View>
@@ -353,7 +353,7 @@ export default function NewAnalysisScreen() {
                 No prompt templates are available yet.
               </Text>
               <PrimaryButton
-                label="Reload prompts"
+                label="Refresh prompts"
                 hint="Fetch prompt templates again"
                 onPress={() => void loadPromptTemplates()}
               />
