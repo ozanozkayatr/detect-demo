@@ -16,43 +16,49 @@ export default function AnalysesTab() {
   const [analyses, setAnalyses] = useState<AnalysisRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadAnalyses = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const nextAnalyses = await fetchAnalyses(signal);
+      setAnalyses(nextAnalyses);
+    } catch (nextError) {
+      if (signal?.aborted) {
+        return;
+      }
+      setError(nextError instanceof Error ? nextError.message : 'Could not load analyses.');
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
       const controller = new AbortController();
-      setLoading(true);
-      setError(null);
-
-      fetchAnalyses(controller.signal)
-        .then((nextAnalyses) => {
-          if (!cancelled) {
-            setAnalyses(nextAnalyses);
-          }
-        })
-        .catch((nextError: Error) => {
-          if (!cancelled) {
-            setError(nextError.message);
-          }
-        })
-        .finally(() => {
-          if (!cancelled) {
-            setLoading(false);
-          }
-        });
-
+      void loadAnalyses(controller.signal);
       return () => {
-        cancelled = true;
         controller.abort();
       };
-    }, []),
+    }, [loadAnalyses]),
   );
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadAnalyses();
+    setRefreshing(false);
+  }, [loadAnalyses]);
 
   return (
     <AppScreen
       eyebrow="Training log"
       title="Your review log lives here."
-      subtitle="Completed analyses are loaded from the backend so the app keeps a real training archive.">
+      subtitle="Completed analyses are loaded from the backend so the app keeps a real training archive."
+      onRefresh={handleRefresh}
+      refreshing={refreshing}>
       <SectionCard>
         <StatusPill label={`${analyses.length} review${analyses.length === 1 ? '' : 's'}`} tone="success" />
         <Text style={styles.bigCopy}>
@@ -76,6 +82,11 @@ export default function AnalysesTab() {
       ) : error ? (
         <SectionCard title="Could not load analyses" tone="muted">
           <Text style={styles.rowText}>{error}</Text>
+          <PrimaryButton
+            label="Retry log"
+            hint="Fetch analysis history again"
+            onPress={() => void loadAnalyses()}
+          />
         </SectionCard>
       ) : analyses.length > 0 ? (
         <View style={styles.list}>

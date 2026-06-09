@@ -1,6 +1,6 @@
 import type { PropsWithChildren, ReactNode } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { palette, spacing, typography } from '@/design/theme';
 
@@ -9,6 +9,8 @@ type AppScreenProps = PropsWithChildren<{
   eyebrow?: string;
   subtitle?: string;
   rightSlot?: ReactNode;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }>;
 
 export function AppScreen({
@@ -17,10 +19,21 @@ export function AppScreen({
   eyebrow,
   subtitle,
   rightSlot,
+  onRefresh,
+  refreshing = false,
 }: AppScreenProps) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <ScrollView
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={palette.accent}
+            />
+          ) : undefined
+        }
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
         <View style={styles.header}>

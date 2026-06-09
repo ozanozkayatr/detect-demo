@@ -21,61 +21,94 @@ import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
 export default function HomeTab() {
   const router = useRouter();
-  const { bootstrapError, hasProfile, isBootstrapping, profile } = useAthleteProfile();
+  const {
+    bootstrapError,
+    hasProfile,
+    isBootstrapping,
+    profile,
+    refreshProfile,
+  } = useAthleteProfile();
   const [latestAnalysis, setLatestAnalysis] = useState<AnalysisRecord | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [latestLoading, setLatestLoading] = useState(true);
+  const [latestError, setLatestError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadHealth = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const nextHealth = await fetchHealth(signal);
+      setHealth(nextHealth);
+    } catch (nextError) {
+      if (signal?.aborted) {
+        return;
+      }
+      setError(nextError instanceof Error ? nextError.message : 'Could not check service status.');
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-
-    fetchHealth(controller.signal)
-      .then(setHealth)
-      .catch((nextError: Error) => setError(nextError.message))
-      .finally(() => setLoading(false));
-
+    void loadHealth(controller.signal);
     return () => controller.abort();
+  }, [loadHealth]);
+
+  const loadLatestAnalysis = useCallback(async (signal?: AbortSignal) => {
+    setLatestLoading(true);
+    setLatestError(null);
+    try {
+      const analyses = await fetchAnalyses(signal);
+      setLatestAnalysis(analyses[0] ?? null);
+    } catch (nextError) {
+      if (signal?.aborted) {
+        return;
+      }
+      setLatestAnalysis(null);
+      setLatestError(
+        nextError instanceof Error ? nextError.message : 'Could not load the latest review.',
+      );
+    } finally {
+      if (!signal?.aborted) {
+        setLatestLoading(false);
+      }
+    }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
       const controller = new AbortController();
-      setLatestLoading(true);
-
-      fetchAnalyses(controller.signal)
-        .then((analyses) => {
-          if (!cancelled) {
-            setLatestAnalysis(analyses[0] ?? null);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) {
-            setLatestAnalysis(null);
-          }
-        })
-        .finally(() => {
-          if (!cancelled) {
-            setLatestLoading(false);
-          }
-        });
-
+      void loadLatestAnalysis(controller.signal);
       return () => {
-        cancelled = true;
         controller.abort();
       };
-    }, []),
+    }, [loadLatestAnalysis]),
   );
 
   const geminiReady = Boolean(health?.gemini_configured);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.allSettled([
+      refreshProfile(),
+      loadHealth(),
+      loadLatestAnalysis(),
+    ]);
+    setRefreshing(false);
+  }, [loadHealth, loadLatestAnalysis, refreshProfile]);
 
   return (
     <AppScreen
       eyebrow="Detect"
       title="AI review built for boxing training."
-      subtitle="Capture a session, run analysis, and turn each round into clear next steps.">
+      subtitle="Capture a session, run analysis, and turn each round into clear next steps."
+      onRefresh={handleRefresh}
+      refreshing={refreshing}>
       <SectionCard>
         <StatusPill
           label={
@@ -113,6 +146,11 @@ export default function HomeTab() {
       {bootstrapError ? (
         <SectionCard tone="muted" title="Profile loading issue">
           <Text style={styles.bodyText}>{bootstrapError}</Text>
+          <PrimaryButton
+            label="Retry profile"
+            hint="Fetch the athlete context again"
+            onPress={() => void refreshProfile()}
+          />
         </SectionCard>
       ) : null}
 
@@ -124,6 +162,15 @@ export default function HomeTab() {
             <ActivityIndicator color={palette.accent} />
             <Text style={styles.bodyText}>Loading the most recent review...</Text>
           </View>
+        </SectionCard>
+      ) : latestError ? (
+        <SectionCard title="Could not load latest review" tone="muted">
+          <Text style={styles.bodyText}>{latestError}</Text>
+          <PrimaryButton
+            label="Retry latest review"
+            hint="Check the most recent analysis again"
+            onPress={() => void loadLatestAnalysis()}
+          />
         </SectionCard>
       ) : latestAnalysis ? (
         <SectionCard title="Latest review" caption="Pick up from the most recent saved analysis.">
@@ -155,6 +202,11 @@ export default function HomeTab() {
               with your computer&apos;s LAN IP.
             </Text>
             <Text style={styles.metaText}>{error}</Text>
+            <PrimaryButton
+              label="Retry connection check"
+              hint="Run the health check again"
+              onPress={() => void loadHealth()}
+            />
           </View>
         ) : (
           <View style={styles.stack}>

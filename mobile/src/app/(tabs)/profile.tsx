@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppScreen } from '@/components/app-screen';
@@ -11,13 +12,28 @@ import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-co
 
 export default function ProfileTab() {
   const router = useRouter();
-  const { bootstrapError, hasProfile, isBootstrapping, profile } = useAthleteProfile();
+  const {
+    bootstrapError,
+    hasProfile,
+    isBootstrapping,
+    profile,
+    refreshProfile,
+  } = useAthleteProfile();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshProfile();
+    setRefreshing(false);
+  }, [refreshProfile]);
 
   return (
     <AppScreen
       eyebrow="Athlete profile"
       title="One profile calibrates every review."
-      subtitle="Keep the athlete context current so coaching stays relevant across every session.">
+      subtitle="Keep the athlete context current so coaching stays relevant across every session."
+      onRefresh={handleRefresh}
+      refreshing={refreshing}>
       <SectionCard>
         <StatusPill
           label={
@@ -41,6 +57,11 @@ export default function ProfileTab() {
       {bootstrapError ? (
         <SectionCard tone="muted">
           <Text style={styles.bodyText}>{bootstrapError}</Text>
+          <PrimaryButton
+            label="Retry profile"
+            hint="Fetch the latest athlete context"
+            onPress={() => void refreshProfile()}
+          />
         </SectionCard>
       ) : null}
 
