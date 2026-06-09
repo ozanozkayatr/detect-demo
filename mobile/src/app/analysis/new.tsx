@@ -3,7 +3,7 @@ import { Asset } from 'expo-asset';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Stack, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -59,7 +59,9 @@ export default function NewAnalysisScreen() {
   const [syncingPrompts, setSyncingPrompts] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [runningAnalysis, setRunningAnalysis] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [promptError, setPromptError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const previewUri = localAsset?.uri ?? null;
   const previewPlayer = useVideoPlayer(
     previewUri ? { uri: previewUri } : null,
@@ -74,33 +76,25 @@ export default function NewAnalysisScreen() {
     }
   }, [bootstrapError, hasProfile, isBootstrapping, router]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchPromptTemplates()
-      .then((templates) => {
-        if (cancelled) {
-          return;
-        }
-
-        setPromptTemplates(templates);
-        setSelectedPromptId((current) => current ?? templates[0]?.id ?? null);
-      })
-      .catch((nextError: Error) => {
-        if (!cancelled) {
-          setError(nextError.message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoadingPrompts(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
+  const loadPromptTemplates = useCallback(async () => {
+    setLoadingPrompts(true);
+    setPromptError(null);
+    try {
+      const templates = await fetchPromptTemplates();
+      setPromptTemplates(templates);
+      setSelectedPromptId((current) => current ?? templates[0]?.id ?? null);
+    } catch (nextError) {
+      setPromptError(
+        nextError instanceof Error ? nextError.message : 'Could not load prompt templates.',
+      );
+    } finally {
+      setLoadingPrompts(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadPromptTemplates();
+  }, [loadPromptTemplates]);
 
   const selectedPrompt = useMemo(
     () => promptTemplates.find((template) => template.id === selectedPromptId) ?? null,
@@ -109,6 +103,7 @@ export default function NewAnalysisScreen() {
   const personaKey = profile ? getBackendPersonaKey(profile) : null;
 
   async function uploadSelectedVideo(nextAsset: LocalVideoAsset) {
+    setUploadError(null);
     setLocalAsset(nextAsset);
     setUploadedVideo(null);
 
@@ -117,18 +112,18 @@ export default function NewAnalysisScreen() {
       const video = await uploadVideoFile(nextAsset);
       setUploadedVideo(video);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : 'Upload failed.');
+      setUploadError(nextError instanceof Error ? nextError.message : 'Upload failed.');
     } finally {
       setUploading(false);
     }
   }
 
   async function handlePickVideo() {
-    setError(null);
+    setUploadError(null);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
-      setError('Media library access is required to choose a boxing clip.');
+      setUploadError('Media library access is required to choose a boxing clip.');
       return;
     }
 
@@ -155,7 +150,7 @@ export default function NewAnalysisScreen() {
   }
 
   async function handleUseSampleVideo(sampleVideo: SampleVideo) {
-    setError(null);
+    setUploadError(null);
     try {
       const asset = Asset.fromModule(sampleVideo.moduleId);
       if (!asset.localUri) {
@@ -172,7 +167,7 @@ export default function NewAnalysisScreen() {
 
       await uploadSelectedVideo(nextAsset);
     } catch (nextError) {
-      setError(
+      setUploadError(
         nextError instanceof Error
           ? nextError.message
           : 'Sample video could not be loaded.',
@@ -181,15 +176,13 @@ export default function NewAnalysisScreen() {
   }
 
   async function handleSyncPromptTemplates() {
-    setError(null);
+    setPromptError(null);
     setSyncingPrompts(true);
     try {
       await syncPromptTemplates();
-      const templates = await fetchPromptTemplates();
-      setPromptTemplates(templates);
-      setSelectedPromptId((current) => current ?? templates[0]?.id ?? null);
+      await loadPromptTemplates();
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : 'Prompt sync failed.');
+      setPromptError(nextError instanceof Error ? nextError.message : 'Prompt sync failed.');
     } finally {
       setSyncingPrompts(false);
     }
@@ -200,7 +193,7 @@ export default function NewAnalysisScreen() {
       return;
     }
 
-    setError(null);
+    setAnalysisError(null);
     setRunningAnalysis(true);
 
     try {
@@ -212,7 +205,7 @@ export default function NewAnalysisScreen() {
       });
       router.replace(`/analysis/${result.id}`);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : 'Analysis failed.');
+      setAnalysisError(nextError instanceof Error ? nextError.message : 'Analysis failed.');
     } finally {
       setRunningAnalysis(false);
     }
@@ -224,7 +217,7 @@ export default function NewAnalysisScreen() {
       <AppScreen
         eyebrow="New analysis"
         title="Review a boxing clip."
-        subtitle="Choose a local video, select a prompt, add an optional note, and run Gemini."
+        subtitle="Choose a clip, pick the review mode, add optional context, and save the result."
         rightSlot={
           <Pressable onPress={() => router.back()} style={styles.closeButton}>
             <Feather name="x" size={20} color={palette.text} />
@@ -244,7 +237,7 @@ export default function NewAnalysisScreen() {
           </View>
         ) : null}
 
-        <SectionCard title="1. Choose a boxing clip" caption="The file is uploaded to FastAPI immediately after selection.">
+        <SectionCard title="1. Choose a boxing clip" caption="The clip uploads as soon as you pick it.">
           <PrimaryButton
             label={localAsset ? 'Choose another clip' : 'Choose a boxing clip'}
             hint="Open the device video library"
@@ -309,14 +302,20 @@ export default function NewAnalysisScreen() {
               </Text>
             </View>
           ) : null}
+
+          {uploadError ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{uploadError}</Text>
+            </View>
+          ) : null}
         </SectionCard>
 
-        <SectionCard title="2. Choose the prompt" caption="The backend still reads prompt templates from PostgreSQL.">
+        <SectionCard title="2. Choose the prompt" caption="Pick the review mode for this clip.">
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.stepBody}>
               {loadingPrompts
                 ? 'Loading prompt templates...'
-                : 'Select the prompt template that should drive Gemini.'}
+                : 'Select the prompt template that should guide the review.'}
             </Text>
             <Pressable onPress={handleSyncPromptTemplates} style={styles.smallActionButton}>
               <Text style={styles.smallActionLabel}>
@@ -349,13 +348,31 @@ export default function NewAnalysisScreen() {
               ))}
             </View>
           ) : !loadingPrompts ? (
-            <Text style={styles.bodyText}>
-              No prompt templates are available yet. Sync them from local files first.
-            </Text>
+            <View style={styles.stack}>
+              <Text style={styles.bodyText}>
+                No prompt templates are available yet.
+              </Text>
+              <PrimaryButton
+                label="Reload prompts"
+                hint="Fetch prompt templates again"
+                onPress={() => void loadPromptTemplates()}
+              />
+            </View>
+          ) : null}
+
+          {promptError ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{promptError}</Text>
+              <Pressable
+                onPress={() => void loadPromptTemplates()}
+                style={styles.retryButton}>
+                <Text style={styles.retryLabel}>Retry prompt load</Text>
+              </Pressable>
+            </View>
           ) : null}
         </SectionCard>
 
-        <SectionCard title="3. Optional focus note" caption="This remains secondary context, not ground truth.">
+        <SectionCard title="3. Optional focus note" caption="Use this for clip-specific context, not ground truth.">
           <TextInput
             value={userPrompt}
             onChangeText={setUserPrompt}
@@ -366,7 +383,7 @@ export default function NewAnalysisScreen() {
           />
         </SectionCard>
 
-        <SectionCard title="4. Run analysis" caption="This uses the current synchronous FastAPI + Gemini execution path.">
+        <SectionCard title="4. Run analysis" caption="Run the review and save it to the training log.">
           <View style={styles.stack}>
             <StatusPill
               label={reviewSubject?.shortLabel ?? 'Profile required'}
@@ -402,14 +419,14 @@ export default function NewAnalysisScreen() {
             <View style={styles.inlineStatus}>
               <ActivityIndicator color={palette.accent} />
               <Text style={styles.bodyText}>
-                Upload completed. Waiting for Gemini to process the video and return structured feedback.
+                Upload completed. Waiting for the review to return structured feedback.
               </Text>
             </View>
           ) : null}
 
-          {error ? (
+          {analysisError ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.errorText}>{analysisError}</Text>
             </View>
           ) : null}
         </SectionCard>
@@ -528,6 +545,16 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '700',
     color: palette.text,
+  },
+  retryButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.xs,
+  },
+  retryLabel: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    fontWeight: '700',
+    color: '#93000a',
   },
   inlineStatus: {
     flexDirection: 'row',
