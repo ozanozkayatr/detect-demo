@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.models.athlete_profile import AthleteProfile
 from app.schemas.athlete_profile import AthleteProfileRead, AthleteProfileUpsert
 from app.services.app_session_service import (
-    get_or_create_app_session,
+    get_athlete_profile,
+    get_or_create_app_user,
 )
 
 router = APIRouter()
@@ -14,7 +16,16 @@ router = APIRouter()
 
 @router.get("", response_model=AthleteProfileRead)
 def read_athlete_profile(db: Session = Depends(get_db)) -> AthleteProfileRead:
-    _, athlete_profile = get_or_create_app_session(db)
+    user = get_or_create_app_user(db)
+    athlete_profile = get_athlete_profile(db, user)
+    if athlete_profile is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "athlete_profile_not_found",
+                "message": "No athlete profile has been created yet.",
+            },
+        )
     return athlete_profile
 
 
@@ -23,7 +34,13 @@ def upsert_athlete_profile(
     payload: AthleteProfileUpsert,
     db: Session = Depends(get_db),
 ) -> AthleteProfileRead:
-    _, athlete_profile = get_or_create_app_session(db)
+    user = get_or_create_app_user(db)
+    athlete_profile = get_athlete_profile(db, user)
+    if athlete_profile is None:
+        athlete_profile = AthleteProfile(user_id=user.id, name="")
+        db.add(athlete_profile)
+        db.flush()
+        user.athlete_profile = athlete_profile
 
     athlete_profile.name = payload.name.strip()
     athlete_profile.age_range = payload.age_range.strip()

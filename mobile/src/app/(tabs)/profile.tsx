@@ -11,7 +11,7 @@ import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-co
 
 export default function ProfileTab() {
   const router = useRouter();
-  const { bootstrapError, isBootstrapping, profile } = useAthleteProfile();
+  const { bootstrapError, hasProfile, isBootstrapping, profile } = useAthleteProfile();
 
   return (
     <AppScreen
@@ -47,7 +47,7 @@ export default function ProfileTab() {
         label={profile ? 'Edit athlete profile' : 'Create athlete profile'}
         hint="Update the profile that future analyses should use"
         disabled={isBootstrapping}
-        onPress={() => router.push('/profile/edit')}
+        onPress={() => router.push(hasProfile ? '/profile/edit' : '/onboarding')}
       />
     </AppScreen>
   );

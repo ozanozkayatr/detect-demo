@@ -44,7 +44,7 @@ export type AthleteProfileRecord = {
 
 export type AppSessionRecord = {
   user: AppUserRecord;
-  athlete_profile: AthleteProfileRecord;
+  athlete_profile: AthleteProfileRecord | null;
 };
 
 export type VideoRecord = {

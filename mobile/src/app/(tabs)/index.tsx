@@ -21,7 +21,7 @@ import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
 export default function HomeTab() {
   const router = useRouter();
-  const { bootstrapError, isBootstrapping, profile } = useAthleteProfile();
+  const { bootstrapError, hasProfile, isBootstrapping, profile } = useAthleteProfile();
   const [latestAnalysis, setLatestAnalysis] = useState<AnalysisRecord | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,17 +90,23 @@ export default function HomeTab() {
           }
         />
         <Text style={styles.heroTitle}>
-          Review a boxing clip with an active athlete profile.
+          {hasProfile
+            ? 'Review a boxing clip with an active athlete profile.'
+            : 'Set up the athlete profile before the first review.'}
         </Text>
         <Text style={styles.heroBody}>
-          Upload a clip, choose the analysis prompt, and read structured Gemini feedback in one pass.
+          {hasProfile
+            ? 'Upload a clip, choose the analysis prompt, and read structured Gemini feedback in one pass.'
+            : 'Create one athlete profile first so Gemini can match tone, difficulty, and next-step guidance.'}
         </Text>
         <PrimaryButton
-          label="Review a boxing clip"
-          hint="Open the analysis flow"
+          label={hasProfile ? 'Review a boxing clip' : 'Set up athlete profile'}
+          hint={
+            hasProfile ? 'Open the analysis flow' : 'Create the athlete context first'
+          }
           icon={<Feather name="arrow-right" size={20} color="#ffffff" />}
           disabled={isBootstrapping || Boolean(bootstrapError)}
-          onPress={() => router.push('/analysis/new')}
+          onPress={() => router.push(hasProfile ? '/analysis/new' : '/onboarding')}
         />
       </SectionCard>
 

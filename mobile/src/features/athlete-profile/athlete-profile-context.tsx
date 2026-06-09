@@ -38,7 +38,11 @@ export function AthleteProfileProvider({ children }: PropsWithChildren) {
     try {
       const session = await fetchAppSession();
       setUser(session.user);
-      setProfile(createProfileFromApiRecord(session.athlete_profile));
+      setProfile(
+        session.athlete_profile
+          ? createProfileFromApiRecord(session.athlete_profile)
+          : null,
+      );
     } catch (error) {
       setBootstrapError(
         error instanceof Error ? error.message : 'Could not load app session.',

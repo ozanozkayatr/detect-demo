@@ -28,6 +28,7 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: palette.background },
           }}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding" options={{ presentation: 'card' }} />
           <Stack.Screen name="analysis/new" options={{ presentation: 'card' }} />
           <Stack.Screen name="analysis/[id]" options={{ presentation: 'card' }} />
           <Stack.Screen name="profile/edit" options={{ presentation: 'card' }} />

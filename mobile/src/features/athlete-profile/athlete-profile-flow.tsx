@@ -110,7 +110,7 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
       );
       return;
     }
-    router.replace('/(tabs)/profile');
+    router.replace(mode === 'create' ? '/analysis/new' : '/(tabs)/profile');
   }
 
   function handleBack() {

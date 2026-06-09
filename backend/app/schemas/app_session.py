@@ -20,4 +20,4 @@ class AppUserRead(BaseModel):
 
 class AppSessionRead(BaseModel):
     user: AppUserRead
-    athlete_profile: AthleteProfileRead
+    athlete_profile: AthleteProfileRead | None

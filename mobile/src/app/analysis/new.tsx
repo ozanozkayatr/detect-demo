@@ -43,7 +43,7 @@ type LocalVideoAsset = {
 
 export default function NewAnalysisScreen() {
   const router = useRouter();
-  const { bootstrapError, isBootstrapping, profile } = useAthleteProfile();
+  const { bootstrapError, hasProfile, isBootstrapping, profile } = useAthleteProfile();
   const [localAsset, setLocalAsset] = useState<LocalVideoAsset | null>(null);
   const [uploadedVideo, setUploadedVideo] = useState<VideoRecord | null>(null);
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplateRecord[]>([]);
@@ -61,6 +61,12 @@ export default function NewAnalysisScreen() {
       currentPlayer.loop = true;
     },
   );
+
+  useEffect(() => {
+    if (!isBootstrapping && !bootstrapError && !hasProfile) {
+      router.replace('/onboarding');
+    }
+  }, [bootstrapError, hasProfile, isBootstrapping, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -218,6 +224,14 @@ export default function NewAnalysisScreen() {
             <Feather name="x" size={20} color={palette.text} />
           </Pressable>
         }>
+        {!isBootstrapping && !bootstrapError && !hasProfile ? (
+          <SectionCard title="Athlete profile required" tone="muted">
+            <Text style={styles.bodyText}>
+              Set up the athlete profile before starting the first analysis.
+            </Text>
+          </SectionCard>
+        ) : null}
+
         {bootstrapError ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{bootstrapError}</Text>
