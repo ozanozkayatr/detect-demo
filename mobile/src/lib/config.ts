@@ -2,6 +2,8 @@ const fallbackApiBaseUrl = 'http://127.0.0.1:8000/api/v1';
 
 export const mobileConfig = {
   apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? fallbackApiBaseUrl,
+  enableSampleClips:
+    process.env.EXPO_PUBLIC_ENABLE_SAMPLE_CLIPS === 'true' || __DEV__,
 };
 
 export function resolveBackendUrl(path: string): string {

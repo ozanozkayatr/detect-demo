@@ -31,6 +31,7 @@ import {
   type PromptTemplateRecord,
   type VideoRecord,
 } from '@/lib/api';
+import { mobileConfig } from '@/lib/config';
 
 type LocalVideoAsset = {
   uri: string;
@@ -232,20 +233,22 @@ export default function NewAnalysisScreen() {
             onPress={handlePickVideo}
           />
 
-          <View style={styles.stack}>
-            <Text style={styles.fieldLabel}>Or use a local sample clip</Text>
-            <View style={styles.sampleVideoList}>
-              {sampleVideos.map((sampleVideo) => (
-                <Pressable
-                  key={sampleVideo.id}
-                  onPress={() => handleUseSampleVideo(sampleVideo)}
-                  style={styles.sampleVideoButton}>
-                  <Text style={styles.sampleVideoTitle}>{sampleVideo.title}</Text>
-                  <Text style={styles.sampleVideoFilename}>{sampleVideo.filename}</Text>
-                </Pressable>
-              ))}
+          {mobileConfig.enableSampleClips ? (
+            <View style={styles.stack}>
+              <Text style={styles.fieldLabel}>Dev-only sample clips</Text>
+              <View style={styles.sampleVideoList}>
+                {sampleVideos.map((sampleVideo) => (
+                  <Pressable
+                    key={sampleVideo.id}
+                    onPress={() => handleUseSampleVideo(sampleVideo)}
+                    style={styles.sampleVideoButton}>
+                    <Text style={styles.sampleVideoTitle}>{sampleVideo.title}</Text>
+                    <Text style={styles.sampleVideoFilename}>{sampleVideo.filename}</Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
-          </View>
+          ) : null}
 
           {uploading ? (
             <View style={styles.inlineStatus}>
