@@ -186,7 +186,24 @@ export default function HomeTab() {
             onPress={() => router.push(`/analysis/${latestAnalysis.id}`)}
           />
         </SectionCard>
-      ) : null}
+      ) : (
+        <SectionCard
+          title="Latest review"
+          caption="Your first saved review will appear here.">
+          <Text style={styles.bodyText}>
+            Run the first clip review to start building the training log.
+          </Text>
+          <PrimaryButton
+            label={hasProfile ? 'Start first review' : 'Set up athlete profile'}
+            hint={
+              hasProfile
+                ? 'Open the review flow'
+                : 'Create the athlete context first'
+            }
+            onPress={() => router.push(hasProfile ? '/analysis/new' : '/onboarding')}
+          />
+        </SectionCard>
+      )}
 
       <SectionCard title="Connection status" caption="Check backend, database, and model readiness.">
         {loading ? (
