@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppScreen } from '@/components/app-screen';
 import { PrimaryButton } from '@/components/primary-button';
@@ -17,7 +17,6 @@ import {
   type AnalysisRecord,
   type HealthResponse,
 } from '@/lib/api';
-import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
 export default function HomeTab() {
   const router = useRouter();
@@ -27,6 +26,7 @@ export default function HomeTab() {
     isBootstrapping,
     profile,
     refreshProfile,
+    reviewSubject,
   } = useAthleteProfile();
   const [latestAnalysis, setLatestAnalysis] = useState<AnalysisRecord | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -104,19 +104,21 @@ export default function HomeTab() {
 
   return (
     <AppScreen
-      eyebrow="Detect"
-      title="AI review built for boxing training."
-      subtitle="Capture a session, run analysis, and turn each round into clear next steps."
+      eyebrow="Dashboard"
+      title="Keep the next round in motion."
+      subtitle="Run reviews, revisit feedback, and keep the active athlete context aligned with training."
       onRefresh={handleRefresh}
       refreshing={refreshing}>
-      <SectionCard>
+      <SectionCard tone="accent">
         <StatusPill
           label={
             isBootstrapping
               ? 'Loading profile'
               : bootstrapError
                 ? 'Profile unavailable'
-                : 'Profile ready'
+                : hasProfile
+                  ? 'Ready for review'
+                  : 'Profile required'
           }
           tone={
             isBootstrapping ? 'neutral' : bootstrapError ? 'warning' : 'success'
@@ -124,12 +126,12 @@ export default function HomeTab() {
         />
         <Text style={styles.heroTitle}>
           {hasProfile
-            ? 'Start a review with the active athlete profile.'
+            ? 'Ready to turn the next clip into clear coaching.'
             : 'Create the athlete profile before the first review.'}
         </Text>
         <Text style={styles.heroBody}>
           {hasProfile
-            ? 'Upload a clip, choose the review mode, and save structured feedback to the training log.'
+            ? `${reviewSubject?.displayName ?? profile?.name ?? 'Your athlete profile'} is the active context for the next saved review.`
             : 'This profile sets coaching tone, difficulty, and progression for every future analysis.'}
         </Text>
         <PrimaryButton
@@ -156,6 +158,29 @@ export default function HomeTab() {
 
       {profile ? <ProfileSummaryCard profile={profile} /> : null}
 
+      <SectionCard title="Quick actions" caption="Move between capture, history, and profile updates.">
+        <View style={styles.actionList}>
+          <QuickActionTile
+            icon="play-circle"
+            title="Start a new review"
+            description="Upload the next clip and save fresh feedback."
+            onPress={() => router.push(hasProfile ? '/analysis/new' : '/onboarding')}
+          />
+          <QuickActionTile
+            icon="clock"
+            title="Open the review log"
+            description="Revisit previous notes, issues, and next steps."
+            onPress={() => router.push('/(tabs)/analyses')}
+          />
+          <QuickActionTile
+            icon="user"
+            title="Update athlete profile"
+            description="Keep level, routine, and stance aligned with training."
+            onPress={() => router.push(hasProfile ? '/profile/edit' : '/onboarding')}
+          />
+        </View>
+      </SectionCard>
+
       {latestLoading ? (
         <SectionCard title="Latest review" caption="Checking the newest saved session.">
           <View style={styles.statusRow}>
@@ -173,7 +198,7 @@ export default function HomeTab() {
           />
         </SectionCard>
       ) : latestAnalysis ? (
-        <SectionCard title="Latest review" caption="Pick up from the most recent saved analysis.">
+        <SectionCard title="Latest review" caption="Pick up from the newest saved result.">
           <Text style={styles.latestTitle}>{latestAnalysis.prompt_template.title}</Text>
           <Text style={styles.bodyText}>
             {latestAnalysis.parsed_response?.summary ||
@@ -205,74 +230,62 @@ export default function HomeTab() {
         </SectionCard>
       )}
 
-      <SectionCard title="Connection status" caption="Check backend, database, and model readiness.">
-        {loading ? (
-          <View style={styles.statusRow}>
-            <ActivityIndicator color={palette.accent} />
-            <Text style={styles.bodyText}>Checking service availability...</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.stack}>
-            <StatusPill label="Unavailable" tone="warning" />
-            <Text style={styles.bodyText}>
-              Could not reach {mobileConfig.apiBaseUrl}. On a physical device, replace localhost
-              with your computer&apos;s LAN IP.
-            </Text>
-            <Text style={styles.metaText}>{error}</Text>
-            <PrimaryButton
-              label="Retry connection check"
-              hint="Run the health check again"
-              onPress={() => void loadHealth()}
-            />
-          </View>
-        ) : (
-          <View style={styles.stack}>
-            <View style={styles.healthRow}>
-              <StatusPill
-                label={health?.database === 'connected' ? 'Database connected' : 'Database issue'}
-                tone={health?.database === 'connected' ? 'success' : 'warning'}
+      {!loading && (error || !geminiReady) ? (
+        <SectionCard title="Review setup issue" tone="muted">
+          {error ? (
+            <>
+              <Text style={styles.bodyText}>
+                The app could not reach the review service. Check the backend, then try again.
+              </Text>
+              <Text style={styles.metaText}>{error}</Text>
+              <PrimaryButton
+                label="Retry service check"
+                hint="Run the health check again"
+                onPress={() => void loadHealth()}
               />
-              <StatusPill
-                label={geminiReady ? 'Gemini ready' : 'Gemini missing'}
-                tone={geminiReady ? 'success' : 'warning'}
+            </>
+          ) : (
+            <>
+              <Text style={styles.bodyText}>
+                Gemini is not configured yet, so new reviews will not complete until the model is available.
+              </Text>
+              <PrimaryButton
+                label="Open settings"
+                hint="Review the current app configuration"
+                onPress={() => router.push('/(tabs)/settings')}
               />
-            </View>
-            <Text style={styles.bodyText}>
-              API base URL: {mobileConfig.apiBaseUrl}
-            </Text>
-            <Text style={styles.metaText}>
-              Model: {health?.gemini_model ?? 'n/a'}
-            </Text>
-          </View>
-        )}
-      </SectionCard>
-
-      <SectionCard title="Training loop">
-        <View style={styles.stepList}>
-          <View style={styles.stepItem}>
-            <Text style={styles.stepLabel}>01</Text>
-            <Text style={styles.stepText}>Set the athlete context that should shape review quality and tone.</Text>
-          </View>
-          <View style={styles.stepItem}>
-            <Text style={styles.stepLabel}>02</Text>
-            <Text style={styles.stepText}>Upload a clip, add an optional focus note, and run the review.</Text>
-          </View>
-          <View style={styles.stepItem}>
-            <Text style={styles.stepLabel}>03</Text>
-            <Text style={styles.stepText}>Save the result, review the feedback, and build a cleaner training log.</Text>
-          </View>
-        </View>
-      </SectionCard>
-
-      {isLoopbackApiBaseUrl(mobileConfig.apiBaseUrl) ? (
-        <SectionCard tone="muted" title="Device setup">
-          <Text style={styles.bodyText}>
-            Expo Go on a real phone cannot reach 127.0.0.1 on your computer. Use your Mac&apos;s
-            LAN IP in `mobile/.env` for device testing.
-          </Text>
+            </>
+          )}
         </SectionCard>
       ) : null}
     </AppScreen>
+  );
+}
+
+function QuickActionTile({
+  description,
+  icon,
+  onPress,
+  title,
+}: {
+  description: string;
+  icon: keyof typeof Feather.glyphMap;
+  onPress: () => void;
+  title: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.actionTile, pressed && styles.actionTilePressed]}>
+      <View style={styles.actionIconWrap}>
+        <Feather name={icon} size={18} color={palette.text} />
+      </View>
+      <View style={styles.actionContent}>
+        <Text style={styles.actionTitle}>{title}</Text>
+        <Text style={styles.actionDescription}>{description}</Text>
+      </View>
+      <Feather name="chevron-right" size={18} color={palette.textSoft} />
+    </Pressable>
   );
 }
 
@@ -291,15 +304,52 @@ const styles = StyleSheet.create({
   stack: {
     gap: spacing.md,
   },
+  actionList: {
+    gap: spacing.sm,
+  },
+  actionTile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  actionTilePressed: {
+    opacity: 0.92,
+  },
+  actionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  actionContent: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  actionTitle: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  actionDescription: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  healthRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
   },
   bodyText: {
     fontSize: typography.body,
@@ -316,27 +366,5 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySmall,
     lineHeight: 20,
     color: palette.textMuted,
-  },
-  stepList: {
-    gap: spacing.md,
-  },
-  stepItem: {
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: palette.border,
-    padding: spacing.md,
-    gap: spacing.xs,
-    backgroundColor: palette.surfaceMuted,
-  },
-  stepLabel: {
-    fontSize: typography.label,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    color: palette.textSoft,
-  },
-  stepText: {
-    fontSize: typography.body,
-    lineHeight: 24,
-    color: palette.text,
   },
 });
