@@ -8,7 +8,7 @@ import { AppScreen } from '@/components/app-screen';
 import { PrimaryButton } from '@/components/primary-button';
 import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
-import { palette, spacing, typography } from '@/design/theme';
+import { palette, radii, spacing, typography } from '@/design/theme';
 import { fetchAnalyses, type AnalysisRecord } from '@/lib/api';
 
 export default function AnalysesTab() {
@@ -51,6 +51,8 @@ export default function AnalysesTab() {
     await loadAnalyses();
     setRefreshing(false);
   }, [loadAnalyses]);
+  const completedCount = analyses.filter((analysis) => analysis.status === 'completed').length;
+  const latestRecordedAt = analyses[0]?.created_at ?? null;
 
   return (
     <AppScreen
@@ -62,8 +64,16 @@ export default function AnalysesTab() {
       <SectionCard>
         <StatusPill label={`${analyses.length} review${analyses.length === 1 ? '' : 's'}`} tone="success" />
         <Text style={styles.bigCopy}>
-          Run a clip analysis, then come back here to review it again.
+          Every saved review stays here for follow-up.
         </Text>
+        <View style={styles.metricsGrid}>
+          <MetricCell label="Saved" value={String(analyses.length)} />
+          <MetricCell label="Completed" value={String(completedCount)} />
+          <MetricCell
+            label="Latest"
+            value={latestRecordedAt ? formatShortDate(latestRecordedAt) : 'None yet'}
+          />
+        </View>
         <PrimaryButton
           label="Review another clip"
           hint="Open the analysis flow"
@@ -98,22 +108,31 @@ export default function AnalysesTab() {
               <SectionCard
                 title={analysis.prompt_template.title}
                 caption={new Date(analysis.created_at).toLocaleString()}>
-                <StatusPill
-                  label={analysis.status}
-                  tone={analysis.status === 'completed' ? 'success' : 'warning'}
-                />
+                <View style={styles.cardHeaderRow}>
+                  <StatusPill
+                    label={analysis.status}
+                    tone={analysis.status === 'completed' ? 'success' : 'warning'}
+                  />
+                  <Text style={styles.cardMetaText}>
+                    {formatPersonaLabel(analysis.persona_key_snapshot)}
+                  </Text>
+                </View>
                 <Text style={styles.rowText}>
                   {analysis.parsed_response?.summary ||
                     analysis.raw_response ||
                     'Analysis completed.'}
                 </Text>
-                <Text style={styles.metaText}>
-                  {(analysis.template_key_snapshot ?? analysis.prompt_template.key)} ·{' '}
-                  {formatPersonaLabel(analysis.persona_key_snapshot)}
-                </Text>
-                <Text style={styles.metaText} numberOfLines={1}>
-                  Model: {analysis.model_name ?? 'n/a'} · Clip {analysis.video.original_filename}
-                </Text>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.metaText}>
+                    {analysis.template_key_snapshot ?? analysis.prompt_template.key}
+                  </Text>
+                  <Text style={styles.metaText} numberOfLines={1}>
+                    {analysis.video.original_filename}
+                  </Text>
+                  <Text style={styles.metaText}>
+                    Model {analysis.model_name ?? 'n/a'}
+                  </Text>
+                </View>
               </SectionCard>
             </Pressable>
           ))}
@@ -123,9 +142,23 @@ export default function AnalysesTab() {
           <Text style={styles.rowText}>
             Your first completed clip will appear here as soon as the analysis finishes.
           </Text>
+          <PrimaryButton
+            label="Start first review"
+            hint="Open the analysis flow"
+            onPress={() => router.push('/analysis/new')}
+          />
         </SectionCard>
       )}
     </AppScreen>
+  );
+}
+
+function MetricCell({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.metricCell}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
   );
 }
 
@@ -136,8 +169,44 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: palette.text,
   },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  metricCell: {
+    flexGrow: 1,
+    minWidth: 92,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  metricLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  metricValue: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    fontWeight: '700',
+    color: palette.text,
+  },
   list: {
     gap: spacing.md,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
   loadingRow: {
     flexDirection: 'row',
@@ -152,12 +221,26 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: palette.text,
   },
+  cardMetaText: {
+    flex: 1,
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    textAlign: 'right',
+    color: palette.textMuted,
+  },
+  cardFooter: {
+    gap: spacing.xs,
+  },
   metaText: {
     fontSize: typography.bodySmall,
     lineHeight: 20,
     color: palette.textMuted,
   },
 });
+
+function formatShortDate(value: string) {
+  return new Date(value).toLocaleDateString();
+}
 
 function formatPersonaLabel(personaKey: string | null) {
   switch (personaKey) {
