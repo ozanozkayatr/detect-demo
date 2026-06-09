@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { SectionCard } from '@/components/section-card';
-import { palette, spacing, typography } from '@/design/theme';
+import { palette, radii, spacing, typography } from '@/design/theme';
 import {
   getExperienceLevelLabel,
   getStanceLabel,
@@ -24,25 +24,49 @@ export function ProfileSummaryCard({ profile }: { profile: AthleteProfile }) {
     .join(', ');
 
   return (
-    <SectionCard title={profile.name} caption="Single athlete profile used for future analyses.">
-      <View style={styles.stack}>
-        <SummaryRow
-          label="Level"
-          value={`${getExperienceLevelLabel(profile.experienceLevel)} · ${getStanceLabel(
-            profile.stance,
-          )}`}
-        />
-        <SummaryRow
-          label="Body profile"
+    <SectionCard title={profile.name} caption="Active athlete context for future reviews.">
+      <View style={styles.metricsGrid}>
+        <MetricCell label="Stance" value={getStanceLabel(profile.stance)} />
+        <MetricCell
+          label="Body"
           value={`${profile.heightCm ?? '—'} cm · ${profile.weightKg ?? '—'} kg`}
         />
-        <SummaryRow
-          label="Routine"
-          value={`${profile.weeklyTrainingDays ?? '—'} days / week · ${sessionTypes}`}
+        <MetricCell
+          label="Experience"
+          value={getExperienceLevelLabel(profile.experienceLevel)}
         />
-        <SummaryRow label="Background" value={background || 'No competitive or coaching history recorded'} />
+      </View>
+
+      <View style={styles.stack}>
+        <SummaryRow
+          label="Training rhythm"
+          value={`${profile.weeklyTrainingDays ?? '—'} days / week`}
+        />
+        <SummaryRow label="Session mix" value={sessionTypes} />
+        <SummaryRow
+          label="Background"
+          value={background || 'No competitive or coaching history recorded'}
+        />
+        {profile.routineSummary ? (
+          <SummaryRow label="Routine note" value={profile.routineSummary} />
+        ) : null}
+        {profile.limitations ? (
+          <SummaryRow label="Limitations" value={profile.limitations} />
+        ) : null}
+        {profile.additionalContext ? (
+          <SummaryRow label="Additional context" value={profile.additionalContext} />
+        ) : null}
       </View>
     </SectionCard>
+  );
+}
+
+function MetricCell({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.metricCell}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
   );
 }
 
@@ -56,6 +80,34 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  metricCell: {
+    flexGrow: 1,
+    minWidth: 96,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  metricLabel: {
+    fontSize: typography.label,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  metricValue: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.text,
+  },
   stack: {
     gap: spacing.md,
   },

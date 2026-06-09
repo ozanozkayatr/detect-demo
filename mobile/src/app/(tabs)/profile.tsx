@@ -7,8 +7,11 @@ import { PrimaryButton } from '@/components/primary-button';
 import { ProfileSummaryCard } from '@/components/profile-summary-card';
 import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
-import { palette, spacing, typography } from '@/design/theme';
+import { palette, radii, spacing, typography } from '@/design/theme';
 import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
+import {
+  getExperienceLevelLabel,
+} from '@/features/athlete-profile/options';
 
 export default function ProfileTab() {
   const router = useRouter();
@@ -18,6 +21,7 @@ export default function ProfileTab() {
     isBootstrapping,
     profile,
     refreshProfile,
+    reviewSubject,
   } = useAthleteProfile();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -34,7 +38,7 @@ export default function ProfileTab() {
       subtitle="Keep the athlete context current so coaching stays relevant across every session."
       onRefresh={handleRefresh}
       refreshing={refreshing}>
-      <SectionCard>
+      <SectionCard tone="accent">
         <StatusPill
           label={
             isBootstrapping
@@ -52,6 +56,22 @@ export default function ProfileTab() {
             ? 'Update the athlete profile whenever training volume, experience, or goals shift.'
             : 'Create the athlete profile once before you begin reviewing clips.'}
         </Text>
+        {profile ? (
+          <View style={styles.metricsGrid}>
+            <MetricCell
+              label="Review target"
+              value={reviewSubject?.shortLabel ?? 'Self review'}
+            />
+            <MetricCell
+              label="Level"
+              value={getExperienceLevelLabel(profile.experienceLevel)}
+            />
+            <MetricCell
+              label="Rhythm"
+              value={`${profile.weeklyTrainingDays ?? '—'} days / week`}
+            />
+          </View>
+        ) : null}
       </SectionCard>
 
       {bootstrapError ? (
@@ -65,7 +85,17 @@ export default function ProfileTab() {
         </SectionCard>
       ) : null}
 
-      {profile ? <ProfileSummaryCard profile={profile} /> : null}
+      {profile ? (
+        <ProfileSummaryCard profile={profile} />
+      ) : !bootstrapError && !isBootstrapping ? (
+        <SectionCard title="No athlete profile yet" tone="muted">
+          <Text style={styles.bodyText}>
+            Add one athlete profile first so every review has the right level, stance,
+            and training context behind it.
+          </Text>
+        </SectionCard>
+      ) : null}
+
       <PrimaryButton
         label={profile ? 'Edit athlete profile' : 'Create athlete profile'}
         hint={
@@ -87,9 +117,47 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: palette.text,
   },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  metricCell: {
+    flexGrow: 1,
+    minWidth: 100,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surface,
+  },
+  metricLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  metricValue: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.text,
+  },
   bodyText: {
     fontSize: typography.body,
     lineHeight: 24,
     color: palette.text,
   },
 });
+
+function MetricCell({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.metricCell}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
+  );
+}
