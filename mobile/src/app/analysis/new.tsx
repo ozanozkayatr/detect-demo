@@ -1,12 +1,12 @@
 import { Feather } from '@expo/vector-icons';
 import { Asset } from 'expo-asset';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Stack, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -53,6 +53,13 @@ export default function NewAnalysisScreen() {
   const [uploading, setUploading] = useState(false);
   const [runningAnalysis, setRunningAnalysis] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const previewUri = localAsset?.uri ?? null;
+  const previewPlayer = useVideoPlayer(
+    previewUri ? { uri: previewUri } : null,
+    (currentPlayer) => {
+      currentPlayer.loop = true;
+    },
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -248,8 +255,14 @@ export default function NewAnalysisScreen() {
           ) : null}
 
           {localAsset ? (
-            <View style={styles.stack}>
-              <Text style={styles.stepTitle}>Selected clip</Text>
+            <View style={styles.clipPreviewCard}>
+              <VideoView
+                style={styles.clipPreviewVideo}
+                player={previewPlayer}
+                nativeControls
+                contentFit="contain"
+              />
+
               <View style={styles.summaryGrid}>
                 <InfoCell label="Filename" value={localAsset.name} />
                 <InfoCell
@@ -266,7 +279,7 @@ export default function NewAnalysisScreen() {
           ) : null}
 
           {uploadedVideo ? (
-            <View style={styles.stack}>
+            <View style={styles.uploadedState}>
               <StatusPill label="Stored locally" tone="success" />
               <Text style={styles.metaText}>
                 Backend video id: {uploadedVideo.id} · {uploadedVideo.original_filename}
@@ -458,12 +471,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: palette.textMuted,
   },
-  stepTitle: {
-    fontSize: typography.heading,
-    lineHeight: 28,
-    fontWeight: '700',
-    color: palette.text,
-  },
   stepBody: {
     fontSize: typography.body,
     lineHeight: 24,
@@ -523,7 +530,20 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: palette.textMuted,
   },
+  clipPreviewCard: {
+    gap: spacing.md,
+  },
+  clipPreviewVideo: {
+    width: '100%',
+    aspectRatio: 9 / 16,
+    borderRadius: radii.md,
+    backgroundColor: '#000000',
+    overflow: 'hidden',
+  },
   summaryGrid: {
+    gap: spacing.sm,
+  },
+  uploadedState: {
     gap: spacing.sm,
   },
   infoCell: {
