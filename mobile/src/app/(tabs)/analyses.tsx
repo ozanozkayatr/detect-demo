@@ -52,30 +52,43 @@ export default function AnalysesTab() {
     setRefreshing(false);
   }, [loadAnalyses]);
   const completedCount = analyses.filter((analysis) => analysis.status === 'completed').length;
-  const latestRecordedAt = analyses[0]?.created_at ?? null;
+  const followUpCount = analyses.filter((analysis) => {
+    const issuesCount = analysis.parsed_response?.issues.length ?? 0;
+    const nextStepsCount = analysis.parsed_response?.next_steps.length ?? 0;
+    return issuesCount + nextStepsCount > 0;
+  }).length;
+  const latestAnalysis = analyses[0] ?? null;
+  const earlierAnalyses = analyses.slice(1);
 
   return (
     <AppScreen
-      eyebrow="Training log"
-      title="Your review log lives here."
-      subtitle="Completed analyses are loaded from the backend so the app keeps a real training archive."
+      eyebrow="Review log"
+      title="Track every saved review."
+      subtitle="Recent clips, coaching notes, and follow-up priorities stay in one place."
       onRefresh={handleRefresh}
       refreshing={refreshing}>
-      <SectionCard>
-        <StatusPill label={`${analyses.length} review${analyses.length === 1 ? '' : 's'}`} tone="success" />
+      <SectionCard tone="accent">
+        <StatusPill
+          label={`${analyses.length} review${analyses.length === 1 ? '' : 's'}`}
+          tone={analyses.length > 0 ? 'success' : 'neutral'}
+        />
         <Text style={styles.bigCopy}>
-          Every saved review stays here for follow-up.
+          {latestAnalysis
+            ? 'The latest session is ready for follow-up.'
+            : 'Start building the review archive.'}
+        </Text>
+        <Text style={styles.heroBody}>
+          {latestAnalysis
+            ? 'Open the newest saved result, carry forward the next steps, and keep the training log moving.'
+            : 'Your first completed clip will anchor the log and create the base for future follow-up.'}
         </Text>
         <View style={styles.metricsGrid}>
           <MetricCell label="Saved" value={String(analyses.length)} />
           <MetricCell label="Completed" value={String(completedCount)} />
-          <MetricCell
-            label="Latest"
-            value={latestRecordedAt ? formatShortDate(latestRecordedAt) : 'None yet'}
-          />
+          <MetricCell label="Follow-up" value={String(followUpCount)} />
         </View>
         <PrimaryButton
-          label="Review another clip"
+          label={latestAnalysis ? 'Review another clip' : 'Start first review'}
           hint="Open the analysis flow"
           icon={<Feather name="arrow-right" size={20} color="#ffffff" />}
           onPress={() => router.push('/analysis/new')}
@@ -83,14 +96,14 @@ export default function AnalysesTab() {
       </SectionCard>
 
       {loading ? (
-        <SectionCard title="Loading reviews" caption="Fetching stored analyses from the backend.">
+        <SectionCard title="Loading reviews" caption="Bringing the saved training log into view.">
           <View style={styles.loadingRow}>
             <ActivityIndicator color={palette.accent} />
-            <Text style={styles.rowText}>Loading your analysis history...</Text>
+            <Text style={styles.rowText}>Loading your saved reviews...</Text>
           </View>
         </SectionCard>
       ) : error ? (
-        <SectionCard title="Could not load analyses" tone="muted">
+        <SectionCard title="Could not load the review log" tone="muted">
           <Text style={styles.rowText}>{error}</Text>
           <PrimaryButton
             label="Retry log"
@@ -98,49 +111,86 @@ export default function AnalysesTab() {
             onPress={() => void loadAnalyses()}
           />
         </SectionCard>
-      ) : analyses.length > 0 ? (
-        <View style={styles.list}>
-          {analyses.map((analysis) => (
-            <Pressable
-              key={analysis.id}
-              onPress={() => router.push(`/analysis/${analysis.id}`)}
-              style={({ pressed }) => [pressed && styles.cardPressed]}>
-              <SectionCard
-                title={analysis.prompt_template.title}
-                caption={new Date(analysis.created_at).toLocaleString()}>
-                <View style={styles.cardHeaderRow}>
-                  <StatusPill
-                    label={analysis.status}
-                    tone={analysis.status === 'completed' ? 'success' : 'warning'}
+      ) : latestAnalysis ? (
+        <>
+          <SectionCard
+            title="Latest review"
+            caption={formatFullDateTime(latestAnalysis.created_at)}>
+            <View style={styles.cardHeaderRow}>
+              <StatusPill
+                label={latestAnalysis.status}
+                tone={getAnalysisTone(latestAnalysis.status)}
+              />
+              <Text style={styles.cardMetaText}>
+                {formatPersonaLabel(latestAnalysis.persona_key_snapshot)}
+              </Text>
+            </View>
+            <Text style={styles.featuredTitle}>
+              {latestAnalysis.parsed_response?.summary ||
+                latestAnalysis.raw_response ||
+                latestAnalysis.prompt_template.title}
+            </Text>
+            <Text style={styles.featuredMeta}>
+              {latestAnalysis.prompt_template.title}
+            </Text>
+            <View style={styles.metricsGrid}>
+              <MetricCell
+                label="Strengths"
+                value={String(latestAnalysis.parsed_response?.strengths.length ?? 0)}
+              />
+              <MetricCell
+                label="Issues"
+                value={String(latestAnalysis.parsed_response?.issues.length ?? 0)}
+              />
+              <MetricCell
+                label="Next steps"
+                value={String(latestAnalysis.parsed_response?.next_steps.length ?? 0)}
+              />
+            </View>
+            {latestAnalysis.user_prompt_snapshot ? (
+              <View style={styles.noteBlock}>
+                <Text style={styles.noteLabel}>Focus note</Text>
+                <Text style={styles.noteValue}>{latestAnalysis.user_prompt_snapshot}</Text>
+              </View>
+            ) : null}
+            <View style={styles.cardFooter}>
+              <Text style={styles.metaText} numberOfLines={1}>
+                {latestAnalysis.video.original_filename}
+              </Text>
+              <Text style={styles.metaText}>
+                {latestAnalysis.template_key_snapshot ?? latestAnalysis.prompt_template.key}
+              </Text>
+              <Text style={styles.metaText}>
+                Model {latestAnalysis.model_name ?? 'n/a'}
+              </Text>
+            </View>
+            <PrimaryButton
+              label="Open latest review"
+              hint="See the full saved result"
+              onPress={() => router.push(`/analysis/${latestAnalysis.id}`)}
+            />
+          </SectionCard>
+
+          {earlierAnalyses.length > 0 ? (
+            <SectionCard
+              title="Earlier reviews"
+              caption="Use the archive to compare sessions and continue follow-up.">
+              <View style={styles.list}>
+                {earlierAnalyses.map((analysis) => (
+                  <ArchiveReviewItem
+                    key={analysis.id}
+                    analysis={analysis}
+                    onPress={() => router.push(`/analysis/${analysis.id}`)}
                   />
-                  <Text style={styles.cardMetaText}>
-                    {formatPersonaLabel(analysis.persona_key_snapshot)}
-                  </Text>
-                </View>
-                <Text style={styles.rowText}>
-                  {analysis.parsed_response?.summary ||
-                    analysis.raw_response ||
-                    'Analysis completed.'}
-                </Text>
-                <View style={styles.cardFooter}>
-                  <Text style={styles.metaText}>
-                    {analysis.template_key_snapshot ?? analysis.prompt_template.key}
-                  </Text>
-                  <Text style={styles.metaText} numberOfLines={1}>
-                    {analysis.video.original_filename}
-                  </Text>
-                  <Text style={styles.metaText}>
-                    Model {analysis.model_name ?? 'n/a'}
-                  </Text>
-                </View>
-              </SectionCard>
-            </Pressable>
-          ))}
-        </View>
+                ))}
+              </View>
+            </SectionCard>
+          ) : null}
+        </>
       ) : (
-        <SectionCard title="No reviews yet" caption="Run one clip from the analysis flow to populate the log.">
+        <SectionCard title="No reviews yet" caption="Run one clip to create the first saved entry.">
           <Text style={styles.rowText}>
-            Your first completed clip will appear here as soon as the analysis finishes.
+            The first completed review will appear here with its summary, issues, and next steps.
           </Text>
           <PrimaryButton
             label="Start first review"
@@ -153,11 +203,60 @@ export default function AnalysesTab() {
   );
 }
 
+function ArchiveReviewItem({
+  analysis,
+  onPress,
+}: {
+  analysis: AnalysisRecord;
+  onPress: () => void;
+}) {
+  const issuesCount = analysis.parsed_response?.issues.length ?? 0;
+  const nextStepsCount = analysis.parsed_response?.next_steps.length ?? 0;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.archiveItem, pressed && styles.cardPressed]}>
+      <View style={styles.archiveHeader}>
+        <Text style={styles.archiveDate}>{formatShortDateTime(analysis.created_at)}</Text>
+        <StatusPill label={analysis.status} tone={getAnalysisTone(analysis.status)} />
+      </View>
+      <Text style={styles.archiveTitle} numberOfLines={2}>
+        {analysis.parsed_response?.summary || analysis.prompt_template.title}
+      </Text>
+      <Text style={styles.archiveBody} numberOfLines={2}>
+        {analysis.parsed_response?.issues[0] ||
+          analysis.raw_response ||
+          'Open the saved review for the full breakdown.'}
+      </Text>
+      <View style={styles.archiveMetrics}>
+        <MetricChip label="Issues" value={issuesCount} />
+        <MetricChip label="Next" value={nextStepsCount} />
+        <MetricChip label="Mode" value={analysis.prompt_template.title} />
+      </View>
+      <Text style={styles.metaText} numberOfLines={1}>
+        {analysis.video.original_filename}
+      </Text>
+    </Pressable>
+  );
+}
+
 function MetricCell({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.metricCell}>
       <Text style={styles.metricLabel}>{label}</Text>
       <Text style={styles.metricValue}>{value}</Text>
+    </View>
+  );
+}
+
+function MetricChip({ label, value }: { label: string; value: number | string }) {
+  return (
+    <View style={styles.metricChip}>
+      <Text style={styles.metricChipLabel}>{label}</Text>
+      <Text style={styles.metricChipValue} numberOfLines={1}>
+        {String(value)}
+      </Text>
     </View>
   );
 }
@@ -168,6 +267,11 @@ const styles = StyleSheet.create({
     lineHeight: 34,
     fontWeight: '700',
     color: palette.text,
+  },
+  heroBody: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    color: palette.textMuted,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -202,6 +306,17 @@ const styles = StyleSheet.create({
   list: {
     gap: spacing.md,
   },
+  featuredTitle: {
+    fontSize: typography.heading,
+    lineHeight: 30,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  featuredMeta: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -215,6 +330,90 @@ const styles = StyleSheet.create({
   },
   cardPressed: {
     opacity: 0.9,
+  },
+  archiveItem: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  archiveHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  archiveDate: {
+    flex: 1,
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
+  archiveTitle: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  archiveBody: {
+    fontSize: typography.bodySmall,
+    lineHeight: 22,
+    color: palette.textMuted,
+  },
+  archiveMetrics: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  metricChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    maxWidth: '100%',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.pill,
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  metricChipLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  metricChipValue: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.text,
+    flexShrink: 1,
+  },
+  noteBlock: {
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  noteLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  noteValue: {
+    fontSize: typography.bodySmall,
+    lineHeight: 22,
+    color: palette.text,
   },
   rowText: {
     fontSize: typography.body,
@@ -240,6 +439,23 @@ const styles = StyleSheet.create({
 
 function formatShortDate(value: string) {
   return new Date(value).toLocaleDateString();
+}
+
+function formatShortDateTime(value: string) {
+  return new Date(value).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatFullDateTime(value: string) {
+  return new Date(value).toLocaleString();
+}
+
+function getAnalysisTone(status: string): 'neutral' | 'success' | 'warning' {
+  return status === 'completed' ? 'success' : 'warning';
 }
 
 function formatPersonaLabel(personaKey: string | null) {
