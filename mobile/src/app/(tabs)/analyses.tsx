@@ -52,13 +52,18 @@ export default function AnalysesTab() {
     setRefreshing(false);
   }, [loadAnalyses]);
   const completedCount = analyses.filter((analysis) => analysis.status === 'completed').length;
-  const followUpCount = analyses.filter((analysis) => {
-    const issuesCount = analysis.parsed_response?.issues.length ?? 0;
-    const nextStepsCount = analysis.parsed_response?.next_steps.length ?? 0;
-    return issuesCount + nextStepsCount > 0;
-  }).length;
+  const rollingWeekCount = analyses.filter((analysis) =>
+    isWithinLastDays(analysis.created_at, 7),
+  ).length;
   const latestAnalysis = analyses[0] ?? null;
   const earlierAnalyses = analyses.slice(1);
+  const recentAnalyses = earlierAnalyses.filter((analysis) =>
+    isWithinLastDays(analysis.created_at, 7),
+  );
+  const olderAnalyses = earlierAnalyses.filter(
+    (analysis) => !isWithinLastDays(analysis.created_at, 7),
+  );
+  const focusQueue = collectFocusQueue(analyses);
 
   return (
     <AppScreen
@@ -69,23 +74,25 @@ export default function AnalysesTab() {
       refreshing={refreshing}>
       <SectionCard tone="accent">
         <StatusPill
-          label={`${analyses.length} review${analyses.length === 1 ? '' : 's'}`}
-          tone={analyses.length > 0 ? 'success' : 'neutral'}
+          label={latestAnalysis ? 'Training log active' : 'No saved reviews yet'}
+          tone={latestAnalysis ? 'success' : 'neutral'}
         />
         <Text style={styles.bigCopy}>
           {latestAnalysis
-            ? 'The latest session is ready for follow-up.'
+            ? 'Keep the training thread alive.'
             : 'Start building the review archive.'}
         </Text>
         <Text style={styles.heroBody}>
           {latestAnalysis
-            ? 'Open the newest saved result, carry forward the next steps, and keep the training log moving.'
+            ? `${rollingWeekCount} clip${
+                rollingWeekCount === 1 ? '' : 's'
+              } saved in the last 7 days. Carry the newest cues forward before the next session.`
             : 'Your first completed clip will anchor the log and create the base for future follow-up.'}
         </Text>
         <View style={styles.metricsGrid}>
           <MetricCell label="Saved" value={String(analyses.length)} />
           <MetricCell label="Completed" value={String(completedCount)} />
-          <MetricCell label="Follow-up" value={String(followUpCount)} />
+          <MetricCell label="7-day" value={String(rollingWeekCount)} />
         </View>
         <PrimaryButton
           label={latestAnalysis ? 'Review another clip' : 'Start first review'}
@@ -94,6 +101,20 @@ export default function AnalysesTab() {
           onPress={() => router.push('/analysis/new')}
         />
       </SectionCard>
+
+      {latestAnalysis && focusQueue.length > 0 ? (
+        <SectionCard
+          title="Carry into the next session"
+          caption={`Built from the latest ${Math.min(analyses.length, 3)} saved review${
+            Math.min(analyses.length, 3) === 1 ? '' : 's'
+          }.`}>
+          <View style={styles.focusList}>
+            {focusQueue.map((item) => (
+              <FocusItemRow key={item.id} item={item} />
+            ))}
+          </View>
+        </SectionCard>
+      ) : null}
 
       {loading ? (
         <SectionCard title="Loading reviews" caption="Bringing the saved training log into view.">
@@ -115,7 +136,9 @@ export default function AnalysesTab() {
         <>
           <SectionCard
             title="Latest review"
-            caption={formatFullDateTime(latestAnalysis.created_at)}>
+            caption={`${formatFullDateTime(latestAnalysis.created_at)} · ${formatRelativeSessionLabel(
+              latestAnalysis.created_at,
+            )}`}>
             <View style={styles.cardHeaderRow}>
               <StatusPill
                 label={latestAnalysis.status}
@@ -147,6 +170,12 @@ export default function AnalysesTab() {
                 value={String(latestAnalysis.parsed_response?.next_steps.length ?? 0)}
               />
             </View>
+            {latestAnalysis.parsed_response?.issues[0] ? (
+              <View style={styles.noteBlock}>
+                <Text style={styles.noteLabel}>Primary correction</Text>
+                <Text style={styles.noteValue}>{latestAnalysis.parsed_response.issues[0]}</Text>
+              </View>
+            ) : null}
             {latestAnalysis.user_prompt_snapshot ? (
               <View style={styles.noteBlock}>
                 <Text style={styles.noteLabel}>Focus note</Text>
@@ -173,16 +202,23 @@ export default function AnalysesTab() {
 
           {earlierAnalyses.length > 0 ? (
             <SectionCard
-              title="Earlier reviews"
-              caption="Use the archive to compare sessions and continue follow-up.">
+              title="Review archive"
+              caption="Compare recent sessions and revisit older results when needed.">
               <View style={styles.list}>
-                {earlierAnalyses.map((analysis) => (
-                  <ArchiveReviewItem
-                    key={analysis.id}
-                    analysis={analysis}
-                    onPress={() => router.push(`/analysis/${analysis.id}`)}
+                {recentAnalyses.length > 0 ? (
+                  <ArchiveGroup
+                    title="Last 7 days"
+                    analyses={recentAnalyses}
+                    onPress={(analysisId) => router.push(`/analysis/${analysisId}`)}
                   />
-                ))}
+                ) : null}
+                {olderAnalyses.length > 0 ? (
+                  <ArchiveGroup
+                    title="Earlier"
+                    analyses={olderAnalyses}
+                    onPress={(analysisId) => router.push(`/analysis/${analysisId}`)}
+                  />
+                ) : null}
               </View>
             </SectionCard>
           ) : null}
@@ -238,6 +274,52 @@ function ArchiveReviewItem({
         {analysis.video.original_filename}
       </Text>
     </Pressable>
+  );
+}
+
+function ArchiveGroup({
+  analyses,
+  onPress,
+  title,
+}: {
+  analyses: AnalysisRecord[];
+  onPress: (analysisId: number) => void;
+  title: string;
+}) {
+  return (
+    <View style={styles.archiveGroup}>
+      <View style={styles.archiveGroupHeader}>
+        <Text style={styles.archiveGroupTitle}>{title}</Text>
+        <Text style={styles.archiveGroupCount}>
+          {analyses.length} review{analyses.length === 1 ? '' : 's'}
+        </Text>
+      </View>
+      <View style={styles.list}>
+        {analyses.map((analysis) => (
+          <ArchiveReviewItem
+            key={analysis.id}
+            analysis={analysis}
+            onPress={() => onPress(analysis.id)}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function FocusItemRow({
+  item,
+}: {
+  item: { id: string; kind: string; text: string; sourceLabel: string };
+}) {
+  return (
+    <View style={styles.focusItem}>
+      <View style={styles.focusItemHeader}>
+        <Text style={styles.focusItemKind}>{item.kind}</Text>
+        <Text style={styles.focusItemSource}>{item.sourceLabel}</Text>
+      </View>
+      <Text style={styles.focusItemText}>{item.text}</Text>
+    </View>
   );
 }
 
@@ -306,6 +388,26 @@ const styles = StyleSheet.create({
   list: {
     gap: spacing.md,
   },
+  archiveGroup: {
+    gap: spacing.sm,
+  },
+  archiveGroupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  archiveGroupTitle: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  archiveGroupCount: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
   featuredTitle: {
     fontSize: typography.heading,
     lineHeight: 30,
@@ -316,6 +418,41 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySmall,
     lineHeight: 20,
     color: palette.textMuted,
+  },
+  focusList: {
+    gap: spacing.sm,
+  },
+  focusItem: {
+    gap: spacing.xs,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  focusItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  focusItemKind: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  focusItemSource: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
+  focusItemText: {
+    fontSize: typography.body,
+    lineHeight: 24,
+    color: palette.text,
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -454,8 +591,66 @@ function formatFullDateTime(value: string) {
   return new Date(value).toLocaleString();
 }
 
+function formatRelativeSessionLabel(value: string) {
+  const ms = Date.now() - new Date(value).getTime();
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+
+  if (days <= 0) {
+    return 'today';
+  }
+
+  if (days === 1) {
+    return 'yesterday';
+  }
+
+  if (days < 7) {
+    return `${days} days ago`;
+  }
+
+  return formatShortDate(value);
+}
+
 function getAnalysisTone(status: string): 'neutral' | 'success' | 'warning' {
   return status === 'completed' ? 'success' : 'warning';
+}
+
+function isWithinLastDays(value: string, days: number) {
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) && Date.now() - timestamp <= days * 24 * 60 * 60 * 1000;
+}
+
+function collectFocusQueue(analyses: AnalysisRecord[]) {
+  const items: { id: string; kind: string; text: string; sourceLabel: string }[] = [];
+  const seen = new Set<string>();
+
+  analyses.slice(0, 3).forEach((analysis, index) => {
+    const nextSteps = analysis.parsed_response?.next_steps ?? [];
+    const issues = analysis.parsed_response?.issues ?? [];
+    const notes = analysis.parsed_response?.notes ?? [];
+    const sourceLabel =
+      index === 0 ? 'Latest review' : formatRelativeSessionLabel(analysis.created_at);
+
+    [
+      ...nextSteps.map((text) => ({ kind: 'Next step', text })),
+      ...issues.map((text) => ({ kind: 'Issue', text })),
+      ...notes.map((text) => ({ kind: 'Note', text })),
+    ].forEach((item) => {
+      const normalized = item.text.trim().toLowerCase();
+      if (!normalized || seen.has(normalized) || items.length >= 4) {
+        return;
+      }
+
+      seen.add(normalized);
+      items.push({
+        id: `${analysis.id}-${item.kind}-${normalized}`,
+        kind: item.kind,
+        text: item.text,
+        sourceLabel,
+      });
+    });
+  });
+
+  return items;
 }
 
 function formatPersonaLabel(personaKey: string | null) {
