@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Asset } from 'expo-asset';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { Stack, useRouter } from 'expo-router';
+import { Redirect, Stack, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -22,6 +22,8 @@ import { sampleVideos, type SampleVideo } from '@/features/demo-videos/sample-vi
 import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
 import {
   getBackendPersonaKey,
+  getExperienceLevelLabel,
+  getStanceLabel,
 } from '@/features/athlete-profile/options';
 import {
   createAnalysis,
@@ -70,12 +72,6 @@ export default function NewAnalysisScreen() {
     },
   );
 
-  useEffect(() => {
-    if (!isBootstrapping && !bootstrapError && !hasProfile) {
-      router.replace('/onboarding');
-    }
-  }, [bootstrapError, hasProfile, isBootstrapping, router]);
-
   const loadPromptTemplates = useCallback(async () => {
     setLoadingPrompts(true);
     setPromptError(null);
@@ -117,6 +113,10 @@ export default function NewAnalysisScreen() {
 
     return null;
   }, [reviewSubject, selectedPrompt, uploadedVideo]);
+
+  if (!isBootstrapping && !bootstrapError && !hasProfile) {
+    return <Redirect href="/onboarding" />;
+  }
 
   async function uploadSelectedVideo(nextAsset: LocalVideoAsset) {
     setUploadError(null);
@@ -231,29 +231,21 @@ export default function NewAnalysisScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <AppScreen
-        eyebrow="Review setup"
-        title="Review a boxing clip."
-        subtitle="Choose the clip, set the review mode, and save the result."
+        eyebrow="New review"
+        title="Prepare the next clip."
+        subtitle="Upload one round, choose the review mode, and run a saved Gemini review."
         rightSlot={
           <Pressable onPress={() => router.back()} style={styles.closeButton}>
             <Feather name="x" size={20} color={palette.text} />
           </Pressable>
         }>
-        {!isBootstrapping && !bootstrapError && !hasProfile ? (
-          <SectionCard title="Athlete profile required" tone="muted">
-            <Text style={styles.bodyText}>
-              Set up the athlete profile before starting the first review.
-            </Text>
-          </SectionCard>
-        ) : null}
-
         {bootstrapError ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{bootstrapError}</Text>
           </View>
         ) : null}
 
-        <SectionCard title="1. Save a boxing clip" caption="The clip uploads as soon as you pick it.">
+        <SectionCard title="1. Choose clip" caption="The clip uploads immediately and attaches to this saved review.">
           <PrimaryButton
             label={localAsset ? 'Choose another clip' : 'Choose a boxing clip'}
             hint="Open the device video library"
@@ -263,8 +255,11 @@ export default function NewAnalysisScreen() {
           />
 
           {mobileConfig.enableSampleClips ? (
-            <View style={styles.stack}>
-              <Text style={styles.fieldLabel}>Dev-only sample clips</Text>
+            <View style={styles.devUtilityCard}>
+              <Text style={styles.devUtilityTitle}>Development shortcuts</Text>
+              <Text style={styles.metaText}>
+                Use bundled sample clips while the real library flow is still being tested.
+              </Text>
               <View style={styles.sampleVideoList}>
                 {sampleVideos.map((sampleVideo) => (
                   <Pressable
@@ -326,16 +321,16 @@ export default function NewAnalysisScreen() {
           ) : null}
         </SectionCard>
 
-        <SectionCard title="2. Choose the review mode" caption="Pick the prompt that should guide the review.">
+        <SectionCard title="2. Choose review mode" caption="This prompt controls the tone and structure of the saved review.">
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.stepBody}>
+            <Text style={styles.sectionMetaText}>
               {loadingPrompts
                 ? 'Loading review modes...'
-                : 'Choose the review mode for this clip.'}
+                : 'Select one analysis mode for this clip.'}
             </Text>
             <Pressable onPress={handleSyncPromptTemplates} style={styles.smallActionButton}>
               <Text style={styles.smallActionLabel}>
-                {syncingPrompts ? 'Refreshing...' : 'Refresh prompts'}
+                {syncingPrompts ? 'Syncing...' : 'Sync prompts'}
               </Text>
             </Pressable>
           </View>
@@ -388,7 +383,9 @@ export default function NewAnalysisScreen() {
           ) : null}
         </SectionCard>
 
-        <SectionCard title="3. Add a focus note" caption="Optional clip-specific context. Do not use it as ground truth.">
+        <SectionCard
+          title="3. Optional focus note"
+          caption="This is appended after the core prompt. Use it to narrow attention, not to replace visible evidence.">
           <TextInput
             value={userPrompt}
             onChangeText={setUserPrompt}
@@ -399,7 +396,14 @@ export default function NewAnalysisScreen() {
           />
         </SectionCard>
 
-        <SectionCard title="4. Review context" caption="Confirm the saved clip and review settings.">
+        <SectionCard
+          title="4. Ready to run"
+          caption="The review will use the saved clip, the active athlete profile, and the selected mode.">
+          <View style={styles.contextPillRow}>
+            <StatusPill label={uploadedVideo ? 'Clip ready' : 'Clip missing'} tone={uploadedVideo ? 'success' : 'neutral'} />
+            <StatusPill label={selectedPrompt ? 'Mode selected' : 'Mode missing'} tone={selectedPrompt ? 'success' : 'neutral'} />
+            <StatusPill label={profile ? 'Athlete ready' : 'Athlete missing'} tone={profile ? 'success' : 'neutral'} />
+          </View>
           <View style={styles.contextCard}>
             <View style={styles.contextRow}>
               <Text style={styles.contextLabel}>Saved clip</Text>
@@ -408,11 +412,16 @@ export default function NewAnalysisScreen() {
               </Text>
             </View>
             <View style={styles.contextRow}>
-              <Text style={styles.contextLabel}>Review target</Text>
+              <Text style={styles.contextLabel}>Athlete profile</Text>
               <Text style={styles.contextValue}>
-                {reviewSubject?.displayName ?? 'No athlete selected yet'}
+                {profile
+                  ? `${profile.name} · ${getExperienceLevelLabel(profile.experienceLevel)} · ${getStanceLabel(profile.stance)}`
+                  : 'No athlete profile selected yet'}
               </Text>
             </View>
+            {reviewSubject?.description ? (
+              <Text style={styles.contextBody}>{reviewSubject.description}</Text>
+            ) : null}
             <View style={styles.contextRow}>
               <Text style={styles.contextLabel}>Review mode</Text>
               <Text style={styles.contextValue}>
@@ -438,7 +447,7 @@ export default function NewAnalysisScreen() {
 
           <PrimaryButton
             label={runningAnalysis ? 'Running review...' : 'Run review'}
-            hint="Saved clip, review mode, and athlete profile are required"
+            hint="Gemini will use the saved clip, active athlete context, and selected prompt"
             disabled={
               isBootstrapping ||
               Boolean(bootstrapError) ||
@@ -524,6 +533,11 @@ const styles = StyleSheet.create({
   sectionHeaderRow: {
     gap: spacing.sm,
   },
+  sectionMetaText: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
   promptList: {
     gap: spacing.md,
   },
@@ -575,6 +589,11 @@ const styles = StyleSheet.create({
   contextRow: {
     gap: spacing.xs,
   },
+  contextPillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
   contextLabel: {
     fontSize: typography.label,
     fontWeight: '700',
@@ -609,11 +628,6 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: typography.bodySmall,
     lineHeight: 20,
-    color: palette.textMuted,
-  },
-  stepBody: {
-    fontSize: typography.body,
-    lineHeight: 24,
     color: palette.textMuted,
   },
   metaText: {
@@ -659,6 +673,21 @@ const styles = StyleSheet.create({
   },
   sampleVideoList: {
     gap: spacing.sm,
+  },
+  devUtilityCard: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  devUtilityTitle: {
+    fontSize: typography.label,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
   },
   sampleVideoButton: {
     gap: spacing.xs,
