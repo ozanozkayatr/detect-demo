@@ -60,27 +60,27 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const titles = [
-    'Who is this review for?',
-    'What body profile should guide feedback?',
-    'What level should the coach assume?',
-    'How often is this athlete training?',
-    'What background should the coach respect?',
-    'Check the profile before saving.',
+    'Who is the athlete behind the clips?',
+    'What body profile should guide movement feedback?',
+    'What level should Detect coach for?',
+    'How often is this athlete training right now?',
+    'What context should the review respect?',
+    'Check the review calibration before saving.',
   ];
 
   const captions = [
-    'This name and stance become the base context behind every saved review.',
-    'Approximate body data helps keep technical feedback grounded and proportional.',
-    'The review should sound different for a beginner than for an experienced boxer.',
+    'Name and stance become the identity layer behind every saved review.',
+    'Approximate height and weight keep movement feedback proportional and realistic.',
+    'Detect should sound very different for a beginner than for an experienced competitor.',
     'Training rhythm changes how demanding the next-step guidance should feel.',
-    'Add history, limitations, and context so the coach avoids generic advice.',
-    'Save once, then use this profile across future sessions and follow-up reviews.',
+    'History, limitations, and goals prevent generic coaching.',
+    'This last step shows how the app will calibrate future reviews.',
   ];
   const screenTitle =
-    mode === 'create' ? 'Build the athlete profile.' : 'Refine the athlete profile.';
+    mode === 'create' ? 'Set the athlete baseline.' : 'Refine the athlete baseline.';
   const screenSubtitle =
     mode === 'create'
-      ? 'Set the context that will shape coaching tone, difficulty, and progression before the first review.'
+      ? 'This one-time intake sets coaching depth, progression, and review tone before the first saved clip.'
       : 'Update the athlete context so future reviews stay aligned with the current training reality.';
   const nextStepLabel =
     stepLabels[stepIndex + 1] ??
@@ -149,7 +149,7 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
       );
       return;
     }
-    router.replace(mode === 'create' ? '/analysis/new' : '/(tabs)/profile');
+    router.replace(mode === 'create' ? '/(tabs)' : '/(tabs)/profile');
   }
 
   function handleBack() {
@@ -496,12 +496,12 @@ function renderStep(
       return (
         <View style={styles.stack}>
           <View style={styles.reviewHero}>
-            <Text style={styles.reviewHeroEyebrow}>Ready to save</Text>
+            <Text style={styles.reviewHeroEyebrow}>Review calibration</Text>
             <Text style={styles.reviewHeroTitle}>
               {draft.name || 'Athlete profile'}
             </Text>
             <Text style={styles.reviewHeroBody}>
-              This profile will shape review tone, level, and progression in every new saved review.
+              {describeProfileCalibration(draft)}
             </Text>
           </View>
 
@@ -517,6 +517,22 @@ function renderStep(
             <ReviewMetric
               label="Rhythm"
               value={formatTrainingRhythm(draft.weeklyTrainingDays)}
+            />
+          </View>
+
+          <View style={styles.calibrationBlock}>
+            <Text style={styles.calibrationTitle}>What Detect will assume</Text>
+            <CalibrationNote
+              label="Coaching depth"
+              value={describeCoachingDepth(draft)}
+            />
+            <CalibrationNote
+              label="Progression pace"
+              value={describeProgressLens(draft)}
+            />
+            <CalibrationNote
+              label="Risk lens"
+              value={describeConstraintLens(draft)}
             />
           </View>
 
@@ -682,12 +698,67 @@ function ReviewMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
+function CalibrationNote({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.calibrationNote}>
+      <Text style={styles.calibrationLabel}>{label}</Text>
+      <Text style={styles.calibrationValue}>{value}</Text>
+    </View>
+  );
+}
+
 function formatTrainingRhythm(value: string) {
   if (!value) {
     return 'Not set yet';
   }
 
   return `${value} day${value === '1' ? '' : 's'} / week`;
+}
+
+function describeProfileCalibration(draft: AthleteProfileDraft) {
+  return `${describeCoachingDepth(draft)} ${describeProgressLens(draft)}`;
+}
+
+function describeCoachingDepth(draft: AthleteProfileDraft) {
+  if (
+    draft.hasProfessionalExperience ||
+    draft.hasCoachingExperience ||
+    draft.experienceLevel === 'coach_or_former_competitor' ||
+    draft.experienceLevel === 'experienced_competitor'
+  ) {
+    return 'Detect will skip beginner framing and lean into sharper technical correction.';
+  }
+
+  if (draft.experienceLevel === 'advanced_amateur' || draft.experienceLevel === 'intermediate') {
+    return 'Detect will balance technical critique with actionable training cues.';
+  }
+
+  return 'Detect will keep feedback simple, grounded, and beginner-appropriate.';
+}
+
+function describeProgressLens(draft: AthleteProfileDraft) {
+  const weeklyDays = Number(draft.weeklyTrainingDays);
+  if (Number.isFinite(weeklyDays) && weeklyDays >= 5) {
+    return 'Next steps can assume consistent weekly repetition and higher training tolerance.';
+  }
+
+  if (Number.isFinite(weeklyDays) && weeklyDays >= 3) {
+    return 'Next steps will assume steady weekly practice without overloading the athlete.';
+  }
+
+  return 'Next steps will stay compact and repeatable between lighter training weeks.';
+}
+
+function describeConstraintLens(draft: AthleteProfileDraft) {
+  if (draft.limitations.trim()) {
+    return 'Detect will keep visible feedback aware of the recorded limitations and avoid careless progression cues.';
+  }
+
+  if (draft.additionalContext.trim()) {
+    return 'Detect will treat the added context as a priority lens when choosing emphasis and next steps.';
+  }
+
+  return 'Detect will rely on visible movement, stated level, and routine history as the primary coaching lens.';
 }
 
 const styles = StyleSheet.create({
@@ -1059,6 +1130,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+  },
+  calibrationBlock: {
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+    padding: spacing.md,
+  },
+  calibrationTitle: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  calibrationNote: {
+    gap: spacing.xs,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.borderStrong,
+  },
+  calibrationLabel: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  calibrationValue: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
   },
   reviewMetric: {
     flexGrow: 1,

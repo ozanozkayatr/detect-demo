@@ -1,5 +1,5 @@
 import { useClerk } from '@clerk/expo';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -16,8 +16,6 @@ export default function SettingsTab() {
   const { signOut } = useClerk();
   const router = useRouter();
   const {
-    bootstrapError,
-    hasProfile,
     isBootstrapping,
     profile,
     refreshProfile,
@@ -62,6 +60,10 @@ export default function SettingsTab() {
     setRefreshing(false);
   }, [loadHealth, refreshProfile]);
 
+  if (!isBootstrapping && !profile) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <AppScreen
       eyebrow="Settings"
@@ -71,16 +73,8 @@ export default function SettingsTab() {
       refreshing={refreshing}>
       <SectionCard tone="accent" title="Account">
         <StatusPill
-          label={
-            isBootstrapping
-              ? 'Refreshing session'
-              : bootstrapError
-                ? 'Session issue'
-                : 'Session active'
-          }
-          tone={
-            isBootstrapping ? 'neutral' : bootstrapError ? 'warning' : 'success'
-          }
+          label={isBootstrapping ? 'Refreshing session' : 'Session active'}
+          tone={isBootstrapping ? 'neutral' : 'success'}
         />
         <View style={styles.stack}>
           <Text style={styles.heroText}>
@@ -105,37 +99,22 @@ export default function SettingsTab() {
         />
       </SectionCard>
 
-      {bootstrapError ? (
-        <SectionCard tone="muted" title="Session error">
-          <Text style={styles.body}>{bootstrapError}</Text>
-        </SectionCard>
-      ) : null}
-
       <SectionCard title="Athlete context">
-        <StatusPill
-          label={hasProfile ? 'Profile active' : 'Profile required'}
-          tone={hasProfile ? 'success' : 'warning'}
-        />
+        <StatusPill label="Profile active" tone="success" />
         <Text style={styles.body}>
-          {hasProfile
-            ? reviewSubject?.description ??
-              `${profile?.name ?? 'Athlete'} is the current context for future reviews.`
-            : 'Create the athlete profile before running the first review.'}
+          {reviewSubject?.description ??
+            `${profile?.name ?? 'Athlete'} is the current context for future reviews.`}
         </Text>
-        {hasProfile ? (
+        {profile ? (
           <View style={styles.contextMetaRow}>
             <SettingsRow label="Review target" value={reviewSubject?.shortLabel ?? 'Self review'} />
             <SettingsRow label="Athlete name" value={profile?.name ?? 'n/a'} />
           </View>
         ) : null}
         <PrimaryButton
-          label={hasProfile ? 'Edit athlete profile' : 'Create athlete profile'}
-          hint={
-            hasProfile
-              ? 'Adjust the profile used in future reviews'
-              : 'Create the profile used in future reviews'
-          }
-          onPress={() => router.push(hasProfile ? '/profile/edit' : '/onboarding')}
+          label="Edit athlete profile"
+          hint="Adjust the profile used in future reviews"
+          onPress={() => router.push('/profile/edit')}
         />
       </SectionCard>
 

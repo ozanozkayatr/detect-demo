@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -21,8 +21,6 @@ import {
 export default function HomeTab() {
   const router = useRouter();
   const {
-    bootstrapError,
-    hasProfile,
     isBootstrapping,
     profile,
     refreshProfile,
@@ -102,6 +100,10 @@ export default function HomeTab() {
     setRefreshing(false);
   }, [loadHealth, loadLatestAnalysis, refreshProfile]);
 
+  if (!isBootstrapping && !profile) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <AppScreen
       eyebrow="Dashboard"
@@ -111,50 +113,24 @@ export default function HomeTab() {
       refreshing={refreshing}>
       <SectionCard tone="accent">
         <StatusPill
-          label={
-            isBootstrapping
-              ? 'Loading profile'
-              : bootstrapError
-                ? 'Profile unavailable'
-                : hasProfile
-                  ? 'Ready for review'
-                  : 'Profile required'
-          }
-          tone={
-            isBootstrapping ? 'neutral' : bootstrapError ? 'warning' : 'success'
-          }
+          label={isBootstrapping ? 'Loading athlete' : 'Ready for review'}
+          tone={isBootstrapping ? 'neutral' : 'success'}
         />
         <Text style={styles.heroTitle}>
-          {hasProfile
-            ? 'Ready to turn the next clip into clear coaching.'
-            : 'Create the athlete profile before the first review.'}
+          Ready to turn the next clip into clear coaching.
         </Text>
         <Text style={styles.heroBody}>
-          {hasProfile
-            ? `${reviewSubject?.displayName ?? profile?.name ?? 'Your athlete profile'} is the active context for the next saved review.`
-            : 'This profile sets coaching tone, difficulty, and progression for every future review.'}
+          {reviewSubject?.displayName ?? profile?.name ?? 'Your athlete profile'} is the active
+          context for the next saved review.
         </Text>
         <PrimaryButton
-          label={hasProfile ? 'Review a boxing clip' : 'Set up athlete profile'}
-          hint={
-            hasProfile ? 'Open the review flow' : 'Create the athlete context first'
-          }
+          label="Review a boxing clip"
+          hint="Open the review flow"
           icon={<Feather name="arrow-right" size={20} color="#ffffff" />}
-          disabled={isBootstrapping || Boolean(bootstrapError)}
-          onPress={() => router.push(hasProfile ? '/analysis/new' : '/onboarding')}
+          disabled={isBootstrapping}
+          onPress={() => router.push('/analysis/new')}
         />
       </SectionCard>
-
-      {bootstrapError ? (
-        <SectionCard tone="muted" title="Profile loading issue">
-          <Text style={styles.bodyText}>{bootstrapError}</Text>
-          <PrimaryButton
-            label="Retry profile"
-            hint="Fetch the athlete context again"
-            onPress={() => void refreshProfile()}
-          />
-        </SectionCard>
-      ) : null}
 
       {profile ? <ProfileSummaryCard profile={profile} /> : null}
 
@@ -164,7 +140,7 @@ export default function HomeTab() {
             icon="play-circle"
             title="Start a new review"
             description="Upload the next clip and save fresh feedback."
-            onPress={() => router.push(hasProfile ? '/analysis/new' : '/onboarding')}
+            onPress={() => router.push('/analysis/new')}
           />
           <QuickActionTile
             icon="clock"
@@ -176,7 +152,7 @@ export default function HomeTab() {
             icon="user"
             title="Update athlete profile"
             description="Keep level, routine, and stance aligned with training."
-            onPress={() => router.push(hasProfile ? '/profile/edit' : '/onboarding')}
+            onPress={() => router.push('/profile/edit')}
           />
         </View>
       </SectionCard>
@@ -219,13 +195,9 @@ export default function HomeTab() {
             Run the first clip review to start building the training log.
           </Text>
           <PrimaryButton
-            label={hasProfile ? 'Start first review' : 'Set up athlete profile'}
-            hint={
-              hasProfile
-                ? 'Open the review flow'
-                : 'Create the athlete context first'
-            }
-            onPress={() => router.push(hasProfile ? '/analysis/new' : '/onboarding')}
+            label="Start first review"
+            hint="Open the review flow"
+            onPress={() => router.push('/analysis/new')}
           />
         </SectionCard>
       )}

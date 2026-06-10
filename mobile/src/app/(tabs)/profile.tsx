@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -16,8 +16,6 @@ import {
 export default function ProfileTab() {
   const router = useRouter();
   const {
-    bootstrapError,
-    hasProfile,
     isBootstrapping,
     profile,
     refreshProfile,
@@ -31,6 +29,10 @@ export default function ProfileTab() {
     setRefreshing(false);
   }, [refreshProfile]);
 
+  if (!isBootstrapping && !profile) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <AppScreen
       eyebrow="Athlete profile"
@@ -40,21 +42,11 @@ export default function ProfileTab() {
       refreshing={refreshing}>
       <SectionCard tone="accent">
         <StatusPill
-          label={
-            isBootstrapping
-              ? 'Loading profile'
-              : bootstrapError
-                ? 'Profile unavailable'
-                : 'Profile active'
-          }
-          tone={
-            isBootstrapping ? 'neutral' : bootstrapError ? 'warning' : 'success'
-          }
+          label={isBootstrapping ? 'Loading profile' : 'Profile active'}
+          tone={isBootstrapping ? 'neutral' : 'success'}
         />
         <Text style={styles.heroText}>
-          {hasProfile
-            ? 'Update the athlete profile whenever training volume, experience, or goals shift.'
-            : 'Create the athlete profile once before you begin reviewing clips.'}
+          Update the athlete profile whenever training volume, experience, or goals shift.
         </Text>
         {profile ? (
           <View style={styles.metricsGrid}>
@@ -74,37 +66,13 @@ export default function ProfileTab() {
         ) : null}
       </SectionCard>
 
-      {bootstrapError ? (
-        <SectionCard tone="muted">
-          <Text style={styles.bodyText}>{bootstrapError}</Text>
-          <PrimaryButton
-            label="Retry profile"
-            hint="Fetch the latest athlete context"
-            onPress={() => void refreshProfile()}
-          />
-        </SectionCard>
-      ) : null}
-
-      {profile ? (
-        <ProfileSummaryCard profile={profile} />
-      ) : !bootstrapError && !isBootstrapping ? (
-        <SectionCard title="No athlete profile yet" tone="muted">
-          <Text style={styles.bodyText}>
-            Add one athlete profile first so every review has the right level, stance,
-            and training context behind it.
-          </Text>
-        </SectionCard>
-      ) : null}
+      {profile ? <ProfileSummaryCard profile={profile} /> : null}
 
       <PrimaryButton
-        label={profile ? 'Edit athlete profile' : 'Create athlete profile'}
-        hint={
-          profile
-            ? 'Update the profile used in future reviews'
-            : 'Create the profile used in future reviews'
-        }
+        label="Edit athlete profile"
+        hint="Update the profile used in future reviews"
         disabled={isBootstrapping}
-        onPress={() => router.push(hasProfile ? '/profile/edit' : '/onboarding')}
+        onPress={() => router.push('/profile/edit')}
       />
     </AppScreen>
   );
