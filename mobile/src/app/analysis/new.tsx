@@ -98,6 +98,12 @@ export default function NewAnalysisScreen() {
   );
   const personaKey = profile ? getBackendPersonaKey(profile) : null;
   const focusNote = userPrompt.trim();
+  const uploadState = getUploadState({
+    localAsset,
+    uploadedVideo,
+    uploadError,
+    uploading,
+  });
   const runReadinessHint = useMemo(() => {
     if (!reviewSubject) {
       return 'Set up the athlete profile before you run the first review.';
@@ -247,12 +253,30 @@ export default function NewAnalysisScreen() {
 
         <SectionCard title="1. Choose clip" caption="The clip uploads immediately and attaches to this saved review.">
           <PrimaryButton
-            label={localAsset ? 'Choose another clip' : 'Choose a boxing clip'}
-            hint="Open the device video library"
+            label={
+              uploading
+                ? 'Uploading clip...'
+                : localAsset
+                  ? 'Choose another clip'
+                  : 'Choose a boxing clip'
+            }
+            hint={
+              uploading
+                ? 'Saving the clip to the backend'
+                : 'Open the device video library'
+            }
             icon={<Feather name="upload" size={20} color="#ffffff" />}
-            disabled={isBootstrapping || Boolean(bootstrapError)}
+            disabled={isBootstrapping || Boolean(bootstrapError) || uploading}
             onPress={handlePickVideo}
           />
+
+          <View style={styles.uploadStateCard}>
+            <View style={styles.uploadStateHeader}>
+              <Text style={styles.uploadStateTitle}>Clip upload</Text>
+              <StatusPill label={uploadState.label} tone={uploadState.tone} />
+            </View>
+            <Text style={styles.uploadStateBody}>{uploadState.message}</Text>
+          </View>
 
           {mobileConfig.enableSampleClips ? (
             <View style={styles.devUtilityCard}>
@@ -264,8 +288,13 @@ export default function NewAnalysisScreen() {
                 {sampleVideos.map((sampleVideo) => (
                   <Pressable
                     key={sampleVideo.id}
+                    disabled={uploading}
                     onPress={() => handleUseSampleVideo(sampleVideo)}
-                    style={styles.sampleVideoButton}>
+                    style={({ pressed }) => [
+                      styles.sampleVideoButton,
+                      uploading && styles.disabledSurface,
+                      pressed && !uploading && styles.pressedSurface,
+                    ]}>
                     <Text style={styles.sampleVideoTitle}>{sampleVideo.title}</Text>
                     <Text style={styles.sampleVideoFilename}>{sampleVideo.filename}</Text>
                   </Pressable>
@@ -305,15 +334,6 @@ export default function NewAnalysisScreen() {
             </View>
           ) : null}
 
-          {uploadedVideo ? (
-            <View style={styles.uploadedState}>
-              <StatusPill label="Clip saved" tone="success" />
-              <Text style={styles.metaText}>
-                Ready to review: {uploadedVideo.original_filename}
-              </Text>
-            </View>
-          ) : null}
-
           {uploadError ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>{uploadError}</Text>
@@ -328,12 +348,36 @@ export default function NewAnalysisScreen() {
                 ? 'Loading review modes...'
                 : 'Select one analysis mode for this clip.'}
             </Text>
-            <Pressable onPress={handleSyncPromptTemplates} style={styles.smallActionButton}>
+            <Pressable
+              disabled={loadingPrompts || syncingPrompts}
+              onPress={handleSyncPromptTemplates}
+              style={({ pressed }) => [
+                styles.smallActionButton,
+                (loadingPrompts || syncingPrompts) && styles.disabledSurface,
+                pressed && !(loadingPrompts || syncingPrompts) && styles.pressedSurface,
+              ]}>
               <Text style={styles.smallActionLabel}>
                 {syncingPrompts ? 'Syncing...' : 'Sync prompts'}
               </Text>
             </Pressable>
           </View>
+
+          {selectedPrompt ? (
+            <View style={styles.selectedPromptCard}>
+              <View style={styles.selectedPromptHeader}>
+                <Text style={styles.selectedPromptLabel}>Selected mode</Text>
+                <StatusPill
+                  label={formatOutputType(selectedPrompt.output_type)}
+                  tone="success"
+                />
+              </View>
+              <Text style={styles.selectedPromptTitle}>{selectedPrompt.title}</Text>
+              <Text style={styles.selectedPromptKey}>{selectedPrompt.key}</Text>
+              {selectedPrompt.description ? (
+                <Text style={styles.selectedPromptBody}>{selectedPrompt.description}</Text>
+              ) : null}
+            </View>
+          ) : null}
 
           {promptTemplates.length > 0 ? (
             <View style={styles.promptList}>
@@ -341,9 +385,10 @@ export default function NewAnalysisScreen() {
                 <Pressable
                   key={template.id}
                   onPress={() => setSelectedPromptId(template.id)}
-                  style={[
+                  style={({ pressed }) => [
                     styles.promptCard,
                     selectedPromptId === template.id && styles.promptCardSelected,
+                    pressed && styles.pressedSurface,
                   ]}>
                   <View style={styles.promptHeader}>
                     <Text style={styles.promptKey}>{template.key}</Text>
@@ -516,6 +561,69 @@ function formatDuration(durationMs: number | null) {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+function getUploadState({
+  localAsset,
+  uploadedVideo,
+  uploadError,
+  uploading,
+}: {
+  localAsset: LocalVideoAsset | null;
+  uploadedVideo: VideoRecord | null;
+  uploadError: string | null;
+  uploading: boolean;
+}): {
+  label: string;
+  message: string;
+  tone: 'neutral' | 'success' | 'warning';
+} {
+  if (uploadError) {
+    return {
+      label: 'Upload failed',
+      message: 'Choose the clip again after fixing the upload issue.',
+      tone: 'warning',
+    };
+  }
+
+  if (uploading) {
+    return {
+      label: 'Uploading',
+      message: localAsset
+        ? `${localAsset.name} is being saved to the backend now.`
+        : 'Saving the selected clip to the backend.',
+      tone: 'neutral',
+    };
+  }
+
+  if (uploadedVideo) {
+    return {
+      label: 'Saved',
+      message: `${uploadedVideo.original_filename} is attached and ready for review.`,
+      tone: 'success',
+    };
+  }
+
+  if (localAsset) {
+    return {
+      label: 'Pending save',
+      message: `${localAsset.name} is selected locally but not saved yet.`,
+      tone: 'neutral',
+    };
+  }
+
+  return {
+    label: 'Waiting',
+    message: 'Pick one clip to start the review setup.',
+    tone: 'neutral',
+  };
+}
+
+function formatOutputType(value: string) {
+  return value
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 const styles = StyleSheet.create({
   closeButton: {
     width: 40,
@@ -540,6 +648,44 @@ const styles = StyleSheet.create({
   },
   promptList: {
     gap: spacing.md,
+  },
+  selectedPromptCard: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(106, 31, 42, 0.2)',
+    borderRadius: radii.md,
+    backgroundColor: palette.accentSoft,
+  },
+  selectedPromptHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  selectedPromptLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  selectedPromptTitle: {
+    fontSize: typography.heading,
+    lineHeight: 28,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  selectedPromptKey: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
+  },
+  selectedPromptBody: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.textMuted,
   },
   promptCard: {
     borderWidth: 1,
@@ -576,6 +722,33 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySmall,
     lineHeight: 20,
     color: palette.textMuted,
+  },
+  uploadStateCard: {
+    gap: spacing.xs,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceMuted,
+  },
+  uploadStateHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  uploadStateTitle: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  uploadStateBody: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.text,
   },
   contextCard: {
     gap: spacing.sm,
@@ -674,6 +847,12 @@ const styles = StyleSheet.create({
   sampleVideoList: {
     gap: spacing.sm,
   },
+  pressedSurface: {
+    opacity: 0.92,
+  },
+  disabledSurface: {
+    opacity: 0.5,
+  },
   devUtilityCard: {
     gap: spacing.sm,
     padding: spacing.md,
@@ -720,9 +899,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   summaryGrid: {
-    gap: spacing.sm,
-  },
-  uploadedState: {
     gap: spacing.sm,
   },
   infoCell: {
