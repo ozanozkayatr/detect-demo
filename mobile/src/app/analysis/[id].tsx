@@ -192,6 +192,12 @@ export default function AnalysisDetailScreen() {
               <Text style={styles.summaryText}>
                 {summary || 'No normalized summary was stored for this run.'}
               </Text>
+              <View style={styles.summaryMetrics}>
+                <ResultCountCell label="Strengths" value={strengths.length} />
+                <ResultCountCell label="Issues" value={issues.length} />
+                <ResultCountCell label="Next" value={nextSteps.length} />
+                <ResultCountCell label="Notes" value={notes.length} />
+              </View>
               <View style={styles.summaryFooter}>
                 <Text style={styles.summaryFooterText}>
                   Template {analysis.template_key_snapshot ?? analysis.prompt_template.key}
@@ -277,15 +283,17 @@ export default function AnalysisDetailScreen() {
             </SectionCard>
 
             {hasObservedFeedback ? (
-              <SectionCard title="Observed feedback">
+              <SectionCard
+                title="What showed up"
+                caption="Observable positives and corrections pulled into the normalized result.">
                 <FeedbackBlock
-                  title="Strengths"
+                  title="Keep"
                   items={strengths}
                   tone="success"
                   emptyText="No clear strengths were extracted from the normalized output."
                 />
                 <FeedbackBlock
-                  title="Issues"
+                  title="Fix"
                   items={issues}
                   tone="warning"
                   emptyText="No specific issues were extracted from the normalized output."
@@ -294,15 +302,17 @@ export default function AnalysisDetailScreen() {
             ) : null}
 
             {hasImprovementPlan ? (
-              <SectionCard title="Improvement plan">
+              <SectionCard
+                title="How to respond"
+                caption="Actionable carryover and caveats for the next session.">
                 <FeedbackBlock
-                  title="Next steps"
+                  title="Next session"
                   items={nextSteps}
                   tone="default"
                   emptyText="No next-step guidance was extracted from the normalized output."
                 />
                 <FeedbackBlock
-                  title="Notes"
+                  title="Caveats"
                   items={notes}
                   tone="muted"
                   emptyText="No extra caveats or visibility notes were stored."
@@ -360,6 +370,15 @@ function DetailCell({ label, value }: { label: string; value: string }) {
     <View style={styles.detailCell}>
       <Text style={styles.detailLabel}>{label}</Text>
       <Text style={styles.detailValue}>{value}</Text>
+    </View>
+  );
+}
+
+function ResultCountCell({ label, value }: { label: string; value: number }) {
+  return (
+    <View style={styles.summaryMetricCell}>
+      <Text style={styles.summaryMetricLabel}>{label}</Text>
+      <Text style={styles.summaryMetricValue}>{String(value)}</Text>
     </View>
   );
 }
@@ -503,6 +522,35 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: typography.title,
     lineHeight: 36,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  summaryMetrics: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  summaryMetricCell: {
+    minWidth: 88,
+    flexGrow: 1,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(106, 31, 42, 0.14)',
+    borderRadius: radii.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.52)',
+  },
+  summaryMetricLabel: {
+    fontSize: typography.label,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  summaryMetricValue: {
+    fontSize: typography.heading,
+    lineHeight: 28,
     fontWeight: '700',
     color: palette.text,
   },
