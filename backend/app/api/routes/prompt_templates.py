@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.dependencies.auth import get_current_user
 from app.db.session import get_db
 from app.models.prompt_template import PromptTemplate
+from app.models.user import User
 from app.schemas.prompt_template import (
     PromptFileRead,
     PromptTemplateCreate,
@@ -18,7 +20,10 @@ router = APIRouter()
 
 
 @router.get("", response_model=list[PromptTemplateRead])
-def list_prompt_templates(db: Session = Depends(get_db)) -> list[PromptTemplate]:
+def list_prompt_templates(
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[PromptTemplate]:
     statement = (
         select(PromptTemplate)
         .where(PromptTemplate.is_active.is_(True))
@@ -28,13 +33,16 @@ def list_prompt_templates(db: Session = Depends(get_db)) -> list[PromptTemplate]
 
 
 @router.get("/files", response_model=list[PromptFileRead])
-def list_prompt_template_files() -> list[PromptFileRead]:
+def list_prompt_template_files(
+    _: User = Depends(get_current_user),
+) -> list[PromptFileRead]:
     return [PromptFileRead.model_validate(file_info) for file_info in list_prompt_files()]
 
 
 @router.post("", response_model=PromptTemplateRead, status_code=201)
 def create_prompt_template(
     payload: PromptTemplateCreate,
+    _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> PromptTemplate:
     prompt_template = PromptTemplate(**payload.model_dump())
@@ -46,6 +54,7 @@ def create_prompt_template(
 
 @router.post("/sync", response_model=PromptTemplateSyncRead)
 def sync_prompt_template_records(
+    _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> PromptTemplateSyncRead:
     created_count, updated_count, templates = sync_prompt_templates(db)

@@ -16,6 +16,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    clerk_user_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     display_name: Mapped[str] = mapped_column(String(255))
     email: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True)
     phone_number: Mapped[str | None] = mapped_column(
@@ -36,5 +37,10 @@ class User(Base):
         "AthleteProfile",
         back_populates="user",
         uselist=False,
+        cascade="all, delete-orphan",
+    )
+    videos = relationship(
+        "Video",
+        back_populates="user",
         cascade="all, delete-orphan",
     )

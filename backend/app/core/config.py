@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AliasChoices, Field, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 REPO_ROOT = BACKEND_DIR.parent
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     debug: bool = True
     database_url: str = "postgresql+psycopg://localhost/detect_demo"
-    cors_origins: list[str] = [
+    cors_origins: Annotated[list[str], NoDecode] = [
         "http://127.0.0.1:3001",
         "http://localhost:3001",
         "http://127.0.0.1:3000",
@@ -23,8 +24,42 @@ class Settings(BaseSettings):
     ]
     upload_dir: Path = BACKEND_DIR / "data" / "uploads"
     prompts_dir: Path = REPO_ROOT / "prompts"
-    gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_GEMINI_API_KEY",
+            "GEMINI_API_KEY",
+            "GOOGLE_API_KEY",
+        ),
+    )
+    gemini_model: str = Field(
+        default="gemini-2.5-flash",
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_GEMINI_MODEL",
+            "GEMINI_MODEL",
+        ),
+    )
+    clerk_secret_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_CLERK_SECRET_KEY",
+            "CLERK_SECRET_KEY",
+        ),
+    )
+    clerk_jwt_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_CLERK_JWT_KEY",
+            "CLERK_JWT_KEY",
+        ),
+    )
+    clerk_authorized_parties: Annotated[list[str], NoDecode] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_CLERK_AUTHORIZED_PARTIES",
+            "CLERK_AUTHORIZED_PARTIES",
+        ),
+    )
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",
@@ -33,7 +68,7 @@ class Settings(BaseSettings):
         env_prefix="DETECT_DEMO_",
     )
 
-    @field_validator("cors_origins", mode="before")
+    @field_validator("cors_origins", "clerk_authorized_parties", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
         if isinstance(value, list):
@@ -55,6 +90,10 @@ class Settings(BaseSettings):
     @property
     def gemini_configured(self) -> bool:
         return bool(self.gemini_api_key and self.gemini_model)
+
+    @property
+    def clerk_configured(self) -> bool:
+        return bool(self.clerk_secret_key or self.clerk_jwt_key)
 
 
 @lru_cache

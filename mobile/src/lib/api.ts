@@ -1,5 +1,13 @@
 import { mobileConfig } from '@/lib/config';
 
+type AccessTokenGetter = () => Promise<string | null>;
+
+let getAccessToken: AccessTokenGetter | null = null;
+
+export function setApiAccessTokenGetter(getter: AccessTokenGetter | null) {
+  getAccessToken = getter;
+}
+
 export type HealthResponse = {
   status: string;
   service: string;
@@ -104,7 +112,17 @@ export type AnalysisRecord = {
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${mobileConfig.apiBaseUrl}${path}`, init);
+  const headers = new Headers(init?.headers);
+  const accessToken = getAccessToken ? await getAccessToken() : null;
+
+  if (accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  const response = await fetch(`${mobileConfig.apiBaseUrl}${path}`, {
+    ...init,
+    headers,
+  });
 
   if (!response.ok) {
     const raw = await response.text();

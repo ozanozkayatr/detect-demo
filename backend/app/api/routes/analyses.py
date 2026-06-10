@@ -4,11 +4,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.api.dependencies.auth import get_current_user
 from app.api.errors import api_error
 from app.core.config import settings
 from app.db.session import get_db
 from app.models.analysis import Analysis
 from app.models.prompt_template import PromptTemplate
+from app.models.user import User
 from app.models.video import Video
 from app.schemas.analysis import AnalysisCreate, AnalysisRead
 from app.services.gemini_service import (
@@ -25,22 +27,38 @@ from app.services.persona_loader import (
 router = APIRouter()
 
 
-def analysis_query():
-    return select(Analysis).options(
-        selectinload(Analysis.video),
-        selectinload(Analysis.prompt_template),
+def analysis_query_for_user(user_id: int):
+    return (
+        select(Analysis)
+        .join(Analysis.video)
+        .where(Video.user_id == user_id)
+        .options(
+            selectinload(Analysis.video),
+            selectinload(Analysis.prompt_template),
+        )
     )
 
 
 @router.get("", response_model=list[AnalysisRead])
-def list_analyses(db: Session = Depends(get_db)) -> list[Analysis]:
-    statement = analysis_query().order_by(Analysis.created_at.desc())
+def list_analyses(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[Analysis]:
+    statement = analysis_query_for_user(current_user.id).order_by(
+        Analysis.created_at.desc()
+    )
     return list(db.scalars(statement))
 
 
 @router.get("/{analysis_id}", response_model=AnalysisRead)
-def get_analysis(analysis_id: int, db: Session = Depends(get_db)) -> Analysis:
-    statement = analysis_query().where(Analysis.id == analysis_id)
+def get_analysis(
+    analysis_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Analysis:
+    statement = analysis_query_for_user(current_user.id).where(
+        Analysis.id == analysis_id
+    )
     analysis = db.scalars(statement).first()
 
     if analysis is None:
@@ -56,9 +74,15 @@ def get_analysis(analysis_id: int, db: Session = Depends(get_db)) -> Analysis:
 @router.post("", response_model=AnalysisRead, status_code=201)
 def create_analysis(
     payload: AnalysisCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Analysis:
-    video = db.get(Video, payload.video_id)
+    video = db.scalar(
+        select(Video).where(
+            Video.id == payload.video_id,
+            Video.user_id == current_user.id,
+        )
+    )
     prompt_template = db.get(PromptTemplate, payload.prompt_template_id)
     normalized_user_prompt = (
         payload.user_prompt.strip() if payload.user_prompt else None
@@ -96,7 +120,7 @@ def create_analysis(
     selected_model_name = (payload.model_name or settings.gemini_model).strip()
 
     analysis = Analysis(
-        video_id=payload.video_id,
+        video_id=video.id,
         prompt_template_id=payload.prompt_template_id,
         status="running",
         raw_response=None,
@@ -159,5 +183,7 @@ def create_analysis(
             analysis_id=analysis.id,
         )
 
-    statement = analysis_query().where(Analysis.id == analysis.id)
+    statement = analysis_query_for_user(current_user.id).where(
+        Analysis.id == analysis.id
+    )
     return db.scalars(statement).one()

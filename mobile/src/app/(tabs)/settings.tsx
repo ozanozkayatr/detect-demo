@@ -1,3 +1,4 @@
+import { useClerk } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -12,6 +13,7 @@ import { fetchHealth, type HealthResponse } from '@/lib/api';
 import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
 export default function SettingsTab() {
+  const { signOut } = useClerk();
   const router = useRouter();
   const {
     bootstrapError,
@@ -95,6 +97,11 @@ export default function SettingsTab() {
           label="Refresh session"
           hint="Fetch the latest account and profile data"
           onPress={() => void handleRefresh()}
+        />
+        <PrimaryButton
+          label="Sign out"
+          hint="Remove the saved session from this device"
+          onPress={() => void signOut()}
         />
       </SectionCard>
 

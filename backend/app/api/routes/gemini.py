@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.api.dependencies.auth import get_current_user
 from app.api.errors import api_error
 from app.core.config import settings
+from app.models.user import User
 from app.schemas.gemini import GeminiModelListResponse, GeminiModelOption
 from app.services.gemini_service import (
     GeminiConfigurationError,
@@ -15,7 +17,7 @@ router = APIRouter()
 
 
 @router.get("/models", response_model=GeminiModelListResponse)
-def list_models() -> GeminiModelListResponse:
+def list_models(_: User = Depends(get_current_user)) -> GeminiModelListResponse:
     try:
         model_choices = list_accessible_gemini_models()
     except GeminiConfigurationError as exc:

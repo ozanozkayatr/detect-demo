@@ -1,7 +1,15 @@
+import Constants from 'expo-constants';
+
 const fallbackApiBaseUrl = 'http://127.0.0.1:8000/api/v1';
+const expoExtra =
+  (Constants.expoConfig?.extra as { clerkPublishableKey?: string } | undefined) ?? {};
 
 export const mobileConfig = {
   apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? fallbackApiBaseUrl,
+  clerkPublishableKey:
+    process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ??
+    expoExtra.clerkPublishableKey ??
+    '',
   enableSampleClips:
     process.env.EXPO_PUBLIC_ENABLE_SAMPLE_CLIPS === 'true' || __DEV__,
 };

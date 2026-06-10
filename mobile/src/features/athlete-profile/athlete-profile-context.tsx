@@ -1,5 +1,13 @@
+import { useAuth } from '@clerk/expo';
 import type { PropsWithChildren } from 'react';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import {
   createAthleteProfilePayload,
@@ -13,6 +21,7 @@ import type { AthleteProfile } from '@/features/athlete-profile/types';
 import {
   fetchAppSession,
   saveAthleteProfile,
+  setApiAccessTokenGetter,
   type AppUserRecord,
 } from '@/lib/api';
 
@@ -31,13 +40,22 @@ type AthleteProfileContextValue = {
 const AthleteProfileContext = createContext<AthleteProfileContextValue | null>(null);
 
 export function AthleteProfileProvider({ children }: PropsWithChildren) {
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [user, setUser] = useState<AppUserRecord | null>(null);
   const [profile, setProfile] = useState<AthleteProfile | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
 
-  async function refreshProfile() {
+  const refreshProfile = useCallback(async () => {
+    if (!isLoaded || !isSignedIn) {
+      setUser(null);
+      setProfile(null);
+      setBootstrapError(null);
+      setIsBootstrapping(false);
+      return;
+    }
+
     setBootstrapError(null);
     setIsBootstrapping(true);
     try {
@@ -55,11 +73,25 @@ export function AthleteProfileProvider({ children }: PropsWithChildren) {
     } finally {
       setIsBootstrapping(false);
     }
-  }
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
-    refreshProfile();
-  }, []);
+    setApiAccessTokenGetter(
+      isLoaded && isSignedIn ? () => getToken() : null,
+    );
+    return () => {
+      setApiAccessTokenGetter(null);
+    };
+  }, [getToken, isLoaded, isSignedIn]);
+
+  useEffect(() => {
+    if (!isLoaded) {
+      setIsBootstrapping(true);
+      return;
+    }
+
+    void refreshProfile();
+  }, [isLoaded, refreshProfile]);
 
   const value = useMemo<AthleteProfileContextValue>(
     () => ({
@@ -89,7 +121,7 @@ export function AthleteProfileProvider({ children }: PropsWithChildren) {
       },
       refreshProfile,
     }),
-    [bootstrapError, isBootstrapping, isSaving, profile, user],
+    [bootstrapError, isBootstrapping, isSaving, profile, refreshProfile, user],
   );
 
   return (

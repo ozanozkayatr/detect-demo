@@ -9,6 +9,7 @@ description = "FastAPI backend for the detect-demo local-first scaffold."
 requires-python = ">=3.11"
 dependencies = [
   "alembic>=1.13.2,<2.0.0",
+  "clerk-backend-api>=3.2.1,<4.0.0",
   "fastapi>=0.115.0,<1.0.0",
   "google-genai>=1.0.0,<2.0.0",
   "psycopg[binary]>=3.2.1,<4.0.0",

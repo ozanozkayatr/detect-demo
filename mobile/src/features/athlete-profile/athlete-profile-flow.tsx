@@ -1,3 +1,4 @@
+import { useClerk } from '@clerk/expo';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { type PropsWithChildren, useEffect, useState } from 'react';
@@ -48,6 +49,7 @@ const experienceLevelDescriptions: Record<ExperienceLevel, string> = {
 };
 
 export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
+  const { signOut } = useClerk();
   const router = useRouter();
   const { bootstrapError, isBootstrapping, isSaving, profile, saveProfile } =
     useAthleteProfile();
@@ -152,6 +154,10 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
 
   function handleBack() {
     if (stepIndex === 0) {
+      if (mode === 'create') {
+        void signOut();
+        return;
+      }
       router.back();
       return;
     }
@@ -230,7 +236,7 @@ export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
         <View style={styles.buttonRow}>
           <Pressable onPress={handleBack} style={styles.secondaryButton}>
             <Text style={styles.secondaryButtonText}>
-              {stepIndex === 0 ? 'Close' : 'Back'}
+              {stepIndex === 0 ? (mode === 'create' ? 'Sign out' : 'Close') : 'Back'}
             </Text>
           </Pressable>
 

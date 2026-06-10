@@ -1,3 +1,4 @@
+import { useAuth } from '@clerk/expo';
 import { Feather } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -19,6 +20,7 @@ import { fetchAnalysisById, type AnalysisRecord } from '@/lib/api';
 import { resolveBackendUrl } from '@/lib/config';
 
 export default function AnalysisDetailScreen() {
+  const { getToken } = useAuth();
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const analysisId = useMemo(() => Number(params.id), [params.id]);
@@ -29,11 +31,16 @@ export default function AnalysisDetailScreen() {
       analysis?.video?.file_url ? resolveBackendUrl(analysis.video.file_url) : null,
     [analysis],
   );
+  const [videoSource, setVideoSource] = useState<{
+    uri: string;
+    headers?: Record<string, string>;
+  } | null>(null);
+  const [loadingVideoSource, setLoadingVideoSource] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const player = useVideoPlayer(
-    videoUrl ? { uri: videoUrl } : null,
+    videoSource,
     (currentPlayer) => {
       currentPlayer.loop = false;
     },
@@ -74,6 +81,48 @@ export default function AnalysisDetailScreen() {
     },
     [analysisId],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function resolveVideoSource() {
+      if (!videoUrl) {
+        setVideoSource(null);
+        setLoadingVideoSource(false);
+        return;
+      }
+
+      setLoadingVideoSource(true);
+      try {
+        const token = await getToken();
+        if (cancelled) {
+          return;
+        }
+
+        setVideoSource(
+          token
+            ? {
+                uri: videoUrl,
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            : null,
+        );
+      } catch {
+        if (!cancelled) {
+          setVideoSource(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingVideoSource(false);
+        }
+      }
+    }
+
+    void resolveVideoSource();
+    return () => {
+      cancelled = true;
+    };
+  }, [getToken, videoUrl]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -155,13 +204,26 @@ export default function AnalysisDetailScreen() {
 
             {videoUrl ? (
               <SectionCard title="Saved clip">
-                <VideoView
-                  style={styles.videoPlayer}
-                  player={player}
-                  nativeControls
-                  allowsPictureInPicture
-                  contentFit="contain"
-                />
+                {videoSource ? (
+                  <VideoView
+                    style={styles.videoPlayer}
+                    player={player}
+                    nativeControls
+                    allowsPictureInPicture
+                    contentFit="contain"
+                  />
+                ) : loadingVideoSource ? (
+                  <View style={styles.inlineStatus}>
+                    <ActivityIndicator color={palette.accent} />
+                    <Text style={styles.bodyText}>Loading the protected clip…</Text>
+                  </View>
+                ) : (
+                  <View style={styles.inlineStatus}>
+                    <Text style={styles.bodyText}>
+                      The protected clip could not be opened from the current session.
+                    </Text>
+                  </View>
+                )}
                 <View style={styles.clipMetaRow}>
                   <View style={styles.clipMetaItem}>
                     <Text style={styles.clipMetaLabel}>Filename</Text>
