@@ -76,7 +76,7 @@ export default function NewAnalysisScreen() {
     setLoadingPrompts(true);
     setPromptError(null);
     try {
-      const templates = await fetchPromptTemplates();
+      const templates = dedupePromptTemplates(await fetchPromptTemplates());
       setPromptTemplates(templates);
       setSelectedPromptId((current) => current ?? templates[0]?.id ?? null);
     } catch (nextError) {
@@ -341,12 +341,11 @@ export default function NewAnalysisScreen() {
               <View style={styles.selectedPromptHeader}>
                 <Text style={styles.selectedPromptLabel}>Selected</Text>
                 <StatusPill
-                  label={formatOutputType(selectedPrompt.output_type)}
+                  label={getPromptModeTag(selectedPrompt.key)}
                   tone="success"
                 />
               </View>
               <Text style={styles.selectedPromptTitle}>{selectedPrompt.title}</Text>
-              <Text style={styles.selectedPromptKey}>{selectedPrompt.key}</Text>
             </View>
           ) : null}
 
@@ -362,10 +361,14 @@ export default function NewAnalysisScreen() {
                     pressed && styles.pressedSurface,
                   ]}>
                   <View style={styles.promptHeader}>
-                    <Text style={styles.promptKey}>{template.key}</Text>
-                    {selectedPromptId === template.id ? (
-                      <StatusPill label="Selected" tone="success" />
-                    ) : null}
+                    <StatusPill
+                      label={
+                        selectedPromptId === template.id
+                          ? 'Selected'
+                          : getPromptModeTag(template.key)
+                      }
+                      tone={selectedPromptId === template.id ? 'success' : 'neutral'}
+                    />
                   </View>
                   <Text style={styles.promptTitle}>{template.title}</Text>
                   {template.description ? (
@@ -527,6 +530,33 @@ function formatOutputType(value: string) {
     .join(' ');
 }
 
+function dedupePromptTemplates(templates: PromptTemplateRecord[]) {
+  const seen = new Set<string>();
+
+  return templates.filter((template) => {
+    const normalizedKey = template.key.trim().toLowerCase();
+    if (seen.has(normalizedKey)) {
+      return false;
+    }
+
+    seen.add(normalizedKey);
+    return true;
+  });
+}
+
+function getPromptModeTag(key: string) {
+  switch (key.trim().toLowerCase()) {
+    case 'boxing_structured':
+      return 'Structured';
+    case 'coach_summary':
+      return 'Coach';
+    case 'observable_only':
+      return 'Visible only';
+    default:
+      return formatOutputType(key);
+  }
+}
+
 const styles = StyleSheet.create({
   closeButton: {
     width: 40,
@@ -580,11 +610,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: palette.text,
   },
-  selectedPromptKey: {
-    fontSize: typography.bodySmall,
-    lineHeight: 20,
-    color: palette.textMuted,
-  },
   promptCard: {
     borderWidth: 1,
     borderColor: palette.border,
@@ -600,15 +625,7 @@ const styles = StyleSheet.create({
   promptHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: spacing.sm,
-  },
-  promptKey: {
-    flex: 1,
-    fontSize: typography.label,
-    fontWeight: '700',
-    letterSpacing: 1.1,
-    color: palette.textSoft,
   },
   promptTitle: {
     fontSize: typography.heading,

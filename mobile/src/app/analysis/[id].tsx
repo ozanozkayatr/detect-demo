@@ -196,7 +196,10 @@ export default function AnalysisDetailScreen() {
               </View>
               <View style={styles.summaryFooter}>
                 <Text style={styles.summaryFooterText}>
-                  Template {analysis.template_key_snapshot ?? analysis.prompt_template.key}
+                  Mode {formatPromptModeLabel(
+                    analysis.template_key_snapshot,
+                    analysis.prompt_template.title,
+                  )}
                 </Text>
                 {analysis.model_name ? (
                   <Text style={styles.summaryFooterText}>Model {analysis.model_name}</Text>
@@ -251,7 +254,10 @@ export default function AnalysisDetailScreen() {
                 <DetailCell label="Parser" value={analysis.parser_strategy ?? 'best effort'} />
                 <DetailCell
                   label="Review mode"
-                  value={analysis.template_key_snapshot ?? analysis.prompt_template.key}
+                  value={formatPromptModeLabel(
+                    analysis.template_key_snapshot,
+                    analysis.prompt_template.title,
+                  )}
                 />
                 <DetailCell
                   label="Review target"
@@ -459,6 +465,26 @@ function formatPersonaLabel(personaKey: string | null) {
         .split('_')
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(' ');
+  }
+}
+
+function formatPromptModeLabel(
+  templateKey: string | null,
+  fallbackTitle?: string | null,
+): string {
+  switch (templateKey?.trim().toLowerCase()) {
+    case 'boxing_structured':
+      return 'Boxing Structured';
+    case 'coach_summary':
+      return 'Coach Summary';
+    case 'observable_only':
+      return 'Observable Only';
+    case null:
+    case undefined:
+    case '':
+      return fallbackTitle ?? 'n/a';
+    default:
+      return fallbackTitle ?? templateKey ?? 'n/a';
   }
 }
 
