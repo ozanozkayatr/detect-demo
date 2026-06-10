@@ -9,6 +9,10 @@ import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, spacing, typography } from '@/design/theme';
 import { useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
+import {
+  getExperienceLevelLabel,
+  getStanceLabel,
+} from '@/features/athlete-profile/options';
 import { fetchHealth, type HealthResponse } from '@/lib/api';
 import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
@@ -67,8 +71,8 @@ export default function SettingsTab() {
   return (
     <AppScreen
       eyebrow="Settings"
-      title="Keep the app ready for the next review."
-      subtitle="Manage account details, athlete context, and review system readiness."
+      title="Keep the training system ready."
+      subtitle="Manage the signed-in account, active athlete baseline, and review system status."
       onRefresh={handleRefresh}
       refreshing={refreshing}>
       <SectionCard tone="accent" title="Account">
@@ -80,16 +84,20 @@ export default function SettingsTab() {
           <Text style={styles.heroText}>
             {user?.display_name ?? 'Active athlete account'}
           </Text>
-          <SettingsRow label="Name" value={user?.display_name ?? 'Unknown athlete'} />
-          <SettingsRow label="Contact" value={formatContact(user)} />
-          <SettingsRow
-            label="Member since"
-            value={user ? formatDate(user.created_at) : 'n/a'}
-          />
+          <Text style={styles.body}>
+            This device is signed in and ready to keep reviews, uploads, and athlete context aligned.
+          </Text>
+          <View style={styles.metricsGrid}>
+            <MetricCell label="Contact" value={formatContact(user)} />
+            <MetricCell
+              label="Member since"
+              value={user ? formatDate(user.created_at) : 'n/a'}
+            />
+          </View>
         </View>
         <PrimaryButton
-          label="Refresh session"
-          hint="Fetch the latest account and profile data"
+          label="Refresh app state"
+          hint="Fetch the latest account, athlete, and review system state"
           onPress={() => void handleRefresh()}
         />
         <PrimaryButton
@@ -99,16 +107,26 @@ export default function SettingsTab() {
         />
       </SectionCard>
 
-      <SectionCard title="Athlete context">
+      <SectionCard
+        title="Active athlete"
+        caption="This baseline shapes how future saved reviews are framed.">
         <StatusPill label="Profile active" tone="success" />
         <Text style={styles.body}>
           {reviewSubject?.description ??
             `${profile?.name ?? 'Athlete'} is the current context for future reviews.`}
         </Text>
         {profile ? (
-          <View style={styles.contextMetaRow}>
-            <SettingsRow label="Review target" value={reviewSubject?.shortLabel ?? 'Self review'} />
-            <SettingsRow label="Athlete name" value={profile?.name ?? 'n/a'} />
+          <View style={styles.metricsGrid}>
+            <MetricCell label="Athlete" value={profile.name} />
+            <MetricCell label="Stance" value={getStanceLabel(profile.stance)} />
+            <MetricCell
+              label="Level"
+              value={getExperienceLevelLabel(profile.experienceLevel)}
+            />
+            <MetricCell
+              label="Rhythm"
+              value={formatTrainingRhythm(profile.weeklyTrainingDays)}
+            />
           </View>
         ) : null}
         <PrimaryButton
@@ -118,7 +136,9 @@ export default function SettingsTab() {
         />
       </SectionCard>
 
-      <SectionCard title="Review system">
+      <SectionCard
+        title="Review system"
+        caption="Backend and Gemini readiness for the next saved analysis.">
         {loadingHealth ? (
           <View style={styles.inlineStatus}>
             <ActivityIndicator color={palette.accent} />
@@ -148,6 +168,10 @@ export default function SettingsTab() {
           <View style={styles.stack}>
             <View style={styles.pillRow}>
               <StatusPill
+                label={health?.status === 'ok' ? 'API ready' : 'API issue'}
+                tone={health?.status === 'ok' ? 'success' : 'warning'}
+              />
+              <StatusPill
                 label={health?.database === 'connected' ? 'Database ready' : 'Database issue'}
                 tone={health?.database === 'connected' ? 'success' : 'warning'}
               />
@@ -161,7 +185,18 @@ export default function SettingsTab() {
                 ? 'The review pipeline is available and ready to save new results.'
                 : 'The app can open clips and save uploads, but new Gemini reviews will not complete until the model is configured.'}
             </Text>
-            <SettingsRow label="Model" value={health?.gemini_model ?? 'n/a'} />
+            <View style={styles.metricsGrid}>
+              <MetricCell label="Model" value={health?.gemini_model ?? 'n/a'} />
+              <MetricCell
+                label="API base"
+                value={isLoopbackApiBaseUrl(mobileConfig.apiBaseUrl) ? 'Localhost' : 'Remote'}
+              />
+            </View>
+            {isLoopbackApiBaseUrl(mobileConfig.apiBaseUrl) ? (
+              <Text style={styles.metaText}>
+                The app is pointed at a local backend. Switch `mobile/.env` to your LAN IP before testing on a physical phone.
+              </Text>
+            ) : null}
           </View>
         )}
       </SectionCard>
@@ -174,6 +209,15 @@ function SettingsRow({ label, value }: { label: string; value: string }) {
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value}>{value}</Text>
+    </View>
+  );
+}
+
+function MetricCell({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.metricCell}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
     </View>
   );
 }
@@ -193,8 +237,21 @@ function formatDate(value: string) {
   return new Date(value).toLocaleDateString();
 }
 
+function formatTrainingRhythm(days: number | null) {
+  if (!days) {
+    return 'Not recorded';
+  }
+
+  return `${days} day${days === 1 ? '' : 's'} / week`;
+}
+
 const styles = StyleSheet.create({
   stack: {
+    gap: spacing.sm,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   heroText: {
@@ -203,14 +260,35 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: palette.text,
   },
+  metricCell: {
+    minWidth: 120,
+    flexGrow: 1,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: 14,
+    backgroundColor: palette.surfaceMuted,
+  },
+  metricLabel: {
+    fontSize: typography.label,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.textSoft,
+  },
+  metricValue: {
+    fontSize: typography.bodySmall,
+    lineHeight: 20,
+    color: palette.text,
+  },
   row: {
     gap: spacing.xs,
     paddingBottom: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: palette.border,
-  },
-  contextMetaRow: {
-    gap: spacing.md,
   },
   pillRow: {
     flexDirection: 'row',
