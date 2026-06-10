@@ -60,6 +60,41 @@ class Settings(BaseSettings):
             "CLERK_AUTHORIZED_PARTIES",
         ),
     )
+    dev_auth_bypass: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_DEV_AUTH_BYPASS",
+            "DEV_AUTH_BYPASS",
+        ),
+    )
+    dev_auth_seed_profile: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_DEV_AUTH_SEED_PROFILE",
+            "DEV_AUTH_SEED_PROFILE",
+        ),
+    )
+    dev_auth_clerk_user_id: str = Field(
+        default="dev-bypass-local-user",
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_DEV_AUTH_CLERK_USER_ID",
+            "DEV_AUTH_CLERK_USER_ID",
+        ),
+    )
+    dev_auth_display_name: str = Field(
+        default="Mert Yilmaz",
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_DEV_AUTH_DISPLAY_NAME",
+            "DEV_AUTH_DISPLAY_NAME",
+        ),
+    )
+    dev_auth_email: str = Field(
+        default="local-athlete@detect.demo",
+        validation_alias=AliasChoices(
+            "DETECT_DEMO_DEV_AUTH_EMAIL",
+            "DEV_AUTH_EMAIL",
+        ),
+    )
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",

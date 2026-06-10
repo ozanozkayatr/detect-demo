@@ -10,6 +10,7 @@ export const mobileConfig = {
     process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ??
     expoExtra.clerkPublishableKey ??
     '',
+  devAuthBypass: process.env.EXPO_PUBLIC_DEV_AUTH_BYPASS === 'true',
   enableSampleClips:
     process.env.EXPO_PUBLIC_ENABLE_SAMPLE_CLIPS === 'true' || __DEV__,
 };

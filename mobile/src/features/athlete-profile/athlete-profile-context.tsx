@@ -1,4 +1,3 @@
-import { useAuth } from '@clerk/expo';
 import type { PropsWithChildren } from 'react';
 import {
   createContext,
@@ -24,6 +23,7 @@ import {
   setApiAccessTokenGetter,
   type AppUserRecord,
 } from '@/lib/api';
+import { useAppAuth } from '@/lib/auth';
 
 type AthleteProfileContextValue = {
   user: AppUserRecord | null;
@@ -40,7 +40,7 @@ type AthleteProfileContextValue = {
 const AthleteProfileContext = createContext<AthleteProfileContextValue | null>(null);
 
 export function AthleteProfileProvider({ children }: PropsWithChildren) {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAppAuth();
   const [user, setUser] = useState<AppUserRecord | null>(null);
   const [profile, setProfile] = useState<AthleteProfile | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);

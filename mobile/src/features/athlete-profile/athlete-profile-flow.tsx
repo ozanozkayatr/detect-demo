@@ -1,4 +1,3 @@
-import { useClerk } from '@clerk/expo';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { type PropsWithChildren, useEffect, useState } from 'react';
@@ -31,6 +30,7 @@ import type {
   ExperienceLevel,
   TrainingType,
 } from '@/features/athlete-profile/types';
+import { useAppClerk } from '@/lib/auth';
 
 type AthleteProfileFlowProps = {
   mode: 'create' | 'edit';
@@ -49,7 +49,7 @@ const experienceLevelDescriptions: Record<ExperienceLevel, string> = {
 };
 
 export function AthleteProfileFlow({ mode }: AthleteProfileFlowProps) {
-  const { signOut } = useClerk();
+  const { signOut } = useAppClerk();
   const router = useRouter();
   const { bootstrapError, isBootstrapping, isSaving, profile, saveProfile } =
     useAthleteProfile();

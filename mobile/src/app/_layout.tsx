@@ -1,5 +1,3 @@
-import { ClerkProvider, useAuth, useClerk } from '@clerk/expo';
-import { tokenCache } from '@clerk/expo/token-cache';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -10,6 +8,7 @@ import { PrimaryButton } from '@/components/primary-button';
 import { SectionCard } from '@/components/section-card';
 import { palette, spacing, typography } from '@/design/theme';
 import { AthleteProfileProvider, useAthleteProfile } from '@/features/athlete-profile/athlete-profile-context';
+import { AppAuthProvider, useAppAuth, useAppClerk } from '@/lib/auth';
 import { mobileConfig } from '@/lib/config';
 
 const navigationTheme = {
@@ -66,7 +65,7 @@ function FullScreenState({
 }
 
 function SignedInNavigator() {
-  const { signOut } = useClerk();
+  const { isDevBypass, signOut } = useAppClerk();
   const {
     bootstrapError,
     hasProfile,
@@ -90,7 +89,9 @@ function SignedInNavigator() {
         title="Could not load the account"
         message={bootstrapError}
         primaryAction={{ label: 'Retry account load', onPress: () => void refreshProfile() }}
-        secondaryAction={{ label: 'Sign out', onPress: () => void signOut() }}
+        secondaryAction={
+          isDevBypass ? undefined : { label: 'Sign out', onPress: () => void signOut() }
+        }
       />
     );
   }
@@ -126,7 +127,7 @@ function SignedInNavigator() {
 }
 
 function AuthNavigation() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAppAuth();
 
   if (!isLoaded) {
     return (
@@ -156,29 +157,27 @@ function AuthNavigation() {
 }
 
 export default function RootLayout() {
-  if (!mobileConfig.clerkPublishableKey) {
+  if (!mobileConfig.devAuthBypass && !mobileConfig.clerkPublishableKey) {
     return (
       <ThemeProvider value={navigationTheme}>
         <StatusBar style="dark" />
         <FullScreenState
           title="Missing auth config"
-          message="Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY to mobile/.env before opening the app."
+          message="Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY to mobile/.env, or enable EXPO_PUBLIC_DEV_AUTH_BYPASS for local-only preview mode."
         />
       </ThemeProvider>
     );
   }
 
   return (
-    <ClerkProvider
-      publishableKey={mobileConfig.clerkPublishableKey}
-      tokenCache={tokenCache}>
+    <AppAuthProvider>
       <AthleteProfileProvider>
         <ThemeProvider value={navigationTheme}>
           <StatusBar style="dark" />
           <AuthNavigation />
         </ThemeProvider>
       </AthleteProfileProvider>
-    </ClerkProvider>
+    </AppAuthProvider>
   );
 }
 

@@ -1,4 +1,3 @@
-import { useClerk } from '@clerk/expo';
 import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -14,10 +13,11 @@ import {
   getStanceLabel,
 } from '@/features/athlete-profile/options';
 import { fetchHealth, type HealthResponse } from '@/lib/api';
+import { useAppClerk } from '@/lib/auth';
 import { isLoopbackApiBaseUrl, mobileConfig } from '@/lib/config';
 
 export default function SettingsTab() {
-  const { signOut } = useClerk();
+  const { isDevBypass, signOut } = useAppClerk();
   const router = useRouter();
   const {
     isBootstrapping,
@@ -100,11 +100,13 @@ export default function SettingsTab() {
           hint="Fetch the latest account, athlete, and review system state"
           onPress={() => void handleRefresh()}
         />
-        <PrimaryButton
-          label="Sign out"
-          hint="Remove the saved session from this device"
-          onPress={() => void signOut()}
-        />
+        {!isDevBypass ? (
+          <PrimaryButton
+            label="Sign out"
+            hint="Remove the saved session from this device"
+            onPress={() => void signOut()}
+          />
+        ) : null}
       </SectionCard>
 
       <SectionCard

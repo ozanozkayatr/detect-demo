@@ -16,9 +16,11 @@ from sqlalchemy.orm import Session
 from app.api.errors import api_error
 from app.core.config import settings
 from app.db.session import get_db
+from app.models.athlete_profile import AthleteProfile
 from app.models.user import User
 from app.services.app_session_service import (
     ClerkIdentity,
+    get_athlete_profile,
     get_user_by_clerk_id,
     upsert_user_from_clerk_identity,
 )
@@ -134,10 +136,67 @@ def get_clerk_client() -> Clerk:
     return Clerk(bearer_auth=settings.clerk_secret_key)
 
 
+def _ensure_dev_bypass_profile(db: Session, user: User) -> None:
+    if not settings.dev_auth_seed_profile:
+        return
+
+    athlete_profile = get_athlete_profile(db, user)
+    if athlete_profile is not None:
+        return
+
+    athlete_profile = AthleteProfile(
+        user_id=user.id,
+        name=settings.dev_auth_display_name.strip(),
+        age_range="25-34",
+        stance="orthodox",
+        height_cm=181,
+        weight_kg=76,
+        experience_level="advanced_amateur",
+        years_boxing=8,
+        weekly_training_days=5,
+        training_types=[
+            "bag_work",
+            "pads",
+            "sparring",
+            "strength",
+            "conditioning",
+        ],
+        routine_summary=(
+            "Trains most weekdays with bag work, pads, sparring, and strength work."
+        ),
+        has_amateur_bouts=True,
+        has_professional_experience=False,
+        has_coaching_experience=False,
+        limitations="",
+        additional_context=(
+            "Treat this athlete like a serious amateur sharpening form for consistent review demos."
+        ),
+    )
+    db.add(athlete_profile)
+    db.flush()
+    user.athlete_profile = athlete_profile
+
+
+def _get_dev_bypass_user(db: Session) -> User:
+    identity = ClerkIdentity(
+        clerk_user_id=settings.dev_auth_clerk_user_id.strip(),
+        display_name=settings.dev_auth_display_name.strip(),
+        email=settings.dev_auth_email.strip().lower(),
+    )
+    user = upsert_user_from_clerk_identity(db, identity)
+    _ensure_dev_bypass_profile(db, user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def get_current_user(
     request: Request,
     db: Session = Depends(get_db),
 ) -> User:
+    if settings.dev_auth_bypass:
+        return _get_dev_bypass_user(db)
+
     if not settings.clerk_configured:
         raise api_error(
             status_code=503,

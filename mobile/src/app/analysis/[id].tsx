@@ -1,4 +1,3 @@
-import { useAuth } from '@clerk/expo';
 import { Feather } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -17,10 +16,11 @@ import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, radii, spacing, typography } from '@/design/theme';
 import { fetchAnalysisById, type AnalysisRecord } from '@/lib/api';
+import { useAppAuth } from '@/lib/auth';
 import { resolveBackendUrl } from '@/lib/config';
 
 export default function AnalysisDetailScreen() {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const analysisId = useMemo(() => Number(params.id), [params.id]);
