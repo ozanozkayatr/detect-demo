@@ -23,7 +23,6 @@ export default function SettingsTab() {
     isBootstrapping,
     profile,
     refreshProfile,
-    reviewSubject,
     user,
   } = useAthleteProfile();
   const [refreshing, setRefreshing] = useState(false);
@@ -70,23 +69,16 @@ export default function SettingsTab() {
 
   return (
     <AppScreen
-      eyebrow="Settings"
-      title="Keep the training system ready."
-      subtitle="Manage the signed-in account, active athlete baseline, and review system status."
+      title="Settings"
       onRefresh={handleRefresh}
       refreshing={refreshing}>
       <SectionCard tone="accent" title="Account">
         <StatusPill
-          label={isBootstrapping ? 'Refreshing session' : 'Session active'}
+          label={isBootstrapping ? 'Loading' : 'Active'}
           tone={isBootstrapping ? 'neutral' : 'success'}
         />
         <View style={styles.stack}>
-          <Text style={styles.heroText}>
-            {user?.display_name ?? 'Active athlete account'}
-          </Text>
-          <Text style={styles.body}>
-            This device is signed in and ready to keep reviews, uploads, and athlete context aligned.
-          </Text>
+          <Text style={styles.heroText}>{user?.display_name ?? 'Account'}</Text>
           <View style={styles.metricsGrid}>
             <MetricCell label="Contact" value={formatContact(user)} />
             <MetricCell
@@ -97,26 +89,18 @@ export default function SettingsTab() {
         </View>
         <PrimaryButton
           label="Refresh app state"
-          hint="Fetch the latest account, athlete, and review system state"
           onPress={() => void handleRefresh()}
         />
         {!isDevBypass ? (
           <PrimaryButton
             label="Sign out"
-            hint="Remove the saved session from this device"
             onPress={() => void signOut()}
           />
         ) : null}
       </SectionCard>
 
-      <SectionCard
-        title="Active athlete"
-        caption="This baseline shapes how future saved reviews are framed.">
+      <SectionCard title="Profile">
         <StatusPill label="Profile active" tone="success" />
-        <Text style={styles.body}>
-          {reviewSubject?.description ??
-            `${profile?.name ?? 'Athlete'} is the current context for future reviews.`}
-        </Text>
         {profile ? (
           <View style={styles.metricsGrid}>
             <MetricCell label="Athlete" value={profile.name} />
@@ -133,36 +117,23 @@ export default function SettingsTab() {
         ) : null}
         <PrimaryButton
           label="Edit athlete profile"
-          hint="Adjust the profile used in future reviews"
           onPress={() => router.push('/profile/edit')}
         />
       </SectionCard>
 
-      <SectionCard
-        title="Review system"
-        caption="Backend and Gemini readiness for the next saved analysis.">
+      <SectionCard title="System">
         {loadingHealth ? (
           <View style={styles.inlineStatus}>
             <ActivityIndicator color={palette.accent} />
-            <Text style={styles.body}>Checking review availability...</Text>
+            <Text style={styles.body}>Checking system...</Text>
           </View>
         ) : healthError ? (
           <View style={styles.stack}>
-            <StatusPill label="Review system unavailable" tone="warning" />
-            <Text style={styles.body}>
-              The app could not reach the review service. Make sure the backend is
-              running, then try again.
-            </Text>
+            <StatusPill label="Unavailable" tone="warning" />
+            <Text style={styles.body}>Could not reach the review service.</Text>
             <Text style={styles.metaText}>{healthError}</Text>
-            {isLoopbackApiBaseUrl(mobileConfig.apiBaseUrl) ? (
-              <Text style={styles.metaText}>
-                If you move from simulator to a physical phone later, replace
-                localhost with your Mac&apos;s LAN IP in `mobile/.env`.
-              </Text>
-            ) : null}
             <PrimaryButton
-              label="Retry system check"
-              hint="Check review availability again"
+              label="Retry check"
               onPress={() => void loadHealth()}
             />
           </View>
@@ -183,9 +154,7 @@ export default function SettingsTab() {
               />
             </View>
             <Text style={styles.body}>
-              {health?.gemini_configured
-                ? 'The review pipeline is available and ready to save new results.'
-                : 'The app can open clips and save uploads, but new Gemini reviews will not complete until the model is configured.'}
+              {health?.gemini_configured ? 'Ready for new reviews.' : 'Gemini is not configured.'}
             </Text>
             <View style={styles.metricsGrid}>
               <MetricCell label="Model" value={health?.gemini_model ?? 'n/a'} />
@@ -194,24 +163,10 @@ export default function SettingsTab() {
                 value={isLoopbackApiBaseUrl(mobileConfig.apiBaseUrl) ? 'Localhost' : 'Remote'}
               />
             </View>
-            {isLoopbackApiBaseUrl(mobileConfig.apiBaseUrl) ? (
-              <Text style={styles.metaText}>
-                The app is pointed at a local backend. Switch `mobile/.env` to your LAN IP before testing on a physical phone.
-              </Text>
-            ) : null}
           </View>
         )}
       </SectionCard>
     </AppScreen>
-  );
-}
-
-function SettingsRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
-    </View>
   );
 }
 
@@ -286,12 +241,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: palette.text,
   },
-  row: {
-    gap: spacing.xs,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.border,
-  },
   pillRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -301,19 +250,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  label: {
-    fontSize: typography.label,
-    lineHeight: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: palette.textSoft,
-  },
-  value: {
-    fontSize: typography.body,
-    lineHeight: 24,
-    color: palette.text,
   },
   body: {
     fontSize: typography.body,

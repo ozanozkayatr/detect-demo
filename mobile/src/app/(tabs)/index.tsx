@@ -6,7 +6,6 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { AppScreen } from '@/components/app-screen';
 import { PrimaryButton } from '@/components/primary-button';
-import { ProfileSummaryCard } from '@/components/profile-summary-card';
 import { SectionCard } from '@/components/section-card';
 import { StatusPill } from '@/components/status-pill';
 import { palette, radii, spacing, typography } from '@/design/theme';
@@ -106,75 +105,63 @@ export default function HomeTab() {
 
   return (
     <AppScreen
-      eyebrow="Dashboard"
-      title="Keep the next round in motion."
-      subtitle="Run reviews, revisit feedback, and keep the active athlete context aligned with training."
+      title="Ready for the next round."
       onRefresh={handleRefresh}
       refreshing={refreshing}>
       <SectionCard tone="accent">
         <StatusPill
-          label={isBootstrapping ? 'Loading athlete' : 'Ready for review'}
+          label={isBootstrapping ? 'Loading' : 'Ready'}
           tone={isBootstrapping ? 'neutral' : 'success'}
         />
-        <Text style={styles.heroTitle}>
-          Ready to turn the next clip into clear coaching.
-        </Text>
+        <Text style={styles.heroTitle}>Start the next review.</Text>
         <Text style={styles.heroBody}>
-          {reviewSubject?.displayName ?? profile?.name ?? 'Your athlete profile'} is the active
-          context for the next saved review.
+          {reviewSubject?.displayName ?? profile?.name ?? 'Your athlete profile'} is active.
         </Text>
         <PrimaryButton
-          label="Review a boxing clip"
-          hint="Open the review flow"
+          label="New review"
           icon={<Feather name="arrow-right" size={20} color="#ffffff" />}
           disabled={isBootstrapping}
           onPress={() => router.push('/analysis/new')}
         />
       </SectionCard>
 
-      {profile ? <ProfileSummaryCard profile={profile} /> : null}
-
-      <SectionCard title="Quick actions" caption="Move between capture, history, and profile updates.">
+      <SectionCard title="Quick actions">
         <View style={styles.actionList}>
           <QuickActionTile
             icon="play-circle"
-            title="Start a new review"
-            description="Upload the next clip and save fresh feedback."
+            title="Start review"
             onPress={() => router.push('/analysis/new')}
           />
           <QuickActionTile
             icon="clock"
-            title="Open the review log"
-            description="Revisit previous notes, issues, and next steps."
+            title="Review log"
             onPress={() => router.push('/(tabs)/analyses')}
           />
           <QuickActionTile
             icon="user"
-            title="Update athlete profile"
-            description="Keep level, routine, and stance aligned with training."
+            title="Edit profile"
             onPress={() => router.push('/profile/edit')}
           />
         </View>
       </SectionCard>
 
       {latestLoading ? (
-        <SectionCard title="Latest review" caption="Checking the newest saved session.">
+        <SectionCard title="Latest review">
           <View style={styles.statusRow}>
             <ActivityIndicator color={palette.accent} />
-            <Text style={styles.bodyText}>Loading the most recent review...</Text>
+            <Text style={styles.bodyText}>Loading...</Text>
           </View>
         </SectionCard>
       ) : latestError ? (
-        <SectionCard title="Could not load latest review" tone="muted">
+        <SectionCard title="Latest review unavailable" tone="muted">
           <Text style={styles.bodyText}>{latestError}</Text>
           <PrimaryButton
-            label="Retry latest review"
-            hint="Check the most recent review again"
+            label="Retry"
             onPress={() => void loadLatestAnalysis()}
           />
         </SectionCard>
       ) : latestAnalysis ? (
-        <SectionCard title="Latest review" caption="Pick up from the newest saved result.">
+        <SectionCard title="Latest review">
           <Text style={styles.latestTitle}>{latestAnalysis.prompt_template.title}</Text>
           <Text style={styles.bodyText}>
             {latestAnalysis.parsed_response?.summary ||
@@ -183,47 +170,35 @@ export default function HomeTab() {
           </Text>
           <PrimaryButton
             label="Open review"
-            hint="See the full structured result"
             onPress={() => router.push(`/analysis/${latestAnalysis.id}`)}
           />
         </SectionCard>
       ) : (
-        <SectionCard
-          title="Latest review"
-          caption="Your first saved review will appear here.">
-          <Text style={styles.bodyText}>
-            Run the first clip review to start building the training log.
-          </Text>
+        <SectionCard title="Latest review">
+          <Text style={styles.bodyText}>No saved reviews yet.</Text>
           <PrimaryButton
-            label="Start first review"
-            hint="Open the review flow"
+            label="Start review"
             onPress={() => router.push('/analysis/new')}
           />
         </SectionCard>
       )}
 
       {!loading && (error || !geminiReady) ? (
-        <SectionCard title="Review setup issue" tone="muted">
+        <SectionCard title="System issue" tone="muted">
           {error ? (
             <>
-              <Text style={styles.bodyText}>
-                The app could not reach the review service. Check the backend, then try again.
-              </Text>
+              <Text style={styles.bodyText}>Could not reach the review service.</Text>
               <Text style={styles.metaText}>{error}</Text>
               <PrimaryButton
-                label="Retry service check"
-                hint="Run the health check again"
+                label="Retry check"
                 onPress={() => void loadHealth()}
               />
             </>
           ) : (
             <>
-              <Text style={styles.bodyText}>
-                Gemini is not configured yet, so new reviews will not complete until the model is available.
-              </Text>
+              <Text style={styles.bodyText}>Gemini is not configured.</Text>
               <PrimaryButton
                 label="Open settings"
-                hint="Review the current app configuration"
                 onPress={() => router.push('/(tabs)/settings')}
               />
             </>
@@ -235,12 +210,10 @@ export default function HomeTab() {
 }
 
 function QuickActionTile({
-  description,
   icon,
   onPress,
   title,
 }: {
-  description: string;
   icon: keyof typeof Feather.glyphMap;
   onPress: () => void;
   title: string;
@@ -252,10 +225,7 @@ function QuickActionTile({
       <View style={styles.actionIconWrap}>
         <Feather name={icon} size={18} color={palette.text} />
       </View>
-      <View style={styles.actionContent}>
-        <Text style={styles.actionTitle}>{title}</Text>
-        <Text style={styles.actionDescription}>{description}</Text>
-      </View>
+      <Text style={styles.actionTitle}>{title}</Text>
       <Feather name="chevron-right" size={18} color={palette.textSoft} />
     </Pressable>
   );
@@ -303,20 +273,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: palette.border,
   },
-  actionContent: {
-    flex: 1,
-    gap: spacing.xs,
-  },
   actionTitle: {
+    flex: 1,
     fontSize: typography.body,
     lineHeight: 24,
     fontWeight: '700',
     color: palette.text,
-  },
-  actionDescription: {
-    fontSize: typography.bodySmall,
-    lineHeight: 20,
-    color: palette.textMuted,
   },
   statusRow: {
     flexDirection: 'row',

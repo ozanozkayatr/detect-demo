@@ -67,27 +67,21 @@ export default function AnalysesTab() {
 
   return (
     <AppScreen
-      eyebrow="Review log"
-      title="Track every saved review."
-      subtitle="Recent clips, coaching notes, and follow-up priorities stay in one place."
+      title="Review log"
       onRefresh={handleRefresh}
       refreshing={refreshing}>
       <SectionCard tone="accent">
         <StatusPill
-          label={latestAnalysis ? 'Training log active' : 'No saved reviews yet'}
+          label={latestAnalysis ? 'Active' : 'Empty'}
           tone={latestAnalysis ? 'success' : 'neutral'}
         />
         <Text style={styles.bigCopy}>
-          {latestAnalysis
-            ? 'Keep the training thread alive.'
-            : 'Start building the review archive.'}
+          {latestAnalysis ? 'Keep momentum.' : 'Start the log.'}
         </Text>
         <Text style={styles.heroBody}>
           {latestAnalysis
-            ? `${rollingWeekCount} clip${
-                rollingWeekCount === 1 ? '' : 's'
-              } saved in the last 7 days. Carry the newest cues forward before the next session.`
-            : 'Your first completed clip will anchor the log and create the base for future follow-up.'}
+            ? `${rollingWeekCount} review${rollingWeekCount === 1 ? '' : 's'} in the last 7 days.`
+            : 'Run the first review to build your archive.'}
         </Text>
         <View style={styles.metricsGrid}>
           <MetricCell label="Saved" value={String(analyses.length)} />
@@ -95,19 +89,14 @@ export default function AnalysesTab() {
           <MetricCell label="7-day" value={String(rollingWeekCount)} />
         </View>
         <PrimaryButton
-          label={latestAnalysis ? 'Review another clip' : 'Start first review'}
-          hint="Open the review flow"
+          label={latestAnalysis ? 'New review' : 'Start review'}
           icon={<Feather name="arrow-right" size={20} color="#ffffff" />}
           onPress={() => router.push('/analysis/new')}
         />
       </SectionCard>
 
       {latestAnalysis && focusQueue.length > 0 ? (
-        <SectionCard
-          title="Carry into the next session"
-          caption={`Built from the latest ${Math.min(analyses.length, 3)} saved review${
-            Math.min(analyses.length, 3) === 1 ? '' : 's'
-          }.`}>
+        <SectionCard title="Focus queue">
           <View style={styles.focusList}>
             {focusQueue.map((item) => (
               <FocusItemRow key={item.id} item={item} />
@@ -117,28 +106,23 @@ export default function AnalysesTab() {
       ) : null}
 
       {loading ? (
-        <SectionCard title="Loading reviews" caption="Bringing the saved training log into view.">
+        <SectionCard title="Review log">
           <View style={styles.loadingRow}>
             <ActivityIndicator color={palette.accent} />
-            <Text style={styles.rowText}>Loading your saved reviews...</Text>
+            <Text style={styles.rowText}>Loading...</Text>
           </View>
         </SectionCard>
       ) : error ? (
-        <SectionCard title="Could not load the review log" tone="muted">
+        <SectionCard title="Review log unavailable" tone="muted">
           <Text style={styles.rowText}>{error}</Text>
           <PrimaryButton
-            label="Retry log"
-            hint="Fetch review history again"
+            label="Retry"
             onPress={() => void loadAnalyses()}
           />
         </SectionCard>
       ) : latestAnalysis ? (
         <>
-          <SectionCard
-            title="Latest review"
-            caption={`${formatFullDateTime(latestAnalysis.created_at)} · ${formatRelativeSessionLabel(
-              latestAnalysis.created_at,
-            )}`}>
+          <SectionCard title="Latest review">
             <View style={styles.cardHeaderRow}>
               <StatusPill
                 label={latestAnalysis.status}
@@ -154,7 +138,9 @@ export default function AnalysesTab() {
                 latestAnalysis.prompt_template.title}
             </Text>
             <Text style={styles.featuredMeta}>
-              {latestAnalysis.prompt_template.title}
+              {`${formatFullDateTime(latestAnalysis.created_at)} · ${formatRelativeSessionLabel(
+                latestAnalysis.created_at,
+              )}`}
             </Text>
             <View style={styles.metricsGrid}>
               <MetricCell
@@ -187,23 +173,17 @@ export default function AnalysesTab() {
                 {latestAnalysis.video.original_filename}
               </Text>
               <Text style={styles.metaText}>
-                {latestAnalysis.template_key_snapshot ?? latestAnalysis.prompt_template.key}
-              </Text>
-              <Text style={styles.metaText}>
                 Model {latestAnalysis.model_name ?? 'n/a'}
               </Text>
             </View>
             <PrimaryButton
-              label="Open latest review"
-              hint="See the full saved result"
+              label="Open latest"
               onPress={() => router.push(`/analysis/${latestAnalysis.id}`)}
             />
           </SectionCard>
 
           {earlierAnalyses.length > 0 ? (
-            <SectionCard
-              title="Review archive"
-              caption="Compare recent sessions and revisit older results when needed.">
+            <SectionCard title="Archive">
               <View style={styles.list}>
                 {recentAnalyses.length > 0 ? (
                   <ArchiveGroup
@@ -224,13 +204,10 @@ export default function AnalysesTab() {
           ) : null}
         </>
       ) : (
-        <SectionCard title="No reviews yet" caption="Run one clip to create the first saved entry.">
-          <Text style={styles.rowText}>
-            The first completed review will appear here with its summary, issues, and next steps.
-          </Text>
+        <SectionCard title="No reviews yet">
+          <Text style={styles.rowText}>Run one review to start the archive.</Text>
           <PrimaryButton
-            label="Start first review"
-            hint="Open the review flow"
+            label="Start review"
             onPress={() => router.push('/analysis/new')}
           />
         </SectionCard>
@@ -263,7 +240,7 @@ function ArchiveReviewItem({
       <Text style={styles.archiveBody} numberOfLines={2}>
         {analysis.parsed_response?.issues[0] ||
           analysis.raw_response ||
-          'Open the saved review for the full breakdown.'}
+          'Open for details.'}
       </Text>
       <View style={styles.archiveMetrics}>
         <MetricChip label="Issues" value={issuesCount} />

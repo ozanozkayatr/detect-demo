@@ -98,23 +98,17 @@ export default function NewAnalysisScreen() {
   );
   const personaKey = profile ? getBackendPersonaKey(profile) : null;
   const focusNote = userPrompt.trim();
-  const uploadState = getUploadState({
-    localAsset,
-    uploadedVideo,
-    uploadError,
-    uploading,
-  });
   const runReadinessHint = useMemo(() => {
     if (!reviewSubject) {
-      return 'Set up the athlete profile before you run the first review.';
+      return 'Complete the athlete profile first.';
     }
 
     if (!uploadedVideo) {
-      return 'Choose a clip before you run the review.';
+      return 'Choose a clip first.';
     }
 
     if (!selectedPrompt) {
-      return 'Select a review mode before you continue.';
+      return 'Choose a review mode.';
     }
 
     return null;
@@ -237,9 +231,7 @@ export default function NewAnalysisScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <AppScreen
-        eyebrow="New review"
-        title="Prepare the next clip."
-        subtitle="Upload one round, choose the review mode, and run a saved Gemini review."
+        title="New review"
         rightSlot={
           <Pressable onPress={() => router.back()} style={styles.closeButton}>
             <Feather name="x" size={20} color={palette.text} />
@@ -251,39 +243,23 @@ export default function NewAnalysisScreen() {
           </View>
         ) : null}
 
-        <SectionCard title="1. Choose clip" caption="The clip uploads immediately and attaches to this saved review.">
+        <SectionCard title="1. Clip">
           <PrimaryButton
             label={
               uploading
-                ? 'Uploading clip...'
+                ? 'Uploading...'
                 : localAsset
-                  ? 'Choose another clip'
-                  : 'Choose a boxing clip'
-            }
-            hint={
-              uploading
-                ? 'Saving the clip to the backend'
-                : 'Open the device video library'
+                  ? 'Replace clip'
+                  : 'Choose clip'
             }
             icon={<Feather name="upload" size={20} color="#ffffff" />}
             disabled={isBootstrapping || Boolean(bootstrapError) || uploading}
             onPress={handlePickVideo}
           />
 
-          <View style={styles.uploadStateCard}>
-            <View style={styles.uploadStateHeader}>
-              <Text style={styles.uploadStateTitle}>Clip upload</Text>
-              <StatusPill label={uploadState.label} tone={uploadState.tone} />
-            </View>
-            <Text style={styles.uploadStateBody}>{uploadState.message}</Text>
-          </View>
-
           {mobileConfig.enableSampleClips ? (
             <View style={styles.devUtilityCard}>
-              <Text style={styles.devUtilityTitle}>Development shortcuts</Text>
-              <Text style={styles.metaText}>
-                Use bundled sample clips while the real library flow is still being tested.
-              </Text>
+              <Text style={styles.devUtilityTitle}>Sample clips</Text>
               <View style={styles.sampleVideoList}>
                 {sampleVideos.map((sampleVideo) => (
                   <Pressable
@@ -306,7 +282,7 @@ export default function NewAnalysisScreen() {
           {uploading ? (
             <View style={styles.inlineStatus}>
               <ActivityIndicator color={palette.accent} />
-              <Text style={styles.bodyText}>Uploading the selected clip to the backend...</Text>
+              <Text style={styles.bodyText}>Uploading clip...</Text>
             </View>
           ) : null}
 
@@ -341,13 +317,11 @@ export default function NewAnalysisScreen() {
           ) : null}
         </SectionCard>
 
-        <SectionCard title="2. Choose review mode" caption="This prompt controls the tone and structure of the saved review.">
+        <SectionCard title="2. Review mode">
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionMetaText}>
-              {loadingPrompts
-                ? 'Loading review modes...'
-                : 'Select one analysis mode for this clip.'}
-            </Text>
+            {loadingPrompts ? (
+              <Text style={styles.sectionMetaText}>Loading modes...</Text>
+            ) : null}
             <Pressable
               disabled={loadingPrompts || syncingPrompts}
               onPress={handleSyncPromptTemplates}
@@ -365,7 +339,7 @@ export default function NewAnalysisScreen() {
           {selectedPrompt ? (
             <View style={styles.selectedPromptCard}>
               <View style={styles.selectedPromptHeader}>
-                <Text style={styles.selectedPromptLabel}>Selected mode</Text>
+                <Text style={styles.selectedPromptLabel}>Selected</Text>
                 <StatusPill
                   label={formatOutputType(selectedPrompt.output_type)}
                   tone="success"
@@ -373,9 +347,6 @@ export default function NewAnalysisScreen() {
               </View>
               <Text style={styles.selectedPromptTitle}>{selectedPrompt.title}</Text>
               <Text style={styles.selectedPromptKey}>{selectedPrompt.key}</Text>
-              {selectedPrompt.description ? (
-                <Text style={styles.selectedPromptBody}>{selectedPrompt.description}</Text>
-              ) : null}
             </View>
           ) : null}
 
@@ -398,7 +369,9 @@ export default function NewAnalysisScreen() {
                   </View>
                   <Text style={styles.promptTitle}>{template.title}</Text>
                   {template.description ? (
-                    <Text style={styles.promptDescription}>{template.description}</Text>
+                    <Text style={styles.promptDescription} numberOfLines={2}>
+                      {template.description}
+                    </Text>
                   ) : null}
                 </Pressable>
               ))}
@@ -410,7 +383,6 @@ export default function NewAnalysisScreen() {
               </Text>
               <PrimaryButton
                 label="Refresh prompts"
-                hint="Fetch prompt templates again"
                 onPress={() => void loadPromptTemplates()}
               />
             </View>
@@ -428,9 +400,7 @@ export default function NewAnalysisScreen() {
           ) : null}
         </SectionCard>
 
-        <SectionCard
-          title="3. Optional focus note"
-          caption="This is appended after the core prompt. Use it to narrow attention, not to replace visible evidence.">
+        <SectionCard title="3. Focus note">
           <TextInput
             value={userPrompt}
             onChangeText={setUserPrompt}
@@ -441,9 +411,7 @@ export default function NewAnalysisScreen() {
           />
         </SectionCard>
 
-        <SectionCard
-          title="4. Ready to run"
-          caption="The review will use the saved clip, the active athlete profile, and the selected mode.">
+        <SectionCard title="4. Run review">
           <View style={styles.contextPillRow}>
             <StatusPill label={uploadedVideo ? 'Clip ready' : 'Clip missing'} tone={uploadedVideo ? 'success' : 'neutral'} />
             <StatusPill label={selectedPrompt ? 'Mode selected' : 'Mode missing'} tone={selectedPrompt ? 'success' : 'neutral'} />
@@ -464,18 +432,12 @@ export default function NewAnalysisScreen() {
                   : 'No athlete profile selected yet'}
               </Text>
             </View>
-            {reviewSubject?.description ? (
-              <Text style={styles.contextBody}>{reviewSubject.description}</Text>
-            ) : null}
             <View style={styles.contextRow}>
               <Text style={styles.contextLabel}>Review mode</Text>
               <Text style={styles.contextValue}>
                 {selectedPrompt?.title ?? 'No review mode selected yet'}
               </Text>
             </View>
-            {selectedPrompt?.description ? (
-              <Text style={styles.contextBody}>{selectedPrompt.description}</Text>
-            ) : null}
             {focusNote ? (
               <View style={styles.contextNote}>
                 <Text style={styles.contextLabel}>Focus note</Text>
@@ -492,7 +454,6 @@ export default function NewAnalysisScreen() {
 
           <PrimaryButton
             label={runningAnalysis ? 'Running review...' : 'Run review'}
-            hint="Gemini will use the saved clip, active athlete context, and selected prompt"
             disabled={
               isBootstrapping ||
               Boolean(bootstrapError) ||
@@ -507,16 +468,14 @@ export default function NewAnalysisScreen() {
           {isBootstrapping ? (
             <View style={styles.inlineStatus}>
               <ActivityIndicator color={palette.accent} />
-              <Text style={styles.bodyText}>Loading the active athlete profile...</Text>
+              <Text style={styles.bodyText}>Loading profile...</Text>
             </View>
           ) : null}
 
           {runningAnalysis ? (
             <View style={styles.inlineStatus}>
               <ActivityIndicator color={palette.accent} />
-              <Text style={styles.bodyText}>
-                Sending the saved clip and context to Gemini.
-              </Text>
+              <Text style={styles.bodyText}>Sending to Gemini...</Text>
             </View>
           ) : null}
 
@@ -559,62 +518,6 @@ function formatDuration(durationMs: number | null) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
-}
-
-function getUploadState({
-  localAsset,
-  uploadedVideo,
-  uploadError,
-  uploading,
-}: {
-  localAsset: LocalVideoAsset | null;
-  uploadedVideo: VideoRecord | null;
-  uploadError: string | null;
-  uploading: boolean;
-}): {
-  label: string;
-  message: string;
-  tone: 'neutral' | 'success' | 'warning';
-} {
-  if (uploadError) {
-    return {
-      label: 'Upload failed',
-      message: 'Choose the clip again after fixing the upload issue.',
-      tone: 'warning',
-    };
-  }
-
-  if (uploading) {
-    return {
-      label: 'Uploading',
-      message: localAsset
-        ? `${localAsset.name} is being saved to the backend now.`
-        : 'Saving the selected clip to the backend.',
-      tone: 'neutral',
-    };
-  }
-
-  if (uploadedVideo) {
-    return {
-      label: 'Saved',
-      message: `${uploadedVideo.original_filename} is attached and ready for review.`,
-      tone: 'success',
-    };
-  }
-
-  if (localAsset) {
-    return {
-      label: 'Pending save',
-      message: `${localAsset.name} is selected locally but not saved yet.`,
-      tone: 'neutral',
-    };
-  }
-
-  return {
-    label: 'Waiting',
-    message: 'Pick one clip to start the review setup.',
-    tone: 'neutral',
-  };
 }
 
 function formatOutputType(value: string) {
@@ -682,11 +585,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: palette.textMuted,
   },
-  selectedPromptBody: {
-    fontSize: typography.bodySmall,
-    lineHeight: 20,
-    color: palette.textMuted,
-  },
   promptCard: {
     borderWidth: 1,
     borderColor: palette.border,
@@ -723,33 +621,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: palette.textMuted,
   },
-  uploadStateCard: {
-    gap: spacing.xs,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: palette.border,
-    borderRadius: radii.md,
-    backgroundColor: palette.surfaceMuted,
-  },
-  uploadStateHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  uploadStateTitle: {
-    fontSize: typography.label,
-    lineHeight: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: palette.textSoft,
-  },
-  uploadStateBody: {
-    fontSize: typography.bodySmall,
-    lineHeight: 20,
-    color: palette.text,
-  },
   contextCard: {
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
@@ -779,11 +650,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: palette.text,
   },
-  contextBody: {
-    fontSize: typography.bodySmall,
-    lineHeight: 20,
-    color: palette.textMuted,
-  },
   contextNote: {
     gap: spacing.xs,
     paddingTop: spacing.sm,
@@ -799,11 +665,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   helperText: {
-    fontSize: typography.bodySmall,
-    lineHeight: 20,
-    color: palette.textMuted,
-  },
-  metaText: {
     fontSize: typography.bodySmall,
     lineHeight: 20,
     color: palette.textMuted,

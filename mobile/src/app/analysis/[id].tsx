@@ -142,9 +142,7 @@ export default function AnalysisDetailScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <AppScreen
-        eyebrow="Saved review"
-        title="Review result"
-        subtitle="Saved clip, context, and normalized Gemini feedback."
+        title="Review"
         onRefresh={handleRefresh}
         refreshing={refreshing}
         rightSlot={
@@ -153,23 +151,21 @@ export default function AnalysisDetailScreen() {
           </Pressable>
         }>
         {loading ? (
-          <SectionCard title="Loading review">
+          <SectionCard title="Review">
             <View style={styles.inlineStatus}>
               <ActivityIndicator color={palette.accent} />
-              <Text style={styles.bodyText}>Fetching the saved review result...</Text>
+              <Text style={styles.bodyText}>Loading...</Text>
             </View>
           </SectionCard>
         ) : error ? (
-          <SectionCard title="Could not load review" tone="muted">
+          <SectionCard title="Review unavailable" tone="muted">
             <Text style={styles.bodyText}>{error}</Text>
             <PrimaryButton
-              label="Retry review"
-              hint="Fetch this analysis again"
+              label="Retry"
               onPress={() => void loadAnalysis()}
             />
             <PrimaryButton
               label="Back to reviews"
-              hint="Return to the training log"
               onPress={() => router.replace('/(tabs)/analyses')}
             />
           </SectionCard>
@@ -209,7 +205,7 @@ export default function AnalysisDetailScreen() {
             </SectionCard>
 
             {videoUrl ? (
-              <SectionCard title="Saved clip">
+              <SectionCard title="Clip">
                 {videoSource ? (
                   <VideoView
                     style={styles.videoPlayer}
@@ -221,13 +217,11 @@ export default function AnalysisDetailScreen() {
                 ) : loadingVideoSource ? (
                   <View style={styles.inlineStatus}>
                     <ActivityIndicator color={palette.accent} />
-                    <Text style={styles.bodyText}>Loading the protected clip…</Text>
+                    <Text style={styles.bodyText}>Loading clip...</Text>
                   </View>
                 ) : (
                   <View style={styles.inlineStatus}>
-                    <Text style={styles.bodyText}>
-                      The protected clip could not be opened from the current session.
-                    </Text>
+                    <Text style={styles.bodyText}>Could not open this clip.</Text>
                   </View>
                 )}
                 <View style={styles.clipMetaRow}>
@@ -247,7 +241,7 @@ export default function AnalysisDetailScreen() {
               </SectionCard>
             ) : null}
 
-            <SectionCard title="Review context">
+            <SectionCard title="Details">
               <View style={styles.detailGrid}>
                 <DetailCell
                   label="Saved"
@@ -283,9 +277,7 @@ export default function AnalysisDetailScreen() {
             </SectionCard>
 
             {hasObservedFeedback ? (
-              <SectionCard
-                title="What showed up"
-                caption="Observable positives and corrections pulled into the normalized result.">
+              <SectionCard title="Strengths & issues">
                 <FeedbackBlock
                   title="Keep"
                   items={strengths}
@@ -302,9 +294,7 @@ export default function AnalysisDetailScreen() {
             ) : null}
 
             {hasImprovementPlan ? (
-              <SectionCard
-                title="How to respond"
-                caption="Actionable carryover and caveats for the next session.">
+              <SectionCard title="Next steps">
                 <FeedbackBlock
                   title="Next session"
                   items={nextSteps}
@@ -323,15 +313,13 @@ export default function AnalysisDetailScreen() {
             {!hasObservedFeedback && !hasImprovementPlan ? (
               <SectionCard title="Structured feedback" tone="muted">
                 <Text style={styles.bodyText}>
-                  This run saved the raw model output, but it did not produce normalized
-                  strengths, issues, or next steps. Open the model output below for the
-                  full response.
+                  No structured feedback was extracted. Open the raw output below.
                 </Text>
               </SectionCard>
             ) : null}
 
             {analysis.raw_response ? (
-              <SectionCard title="Model output" tone="muted">
+              <SectionCard title="Raw output" tone="muted">
                 <Pressable
                   onPress={() => setShowRawResponse((current) => !current)}
                   style={({ pressed }) => [
@@ -355,7 +343,6 @@ export default function AnalysisDetailScreen() {
 
             <PrimaryButton
               label="Back to review log"
-              hint="Open the full review log"
               onPress={() => router.replace('/(tabs)/analyses')}
             />
           </>
