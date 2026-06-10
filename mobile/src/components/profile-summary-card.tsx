@@ -13,7 +13,7 @@ export function ProfileSummaryCard({ profile }: { profile: AthleteProfile }) {
   const sessionTypes =
     profile.trainingTypes.length > 0
       ? profile.trainingTypes.map(getTrainingTypeLabel).join(', ')
-      : 'No session types selected yet';
+      : 'No session mix recorded yet';
 
   const background = [
     profile.hasAmateurBouts ? 'Amateur bouts' : null,
@@ -24,7 +24,9 @@ export function ProfileSummaryCard({ profile }: { profile: AthleteProfile }) {
     .join(', ');
 
   return (
-    <SectionCard title={profile.name} caption="Active athlete context for future reviews.">
+    <SectionCard
+      title={profile.name}
+      caption="Baseline used to calibrate future saved reviews.">
       <View style={styles.metricsGrid}>
         <MetricCell label="Stance" value={getStanceLabel(profile.stance)} />
         <MetricCell
@@ -38,24 +40,34 @@ export function ProfileSummaryCard({ profile }: { profile: AthleteProfile }) {
       </View>
 
       <View style={styles.stack}>
+        {profile.ageRange ? (
+          <SummaryRow label="Age range" value={profile.ageRange} />
+        ) : null}
         <SummaryRow
           label="Training rhythm"
           value={`${profile.weeklyTrainingDays ?? '—'} days / week`}
         />
+        {profile.yearsBoxing !== null ? (
+          <SummaryRow
+            label="Years boxing"
+            value={`${profile.yearsBoxing} year${profile.yearsBoxing === 1 ? '' : 's'}`}
+          />
+        ) : null}
         <SummaryRow label="Session mix" value={sessionTypes} />
         <SummaryRow
           label="Background"
-          value={background || 'No competitive or coaching history recorded'}
+          value={background || 'No ring or coaching history recorded'}
         />
         {profile.routineSummary ? (
-          <SummaryRow label="Routine note" value={profile.routineSummary} />
+          <SummaryRow label="Current routine" value={profile.routineSummary} />
         ) : null}
         {profile.limitations ? (
           <SummaryRow label="Limitations" value={profile.limitations} />
         ) : null}
         {profile.additionalContext ? (
-          <SummaryRow label="Additional context" value={profile.additionalContext} />
+          <SummaryRow label="Priority context" value={profile.additionalContext} />
         ) : null}
+        <SummaryRow label="Updated" value={formatUpdatedAt(profile.updatedAt)} />
       </View>
     </SectionCard>
   );
@@ -77,6 +89,15 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
       <Text style={styles.value}>{value}</Text>
     </View>
   );
+}
+
+function formatUpdatedAt(value: string) {
+  const timestamp = new Date(value);
+  if (Number.isNaN(timestamp.getTime())) {
+    return 'Unknown';
+  }
+
+  return timestamp.toLocaleDateString();
 }
 
 const styles = StyleSheet.create({
