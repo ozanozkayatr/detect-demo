@@ -336,19 +336,6 @@ export default function NewAnalysisScreen() {
             </Pressable>
           </View>
 
-          {selectedPrompt ? (
-            <View style={styles.selectedPromptCard}>
-              <View style={styles.selectedPromptHeader}>
-                <Text style={styles.selectedPromptLabel}>Selected</Text>
-                <StatusPill
-                  label={getPromptModeTag(selectedPrompt.key)}
-                  tone="success"
-                />
-              </View>
-              <Text style={styles.selectedPromptTitle}>{selectedPrompt.title}</Text>
-            </View>
-          ) : null}
-
           {promptTemplates.length > 0 ? (
             <View style={styles.promptList}>
               {promptTemplates.map((template) => (
@@ -581,34 +568,6 @@ const styles = StyleSheet.create({
   },
   promptList: {
     gap: spacing.md,
-  },
-  selectedPromptCard: {
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(106, 31, 42, 0.2)',
-    borderRadius: radii.md,
-    backgroundColor: palette.accentSoft,
-  },
-  selectedPromptHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  selectedPromptLabel: {
-    fontSize: typography.label,
-    lineHeight: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: palette.textSoft,
-  },
-  selectedPromptTitle: {
-    fontSize: typography.heading,
-    lineHeight: 28,
-    fontWeight: '700',
-    color: palette.text,
   },
   promptCard: {
     borderWidth: 1,
